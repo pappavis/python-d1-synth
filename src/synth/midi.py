@@ -4,6 +4,8 @@ import platform
 import subprocess
 import sys
 
+from synth.notes import NoteEvent, NoteParser, NoteSequence
+
 
 @dataclass(frozen=True)
 class MidiDevice:
@@ -22,6 +24,152 @@ class MidiDeviceSelection:
 class MidiDeviceScanResult:
     devices: tuple[MidiDevice, ...]
     error_message: str | None
+
+
+@dataclass(frozen=True)
+class MidiMessage:
+    """Protocol-level MIDI message normalized for virtual input tests.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-020
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-020 Virtual MIDI Input Voor DAW
+    - Version: 0.1.0
+    """
+
+    message_type: str
+    note_number: int
+    velocity: int
+    channel: int
+    time_seconds: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.message_type not in {"note_on", "note_off"}:
+            raise ValueError("message_type must be note_on or note_off")
+        if not 0 <= self.note_number <= 127:
+            raise ValueError("note_number must be between 0 and 127")
+        if not 0 <= self.velocity <= 127:
+            raise ValueError("velocity must be between 0 and 127")
+        if not 1 <= self.channel <= 16:
+            raise ValueError("channel must be between 1 and 16")
+        if self.time_seconds < 0:
+            raise ValueError("time_seconds must not be negative")
+
+
+@dataclass(frozen=True)
+class VirtualMidiInputSettings:
+    """Settings for future virtual MIDI input routes from a DAW.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-020
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-020 Virtual MIDI Input Voor DAW
+    - Version: 0.1.0
+    """
+
+    input_name: str = "python-d1-synth"
+    default_note_duration_seconds: float = 1.0
+
+    def __post_init__(self) -> None:
+        if not self.input_name.strip():
+            raise ValueError("input_name must not be empty")
+        if self.default_note_duration_seconds <= 0:
+            raise ValueError("default_note_duration_seconds must be positive")
+
+
+@dataclass(frozen=True)
+class VirtualMidiInputDiagnostic:
+    """Diagnostic result for a virtual MIDI input route.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-020
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-020 Virtual MIDI Input Voor DAW
+    - Version: 0.1.0
+    """
+
+    available: bool
+    message: str
+
+
+class VirtualMidiInputAdapter:
+    """Map virtual MIDI note messages to the internal note sequence model.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-020
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-020 Virtual MIDI Input Voor DAW
+    - Version: 0.1.0
+    """
+
+    def __init__(self, settings: VirtualMidiInputSettings | None = None) -> None:
+        self._settings = settings if settings is not None else VirtualMidiInputSettings()
+        self._parser = NoteParser()
+
+    def diagnose(self, backend_available: bool) -> VirtualMidiInputDiagnostic:
+        if backend_available:
+            return VirtualMidiInputDiagnostic(
+                available=True,
+                message=(
+                    f"Virtual MIDI input backend is installed. Route a DAW track to '{self._settings.input_name}' "
+                    "when the live input story opens the port."
+                ),
+            )
+        return VirtualMidiInputDiagnostic(
+            available=False,
+            message=(
+                "Virtual MIDI input backend is not available. Install the MIDI extras and verify a virtual MIDI "
+                "route before DAW input."
+            ),
+        )
+
+    def messages_to_note_sequence(self, messages: tuple[MidiMessage, ...]) -> NoteSequence:
+        active_notes: dict[tuple[int, int], MidiMessage] = {}
+        events: list[NoteEvent] = []
+
+        for message in messages:
+            key = (message.channel, message.note_number)
+            if message.message_type == "note_on" and message.velocity > 0:
+                active_notes[key] = message
+                continue
+
+            started = active_notes.pop(key, None)
+            if started is not None:
+                events.append(self._event_from_pair(started, message))
+
+        for started in active_notes.values():
+            events.append(self._event_from_open_note(started))
+
+        return NoteSequence(events=tuple(sorted(events, key=lambda event: event.start_seconds)))
+
+    def _event_from_pair(self, started: MidiMessage, stopped: MidiMessage) -> NoteEvent:
+        duration = stopped.time_seconds - started.time_seconds
+        if duration <= 0:
+            duration = self._settings.default_note_duration_seconds
+        return NoteEvent(
+            note=self._note_from_midi_number(started.note_number),
+            duration_seconds=duration,
+            velocity=started.velocity / 127,
+            start_seconds=started.time_seconds,
+        )
+
+    def _event_from_open_note(self, started: MidiMessage) -> NoteEvent:
+        return NoteEvent(
+            note=self._note_from_midi_number(started.note_number),
+            duration_seconds=self._settings.default_note_duration_seconds,
+            velocity=started.velocity / 127,
+            start_seconds=started.time_seconds,
+        )
+
+    def _note_from_midi_number(self, note_number: int):
+        note_names = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+        octave = (note_number // 12) - 1
+        name = note_names[note_number % 12]
+        return self._parser.parse(f"{name}{octave}")
 
 
 class MidiDeviceScanner:

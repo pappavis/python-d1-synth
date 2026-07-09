@@ -1,6 +1,7 @@
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
 from synth.debug import DebugLevel, DebugReporter
+from synth.midi import MidiMessage, VirtualMidiInputAdapter, VirtualMidiInputDiagnostic, VirtualMidiInputSettings
 from synth.notes import Note, NoteEvent, NoteParser, NoteSequence
 from synth.oscillators import Oscillator, OscillatorSettings, Waveform
 from synth.wav_writer import WavWriter, WavWriteSettings
@@ -46,6 +47,27 @@ class TestCodeTraceability:
             "Version: 0.1.0",
         )
         traceable_objects = (WavWriteSettings, WavWriter)
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us020_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-020 Virtual MIDI Input Voor DAW",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            MidiMessage,
+            VirtualMidiInputSettings,
+            VirtualMidiInputDiagnostic,
+            VirtualMidiInputAdapter,
+            SynthCli,
+        )
 
         for traceable_object in traceable_objects:
             doc = traceable_object.__doc__ or ""

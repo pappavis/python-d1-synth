@@ -192,6 +192,14 @@ Acceptatie op 2026-07-09:
 - Given MIDI note on/off events, then deze naar het bestaande `NoteEvent` model worden vertaald.
 - Given de route niet beschikbaar is op het platform, then de CLI een duidelijke diagnose geeft.
 
+Acceptatie op 2026-07-09:
+
+- `MidiMessage` en `VirtualMidiInputAdapter` vertalen MIDI note-on/off paren naar `NoteSequence`.
+- `note_on` met velocity `0` wordt als note-off behandeld.
+- `python -m synth midi diagnose-virtual-input` geeft een duidelijke backenddiagnose zonder live CoreMIDI/RtMidi poort te openen.
+- `docs/virtual_midi_input_v0.1.0.md` beschrijft de veilige DAW-route voor Logic Pro 12.3 en andere DAWs.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-020 Virtual MIDI Input Voor DAW` en `Version: 0.1.0`.
+
 ## US-021: External MIDI Workflow In Logic
 
 - Given Logic Pro 12.3, when de external MIDI workflow wordt onderzocht, then er een reproduceerbare setup-notitie ontstaat.

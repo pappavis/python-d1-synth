@@ -185,6 +185,8 @@ Als Logic Pro 12.3 gebruiker wil ik de synth later via een virtual MIDI input ku
 Prioriteit: Must
 Sprint: Future
 
+Notitie: US-020 is afgerond met `VirtualMidiInputAdapter`, MIDI note-on/off naar `NoteSequence` mapping, CLI-diagnose `midi diagnose-virtual-input`, en `docs/virtual_midi_input_v0.1.0.md`.
+
 ### US-021: External MIDI Workflow In Logic
 
 Als Logic Pro gebruiker wil ik een external MIDI workflow onderzoeken, zodat de synth in Logic of een andere DAW praktisch kan worden aangestuurd zonder direct een plugin te zijn.

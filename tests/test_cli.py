@@ -137,3 +137,12 @@ class TestSynthCli:
         assert "Playing note C3" in output
         assert "Playback settings: waveform=sine, duration=0.01s, sample_rate=44100 Hz, channel=stereo" in output
         assert "Audio buffer: 441 frames, 44100 Hz" in output
+
+    def test_midi_diagnose_virtual_input_reports_backend_status(self, monkeypatch, capsys) -> None:
+        monkeypatch.setattr(synth.cli.importlib.util, "find_spec", lambda name: None)
+
+        exit_code = SynthCli().run(["midi", "diagnose-virtual-input"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Virtual MIDI input backend is not available" in output

@@ -1,4 +1,5 @@
 import argparse
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from synth.audio import AudioDeviceScanner, AudioDeviceSelector, OutputChannel, 
 from synth.config import PatchConfigLoader
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import SynthEngine, SynthEngineSettings
-from synth.midi import MidiDeviceScanner, MidiDeviceSelector
+from synth.midi import MidiDeviceScanner, MidiDeviceSelector, VirtualMidiInputAdapter
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 from synth.oscillators import Waveform
 from synth.wav_writer import WavWriter
@@ -22,6 +23,8 @@ class SynthCli:
     - User Story: US-013 Channel Selection
     - Epic: EPIC-005 Configuratie En CLI
     - User Story: US-016 Debuglevel
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-020 Virtual MIDI Input Voor DAW
     - Version: 0.1.0
     """
 
@@ -66,6 +69,11 @@ class SynthCli:
         list_devices.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
         list_devices.add_argument("--unsafe-rtmidi-scan", action="store_true")
         list_devices.set_defaults(handler=self._handle_midi_list_devices)
+        virtual_input = midi_subparsers.add_parser(
+            "diagnose-virtual-input",
+            help="Diagnose whether virtual MIDI input prerequisites are present.",
+        )
+        virtual_input.set_defaults(handler=self._handle_midi_diagnose_virtual_input)
 
         return parser
 
@@ -148,6 +156,12 @@ class SynthCli:
             return 0
         for device in devices:
             print(f"{device.identifier}\t{device.direction}\t{device.name}")
+        return 0
+
+    def _handle_midi_diagnose_virtual_input(self, args: argparse.Namespace) -> int:
+        backend_available = importlib.util.find_spec("mido") is not None
+        diagnostic = VirtualMidiInputAdapter().diagnose(backend_available=backend_available)
+        print(diagnostic.message)
         return 0
 
     def _handle_audio_list_devices(self, args: argparse.Namespace) -> int:
