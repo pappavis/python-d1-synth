@@ -160,6 +160,7 @@ MIDI leerpad:
 
 - [MIDI Leerpad En Terminologie](docs/midi_learning_path_v0.1.0.md)
 - [Virtual MIDI Input Voor DAW](docs/virtual_midi_input_v0.1.0.md)
+- [External MIDI Workflow In Logic](docs/logic_external_midi_workflow_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 

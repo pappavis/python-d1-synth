@@ -194,6 +194,8 @@ Als Logic Pro gebruiker wil ik een external MIDI workflow onderzoeken, zodat de 
 Prioriteit: Should
 Sprint: Future
 
+Notitie: US-021 staat In Review met `docs/logic_external_midi_workflow_v0.1.0.md`; afronding wacht op handmatig Logic Pro 12.3 testresultaat.
+
 ### US-022: USB MIDI Hardware Input
 
 Als gebruiker met een Arturia KeyLab Mk3 wil ik USB MIDI input kunnen ontvangen, zodat ik de synth met een fysiek MIDI keyboard kan bespelen.

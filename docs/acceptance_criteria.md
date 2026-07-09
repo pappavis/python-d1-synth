@@ -205,6 +205,13 @@ Acceptatie op 2026-07-09:
 - Given Logic Pro 12.3, when de external MIDI workflow wordt onderzocht, then er een reproduceerbare setup-notitie ontstaat.
 - Given een testnote vanuit Logic, then de synth een overeenkomstige note event ontvangt of de beperking wordt gedocumenteerd.
 
+Acceptatie op 2026-07-09:
+
+- `docs/logic_external_midi_workflow_v0.1.0.md` beschrijft een veilige Logic Pro 12.3 route via Audio MIDI Setup en IAC Driver.
+- De workflow bevat een handmatige testtemplate voor de klant.
+- De story blijft `In Review` totdat het Logic Pro testresultaat is ontvangen.
+- Er wordt geen live CoreMIDI/RtMidi inputpoort geopend in Python tijdens deze story.
+
 ## US-022: USB MIDI Hardware Input
 
 - Given een Arturia KeyLab Mk3 via USB MIDI, when een toets wordt ingedrukt, then de synth een note on event ontvangt.

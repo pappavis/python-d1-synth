@@ -47,3 +47,25 @@ class TestDocumentationArtifacts:
         )
         for term in required_terms:
             assert term in content
+
+    def test_us021_logic_external_midi_workflow_doc_contains_required_terms(self) -> None:
+        document = Path("docs/logic_external_midi_workflow_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-021 External MIDI Workflow In Logic",
+            "Logic Pro 12.3",
+            "IAC Driver",
+            "Audio MIDI Setup",
+            "External MIDI",
+            "python-d1-synth",
+            "midi diagnose-virtual-input",
+            "Handmatige test",
+            "Testresultaat",
+        )
+        for term in required_terms:
+            assert term in content
