@@ -77,6 +77,8 @@ Als gebruiker wil ik een saw waveform kunnen genereren, zodat de synth richting 
 Prioriteit: Should
 Sprint: 1
 
+Notitie: US-008 sluit saw waveform technisch af met sample count, amplitude, ramp-level tests en code traceability metadata.
+
 ### US-009: Square Oscillator
 
 Als gebruiker wil ik een square waveform kunnen genereren, zodat ik een tweede klassieke monosynth waveform kan testen.

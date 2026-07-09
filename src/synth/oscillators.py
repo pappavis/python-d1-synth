@@ -9,9 +9,11 @@ class Waveform(str, Enum):
     """Supported oscillator waveform names.
 
     Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-008
     - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-009
     - Backlog: Sprint 1 Kanban Backlog
     - Epic: EPIC-003 Oscillator En Audio Rendering
+    - User Story: US-008 Saw Oscillator
     - User Story: US-009 Square Oscillator
     - Version: 0.1.0
     """
@@ -26,9 +28,11 @@ class OscillatorSettings:
     """Immutable oscillator settings used by sample generation.
 
     Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-008
     - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-009
     - Backlog: Sprint 1 Kanban Backlog
     - Epic: EPIC-003 Oscillator En Audio Rendering
+    - User Story: US-008 Saw Oscillator
     - User Story: US-009 Square Oscillator
     - Version: 0.1.0
     """
@@ -48,9 +52,11 @@ class Oscillator:
     """Generate oscillator samples for the selected waveform.
 
     Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-008
     - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-009
     - Backlog: Sprint 1 Kanban Backlog
     - Epic: EPIC-003 Oscillator En Audio Rendering
+    - User Story: US-008 Saw Oscillator
     - User Story: US-009 Square Oscillator
     - Version: 0.1.0
     """

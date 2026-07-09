@@ -66,6 +66,13 @@ Acceptatie op 2026-07-09:
 
 - Given frequentie, duur en sample rate, when de saw oscillator samples genereert, then het aantal samples klopt.
 - Given amplitude-limieten, then samples binnen `-1.0` en `1.0` blijven.
+- Given saw output, then de samples meerdere ramp-niveaus bevatten en zowel positieve als negatieve waarden bevatten.
+- Given US-008 code wordt aangepast, then de betrokken code-docstrings ChatOD, backlog, epicnummer, user story nummer en versie bevatten.
+
+Acceptatie op 2026-07-09:
+
+- Geautomatiseerde tests verifieren saw sample count, amplitude-limieten, positieve/negatieve samples en meerdere ramp-niveaus.
+- Traceability-tests verifieren `CHATOD-20260709-D1PY-MVP-001`, `Sprint 1 Kanban Backlog`, `EPIC-003 Oscillator En Audio Rendering`, `US-008 Saw Oscillator` en `Version: 0.1.0`.
 
 ## US-009: Square Oscillator
 

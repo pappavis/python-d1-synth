@@ -36,6 +36,21 @@ class TestCodeTraceability:
             for expected in required:
                 assert expected in doc
 
+    def test_us008_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-003 Oscillator En Audio Rendering",
+            "US-008 Saw Oscillator",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (Waveform, OscillatorSettings, Oscillator)
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
     def test_us006_code_contains_required_traceability_fields(self) -> None:
         required = (
             "CHATOD-20260709-D1PY-MVP-001",
