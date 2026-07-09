@@ -95,6 +95,8 @@ Als gebruiker wil ik een patch naar WAV kunnen renderen, zodat ik audio-output o
 Prioriteit: Must
 Sprint: 1
 
+Notitie: US-010 rondt WAV-export af met stereo PCM output, 44100 Hz patch-rendering en code traceability metadata.
+
 ## Epic E4: Realtime CLI Playback
 
 ### US-011: Play Single Note

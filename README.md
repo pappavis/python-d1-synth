@@ -181,6 +181,11 @@ Als `audio list-devices` geen devices toont in Codex maar macOS ze wel toont, is
 
 ## Sprint 1 Scope
 
+Agile artefacts:
+
+- [Sprint 1 Epic 003 Review](docs/sprint_1_epic_003_review_v0.1.0.md)
+- [Sprint 1 Sessie](docs/sprint_1_session_v0.1.0.md)
+
 In scope:
 
 - CLI skeleton.

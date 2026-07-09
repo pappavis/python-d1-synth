@@ -91,6 +91,12 @@ Acceptatie op 2026-07-09:
 - Given een patch-config, when `render patch.yaml --output demo.wav` draait, then `demo.wav` wordt aangemaakt.
 - Given stereo output, then het WAV-bestand twee kanalen bevat.
 - Given sample rate `44100`, then het WAV-bestand die sample rate gebruikt.
+- Given US-010 code wordt aangepast, then de betrokken code-docstrings ChatOD, backlog, epicnummer, user story nummer en versie bevatten.
+
+Acceptatie op 2026-07-09:
+
+- CLI render schrijft een stereo WAV op basis van `examples/patch.yaml`.
+- Traceability-tests verifieren `CHATOD-20260709-D1PY-MVP-001`, `Sprint 1 Kanban Backlog`, `EPIC-003 Oscillator En Audio Rendering`, `US-010 WAV Export` en `Version: 0.1.0`.
 
 ## US-011: Play Single Note
 
