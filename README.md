@@ -45,6 +45,14 @@ Speel een noot via je Scarlett 8i6 USB:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --channel stereo --audio-device "Scarlett 8i6 USB" --debuglevel verbose
 ```
 
+Test kanaalroutering via je Scarlett 8i6 USB:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --channel stereo --audio-device "Scarlett 8i6 USB" --debuglevel verbose
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --channel left --audio-device "Scarlett 8i6 USB" --debuglevel verbose
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --channel right --audio-device "Scarlett 8i6 USB" --debuglevel verbose
+```
+
 Speel een testsequence:
 
 ```bash
@@ -95,12 +103,24 @@ De launch-config bevat:
 
 - `python-d1-synth: play C3`
 - `python-d1-synth: play C3 Scarlett`
+- `python-d1-synth: play C3 Scarlett left`
+- `python-d1-synth: play C3 Scarlett right`
 - `python-d1-synth: play ACGD Scarlett`
 - `python-d1-synth: render patch`
 - `python-d1-synth: list audio devices`
 - `python-d1-synth: list MIDI devices`
 
 Als VS Code jouw venv niet automatisch kiest, zet de interpreter handmatig naar jouw daadwerkelijke venv-python.
+
+## Code Traceability
+
+Nieuwe code die vanaf US-013 wordt toegevoegd of geraakt, krijgt traceerbare metadata in docstrings:
+
+- Chatlog ID, bijvoorbeeld `CHATOD-20260709-D1PY-MVP-001`.
+- Backlognaam, bijvoorbeeld `Sprint 1 Kanban Backlog`.
+- Epicnummer en epicnaam, bijvoorbeeld `EPIC-004 Realtime CLI Playback`.
+- User story nummer en titel, bijvoorbeeld `US-013 Channel Selection`.
+- Projectversie, bijvoorbeeld `0.1.0`.
 
 ## MIDI Troubleshooting
 

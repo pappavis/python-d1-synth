@@ -13,6 +13,16 @@ from synth.wav_writer import WavWriter
 
 
 class SynthCli:
+    """Commandline entrypoint for Sprint 1 synth workflows.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-004 Realtime CLI Playback
+    - User Story: US-013 Channel Selection
+    - Version: 0.1.0
+    """
+
     def __init__(self) -> None:
         self._parser = self._build_parser()
 
@@ -67,6 +77,7 @@ class SynthCli:
         audio_selection = AudioDeviceSelector().select(args.audio_device)
         if audio_selection.sounddevice_value is not None:
             reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
+        reporter.verbose(f"Output channel: {args.channel}")
 
         engine = SynthEngine(
             SynthEngineSettings(

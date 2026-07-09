@@ -24,6 +24,28 @@
       "args": ["play", "--note", "C3", "--duration", "1.0", "--channel", "stereo", "--audio-device", "Scarlett 8i6 USB", "--debuglevel", "verbose"]
     },
     {
+      "name": "python-d1-synth: play C3 Scarlett left",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synth",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "args": ["play", "--note", "C3", "--duration", "1.0", "--channel", "left", "--audio-device", "Scarlett 8i6 USB", "--debuglevel", "verbose"]
+    },
+    {
+      "name": "python-d1-synth: play C3 Scarlett right",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synth",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "args": ["play", "--note", "C3", "--duration", "1.0", "--channel", "right", "--audio-device", "Scarlett 8i6 USB", "--debuglevel", "verbose"]
+    },
+    {
       "name": "python-d1-synth: play ACGD Scarlett",
       "type": "debugpy",
       "request": "launch",

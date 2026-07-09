@@ -4,6 +4,15 @@ from synth.audio import AudioBuffer, AudioDeviceScanner, AudioDeviceSelector, Ch
 
 
 class TestChannelRouter:
+    def test_stereo_channel_copies_mono_to_both_channels(self) -> None:
+        mono = np.array([0.1, -0.2], dtype=np.float32)
+
+        stereo = ChannelRouter().route(mono, OutputChannel.STEREO)
+
+        assert stereo.shape == (2, 2)
+        assert np.allclose(stereo[:, 0], mono)
+        assert np.allclose(stereo[:, 1], mono)
+
     def test_left_channel_mutes_right(self) -> None:
         mono = np.array([0.1, -0.2], dtype=np.float32)
 
@@ -12,6 +21,15 @@ class TestChannelRouter:
         assert stereo.shape == (2, 2)
         assert np.allclose(stereo[:, 0], mono)
         assert np.allclose(stereo[:, 1], 0.0)
+
+    def test_right_channel_mutes_left(self) -> None:
+        mono = np.array([0.1, -0.2], dtype=np.float32)
+
+        stereo = ChannelRouter().route(mono, OutputChannel.RIGHT)
+
+        assert stereo.shape == (2, 2)
+        assert np.allclose(stereo[:, 0], 0.0)
+        assert np.allclose(stereo[:, 1], mono)
 
 
 class TestAudioDeviceSelector:

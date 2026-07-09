@@ -1,3 +1,5 @@
+import numpy as np
+
 from synth.audio import AudioDevice
 import synth.cli
 from synth.cli import SynthCli
@@ -75,3 +77,21 @@ class TestSynthCli:
         assert "Playing testsequence ACGD" in output
         assert "Sequence events: A3@0.000s, C4@0.250s, G3@0.500s, D4@0.750s" in output
         assert "Audio buffer: 44100 frames, 44100 Hz" in output
+
+    def test_play_honors_right_channel_option(self, monkeypatch, capsys) -> None:
+        calls = []
+
+        class FakePlayer:
+            def play(self, buffer, device=None):
+                calls.append(buffer.samples.copy())
+
+        monkeypatch.setattr(synth.cli, "SoundDeviceAudioPlayer", FakePlayer)
+
+        exit_code = SynthCli().run(
+            ["play", "--note", "C3", "--duration", "0.1", "--channel", "right", "--debuglevel", "verbose"]
+        )
+
+        assert exit_code == 0
+        assert np.allclose(calls[0][:, 0], 0.0)
+        assert np.any(np.abs(calls[0][:, 1]) > 0.0)
+        assert "Output channel: right" in capsys.readouterr().out

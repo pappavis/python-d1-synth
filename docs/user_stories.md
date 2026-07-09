@@ -116,6 +116,8 @@ Als gebruiker wil ik `--channel stereo`, `--channel left` en `--channel right`, 
 Prioriteit: Must
 Sprint: 1
 
+Notitie: vanaf deze story moet geraakte code traceerbare metadata bevatten: ChatOD, backlog, epicnummer, user story nummer en versie.
+
 ## Epic E5: Configuratie En CLI
 
 ### US-014: YAML Patch Config

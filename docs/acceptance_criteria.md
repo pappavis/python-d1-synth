@@ -104,6 +104,14 @@ Acceptatie op 2026-07-09:
 - Given `--channel stereo`, then links en rechts audio bevatten.
 - Given `--channel left`, then alleen links audio bevat en rechts stil is.
 - Given `--channel right`, then alleen rechts audio bevat en links stil is.
+- Given US-013 code wordt aangepast, then de betrokken code-docstrings ChatOD, backlog, epicnummer, user story nummer en versie bevatten.
+
+Acceptatie op 2026-07-09:
+
+- Geautomatiseerde tests verifieren stereo, left-only en right-only routing in `ChannelRouter`, `SynthEngine` en CLI.
+- `play --note C3 --duration 1.0 --channel stereo --audio-device "Scarlett 8i6 USB"` speelde hoorbaar stereo af.
+- `play --note C3 --duration 1.0 --channel left --audio-device "Scarlett 8i6 USB"` speelde hoorbaar links af.
+- `play --note C3 --duration 1.0 --channel right --audio-device "Scarlett 8i6 USB"` speelde hoorbaar rechts af.
 
 ## US-014: YAML Patch Config
 

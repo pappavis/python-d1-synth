@@ -7,6 +7,16 @@ from numpy.typing import NDArray
 
 
 class OutputChannel(str, Enum):
+    """Supported stereo output routing modes.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-013
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-004 Realtime CLI Playback
+    - User Story: US-013 Channel Selection
+    - Version: 0.1.0
+    """
+
     STEREO = "stereo"
     LEFT = "left"
     RIGHT = "right"
@@ -100,6 +110,16 @@ class AudioDeviceSelector:
 
 
 class ChannelRouter:
+    """Route mono synth samples to stereo, left-only, or right-only output.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-013
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-004 Realtime CLI Playback
+    - User Story: US-013 Channel Selection
+    - Version: 0.1.0
+    """
+
     def route(self, mono_samples: NDArray[np.float32], channel: OutputChannel) -> NDArray[np.float32]:
         silent = np.zeros_like(mono_samples)
         if channel is OutputChannel.STEREO:
