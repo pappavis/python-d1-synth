@@ -83,6 +83,20 @@ Selecteer later een MIDI device:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --midi-device "Arturia KeyLab Mk3" --debuglevel light
 ```
 
+## Debuglevel
+
+`--debuglevel` ondersteunt drie niveaus:
+
+- `none`: geen statusregels, alleen noodzakelijke fouten.
+- `light`: hoofdacties zoals `Playing note C3`.
+- `verbose`: hoofdacties plus technische details zoals waveform, duration, sample rate, channel en audio-buffer.
+
+Voorbeeld:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --debuglevel verbose
+```
+
 ## Tests
 
 ```bash
@@ -118,8 +132,8 @@ Nieuwe code die vanaf US-013 wordt toegevoegd of geraakt, krijgt traceerbare met
 
 - Chatlog ID, bijvoorbeeld `CHATOD-20260709-D1PY-MVP-001`.
 - Backlognaam, bijvoorbeeld `Sprint 1 Kanban Backlog`.
-- Epicnummer en epicnaam, bijvoorbeeld `EPIC-004 Realtime CLI Playback`.
-- User story nummer en titel, bijvoorbeeld `US-013 Channel Selection`.
+- Epicnummer en epicnaam, bijvoorbeeld `EPIC-004 Realtime CLI Playback` of `EPIC-005 Configuratie En CLI`.
+- User story nummer en titel, bijvoorbeeld `US-013 Channel Selection` of `US-016 Debuglevel`.
 - Projectversie, bijvoorbeeld `0.1.0`.
 
 ## MIDI Troubleshooting

@@ -95,3 +95,45 @@ class TestSynthCli:
         assert np.allclose(calls[0][:, 0], 0.0)
         assert np.any(np.abs(calls[0][:, 1]) > 0.0)
         assert "Output channel: right" in capsys.readouterr().out
+
+    def test_play_debuglevel_none_suppresses_status_output(self, monkeypatch, capsys) -> None:
+        class FakePlayer:
+            def play(self, buffer, device=None):
+                return None
+
+        monkeypatch.setattr(synth.cli, "SoundDeviceAudioPlayer", FakePlayer)
+
+        exit_code = SynthCli().run(["play", "--note", "C3", "--duration", "0.01", "--debuglevel", "none"])
+
+        assert exit_code == 0
+        assert capsys.readouterr().out == ""
+
+    def test_play_debuglevel_light_outputs_main_action_only(self, monkeypatch, capsys) -> None:
+        class FakePlayer:
+            def play(self, buffer, device=None):
+                return None
+
+        monkeypatch.setattr(synth.cli, "SoundDeviceAudioPlayer", FakePlayer)
+
+        exit_code = SynthCli().run(["play", "--note", "C3", "--duration", "0.01", "--debuglevel", "light"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Playing note C3" in output
+        assert "Playback settings:" not in output
+        assert "Audio buffer:" not in output
+
+    def test_play_debuglevel_verbose_outputs_technical_details(self, monkeypatch, capsys) -> None:
+        class FakePlayer:
+            def play(self, buffer, device=None):
+                return None
+
+        monkeypatch.setattr(synth.cli, "SoundDeviceAudioPlayer", FakePlayer)
+
+        exit_code = SynthCli().run(["play", "--note", "C3", "--duration", "0.01", "--debuglevel", "verbose"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Playing note C3" in output
+        assert "Playback settings: waveform=sine, duration=0.01s, sample_rate=44100 Hz, channel=stereo" in output
+        assert "Audio buffer: 441 frames, 44100 Hz" in output

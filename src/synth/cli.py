@@ -20,6 +20,8 @@ class SynthCli:
     - Backlog: Sprint 1 Kanban Backlog
     - Epic: EPIC-004 Realtime CLI Playback
     - User Story: US-013 Channel Selection
+    - Epic: EPIC-005 Configuratie En CLI
+    - User Story: US-016 Debuglevel
     - Version: 0.1.0
     """
 
@@ -78,6 +80,11 @@ class SynthCli:
         if audio_selection.sounddevice_value is not None:
             reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
         reporter.verbose(f"Output channel: {args.channel}")
+        reporter.verbose(
+            "Playback settings: "
+            f"waveform={args.waveform}, duration={args.duration:g}s, "
+            f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
+        )
 
         engine = SynthEngine(
             SynthEngineSettings(

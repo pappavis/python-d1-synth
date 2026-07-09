@@ -1,5 +1,6 @@
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
+from synth.debug import DebugLevel, DebugReporter
 
 
 class TestCodeTraceability:
@@ -12,6 +13,21 @@ class TestCodeTraceability:
             "Version: 0.1.0",
         )
         traceable_objects = (OutputChannel, ChannelRouter, SynthCli)
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us016_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-005 Configuratie En CLI",
+            "US-016 Debuglevel",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (DebugLevel, DebugReporter, SynthCli)
 
         for traceable_object in traceable_objects:
             doc = traceable_object.__doc__ or ""

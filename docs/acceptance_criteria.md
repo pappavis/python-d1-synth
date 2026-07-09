@@ -129,6 +129,13 @@ Acceptatie op 2026-07-09:
 - Given `--debuglevel none`, then alleen noodzakelijke fouten getoond worden.
 - Given `--debuglevel light`, then hoofdacties zichtbaar zijn.
 - Given `--debuglevel verbose`, then technische details zoals sample rate, waveform, channel en duration zichtbaar zijn.
+- Given US-016 code wordt aangepast, then de betrokken code-docstrings ChatOD, backlog, epicnummer, user story nummer en versie bevatten.
+
+Acceptatie op 2026-07-09:
+
+- Geautomatiseerde tests verifieren `DebugReporter` gedrag voor `none`, `light` en `verbose`.
+- CLI-tests verifieren dat `none` statusregels onderdrukt, `light` hoofdacties toont en `verbose` playback-settings plus audio-bufferdetails toont.
+- Traceability-tests verifieren `CHATOD-20260709-D1PY-MVP-001`, `Sprint 1 Kanban Backlog`, `EPIC-005 Configuratie En CLI`, `US-016 Debuglevel` en `Version: 0.1.0`.
 
 ## US-017: README Startinstructies
 

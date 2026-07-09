@@ -141,6 +141,8 @@ Als gebruiker wil ik `--debuglevel none|light|verbose`, zodat ik eenvoudige of u
 Prioriteit: Should
 Sprint: 1
 
+Notitie: US-016 gebruikt code traceability metadata voor `DebugLevel`, `DebugReporter` en de CLI-entrypoint.
+
 ## Epic E6: Documentatie En Governance
 
 ### US-017: README Startinstructies
