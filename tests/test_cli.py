@@ -3,6 +3,7 @@ import numpy as np
 from synth.audio import AudioDevice
 import synth.cli
 from synth.cli import SynthCli
+from synth.midi import MidiDevice
 
 
 class TestSynthCli:
@@ -146,3 +147,29 @@ class TestSynthCli:
         output = capsys.readouterr().out
         assert exit_code == 0
         assert "Virtual MIDI input backend is not available" in output
+
+    def test_midi_diagnose_usb_input_accepts_generic_input_device(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (
+                            MidiDevice(identifier="input:0", name="Fishman TriplePlay", direction="input"),
+                            MidiDevice(identifier="input:1", name="M-Vave MIDI", direction="input"),
+                        ),
+                        "error_message": None,
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(["midi", "diagnose-usb-input", "--midi-device", "Fishman"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "USB MIDI input ready: Fishman TriplePlay" in output

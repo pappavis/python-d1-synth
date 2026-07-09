@@ -215,9 +215,16 @@ Acceptatie op 2026-07-09:
 
 ## US-022: USB MIDI Hardware Input
 
-- Given een Arturia KeyLab Mk3 via USB MIDI, when een toets wordt ingedrukt, then de synth een note on event ontvangt.
-- Given de toets wordt losgelaten, then de synth een note off event ontvangt.
-- Given velocity wordt meegestuurd, then de waarde in het interne eventmodel zichtbaar is.
+- Given een Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave of ander USB MIDI input device, when het device zichtbaar is, then de CLI een generieke input-readiness diagnose kan geven.
+- Given een device alleen output aanbiedt, then het niet als USB MIDI input-ready wordt beschouwd.
+- Given een device naam of identifier wordt meegegeven, then de selectie op gedeeltelijke naam of identifier kan matchen.
+
+Acceptatie op 2026-07-09:
+
+- `UsbMidiHardwareInputAdapter` accepteert generieke MIDI input devices en is niet Arturia-only.
+- `python -m synth midi diagnose-usb-input` geeft duidelijke diagnostiek.
+- `docs/usb_midi_hardware_input_v0.1.0.md` bevat een handmatige hardwaretest-template.
+- US-022 blijft `In Review` totdat minstens een echte USB MIDI hardwaretest is ontvangen.
 
 ## US-023: Studio MIDI Routing Integratietest
 

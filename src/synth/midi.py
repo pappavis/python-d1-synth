@@ -95,6 +95,75 @@ class VirtualMidiInputDiagnostic:
     message: str
 
 
+@dataclass(frozen=True)
+class UsbMidiInputDiagnostic:
+    """Readiness result for generic USB MIDI input hardware.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-022
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-022 USB MIDI Hardware Input
+    - Version: 0.1.0
+    """
+
+    ready: bool
+    message: str
+    selected_device: MidiDevice | None
+    compatible_devices: tuple[MidiDevice, ...]
+
+
+class UsbMidiHardwareInputAdapter:
+    """Diagnose generic USB MIDI input devices before live receive is enabled.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-022
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-022 USB MIDI Hardware Input
+    - Version: 0.1.0
+    """
+
+    def diagnose(self, devices: tuple[MidiDevice, ...], requested_device: str | None = None) -> UsbMidiInputDiagnostic:
+        input_devices = tuple(device for device in devices if device.direction == "input")
+        if not input_devices:
+            return UsbMidiInputDiagnostic(
+                ready=False,
+                message=(
+                    "No USB MIDI input devices detected. Connect any class-compliant USB MIDI interface and run "
+                    "the diagnostic again."
+                ),
+                selected_device=None,
+                compatible_devices=tuple(),
+            )
+
+        selected = self._select_device(input_devices, requested_device)
+        if selected is None:
+            names = ", ".join(device.name for device in input_devices)
+            return UsbMidiInputDiagnostic(
+                ready=False,
+                message=f"Requested USB MIDI input device not found. Available input devices: {names}.",
+                selected_device=None,
+                compatible_devices=input_devices,
+            )
+
+        return UsbMidiInputDiagnostic(
+            ready=True,
+            message=f"USB MIDI input ready: {selected.name} ({selected.identifier}).",
+            selected_device=selected,
+            compatible_devices=input_devices,
+        )
+
+    def _select_device(self, devices: tuple[MidiDevice, ...], requested_device: str | None) -> MidiDevice | None:
+        if requested_device is None:
+            return devices[0]
+        normalized = requested_device.casefold()
+        for device in devices:
+            if normalized in device.name.casefold() or normalized == device.identifier.casefold():
+                return device
+        return None
+
+
 class VirtualMidiInputAdapter:
     """Map virtual MIDI note messages to the internal note sequence model.
 

@@ -71,3 +71,24 @@ class TestDocumentationArtifacts:
         )
         for term in required_terms:
             assert term in content
+
+    def test_us022_usb_midi_hardware_input_doc_contains_required_terms(self) -> None:
+        document = Path("docs/usb_midi_hardware_input_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-022 USB MIDI Hardware Input",
+            "Fishman TriplePlay",
+            "M-Vave",
+            "Arturia KeyLab Mk3",
+            "UsbMidiHardwareInputAdapter",
+            "midi diagnose-usb-input",
+            "Handmatige hardwaretest",
+            "Testresultaat",
+        )
+        for term in required_terms:
+            assert term in content

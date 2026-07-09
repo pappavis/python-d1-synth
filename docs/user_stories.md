@@ -198,10 +198,12 @@ Notitie: US-021 is afgerond met `docs/logic_external_midi_workflow_v0.1.0.md`; h
 
 ### US-022: USB MIDI Hardware Input
 
-Als gebruiker met een Arturia KeyLab Mk3 wil ik USB MIDI input kunnen ontvangen, zodat ik de synth met een fysiek MIDI keyboard kan bespelen.
+Als gebruiker met Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave of een ander USB MIDI input device wil ik hardware input kunnen diagnosticeren, zodat de synth niet aan een specifiek merk of controller vastzit.
 
 Prioriteit: Must
 Sprint: Future
+
+Notitie: US-022 staat In Review met `UsbMidiHardwareInputAdapter`, CLI `midi diagnose-usb-input`, en `docs/usb_midi_hardware_input_v0.1.0.md`; afronding wacht op handmatig hardwaretestresultaat.
 
 ### US-023: Studio MIDI Routing Integratietest
 
