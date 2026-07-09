@@ -6,7 +6,7 @@ Doc versie: 0.1.0
 Datum: 2026-07-09  
 User Story: US-021 External MIDI Workflow In Logic  
 Epic: EPIC-007 Future MIDI En DAW Integratie  
-Status: In Review, wacht op handmatige Logic Pro test
+Status: Done
 
 ## Doel
 
@@ -78,9 +78,29 @@ Playback start zonder Logic foutmelding: ja/nee
 Opmerkingen/screenshot:
 ```
 
+## Testresultaat
+
+- CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-021-LOGIC-TESTRESULT
+- Datum/tijd: 2026-07-09 17:45
+- Tester: Michiel
+- MIDI Studio: IAC-besturingsbestand zichtbaar in Audio MIDI Setup
+- Python diagnose: geslaagd
+- Logic Pro route: External MIDI op IAC external MIDI channel 1 toegevoegd
+- Testactie: note gespeeld vanuit Logic Pro route
+- Geluid hoorbaar: nee
+- Beoordeling: geslaagd voor US-021
+
+Commandline bewijs:
+
+```text
+Virtual MIDI input backend is installed. Route a DAW track to 'python-d1-synth' when the live input story opens the port.
+```
+
+Belangrijk: geen geluid is verwacht in US-021. Deze story bewijst alleen dat de Logic/IAC-route en Python MIDI-backenddiagnose reproduceerbaar zijn. Live MIDI ontvangen, note events realtime naar de synth-engine sturen en audio triggeren horen bij de volgende implementatiestory.
+
 ## Acceptatie Voor US-021
 
 - De workflow is reproduceerbaar beschreven.
 - Logic Pro 12.3, IAC Driver, Audio MIDI Setup, External MIDI en `python-d1-synth` zijn expliciet genoemd.
 - De test blijft veilig: geen live CoreMIDI/RtMidi input in Python tijdens deze story.
-- US-021 blijft `In Review` totdat het handmatige Logic testresultaat is ontvangen.
+- Het handmatige Logic/IAC testresultaat is ontvangen en vastgelegd.

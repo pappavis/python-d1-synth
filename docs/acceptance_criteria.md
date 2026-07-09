@@ -209,8 +209,9 @@ Acceptatie op 2026-07-09:
 
 - `docs/logic_external_midi_workflow_v0.1.0.md` beschrijft een veilige Logic Pro 12.3 route via Audio MIDI Setup en IAC Driver.
 - De workflow bevat een handmatige testtemplate voor de klant.
-- De story blijft `In Review` totdat het Logic Pro testresultaat is ontvangen.
+- Het Logic Pro/IAC testresultaat is ontvangen en vastgelegd.
 - Er wordt geen live CoreMIDI/RtMidi inputpoort geopend in Python tijdens deze story.
+- Geen hoorbaar geluid is verwacht in US-021; live MIDI receive en audio trigger horen bij een volgende story.
 
 ## US-022: USB MIDI Hardware Input
 

@@ -194,7 +194,7 @@ Als Logic Pro gebruiker wil ik een external MIDI workflow onderzoeken, zodat de 
 Prioriteit: Should
 Sprint: Future
 
-Notitie: US-021 staat In Review met `docs/logic_external_midi_workflow_v0.1.0.md`; afronding wacht op handmatig Logic Pro 12.3 testresultaat.
+Notitie: US-021 is afgerond met `docs/logic_external_midi_workflow_v0.1.0.md`; het handmatige Logic/IAC testresultaat is ontvangen en geen geluid was verwacht voor deze story.
 
 ### US-022: USB MIDI Hardware Input
 

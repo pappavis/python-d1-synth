@@ -66,6 +66,8 @@ class TestDocumentationArtifacts:
             "midi diagnose-virtual-input",
             "Handmatige test",
             "Testresultaat",
+            "Beoordeling: geslaagd voor US-021",
+            "geen geluid is verwacht in US-021",
         )
         for term in required_terms:
             assert term in content
