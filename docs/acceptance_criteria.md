@@ -89,6 +89,15 @@ Acceptatie op 2026-07-09:
 
 - Given `python -m synth play --testsequence "ACGD"`, when de command draait, then vier noten achter elkaar hoorbaar zijn.
 - Given default mapping, then de reeks `A3 C4 G3 D4` gebruikt.
+- Given `--duration 0.25`, then vier noten samen ongeveer `1.0` seconde audio-buffer opleveren op `44100 Hz`.
+- Given `--debuglevel verbose`, then de CLI de sequence-events met starttijden toont.
+- Given `--audio-device "Scarlett 8i6 USB"`, then dezelfde device-selectie als US-011 gebruikt wordt.
+
+Acceptatie op 2026-07-09:
+
+- Geautomatiseerde tests verifieren `ACGD` als een stereo buffer van `44100` frames bij `44100 Hz`.
+- `play --testsequence "ACGD" --duration 0.25 --channel stereo --audio-device "Scarlett 8i6 USB" --debuglevel verbose` speelde hoorbaar een sequence af.
+- Verbose output toonde `A3@0.000s, C4@0.250s, G3@0.500s, D4@0.750s`.
 
 ## US-013: Channel Selection
 

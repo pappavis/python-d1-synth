@@ -107,6 +107,8 @@ Als gebruiker wil ik `python -m synth play --testsequence "ACGD"` kunnen uitvoer
 Prioriteit: Must
 Sprint: 1
 
+Notitie: deze story gebruikt de US-011 audio-device route, zodat `ACGD` ook expliciet via `Scarlett 8i6 USB` getest kan worden.
+
 ### US-013: Channel Selection
 
 Als gebruiker wil ik `--channel stereo`, `--channel left` en `--channel right`, zodat ik audio-output routes kan testen.

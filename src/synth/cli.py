@@ -7,7 +7,7 @@ from synth.config import PatchConfigLoader
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import SynthEngine, SynthEngineSettings
 from synth.midi import MidiDeviceScanner, MidiDeviceSelector
-from synth.notes import NoteEvent, NoteParser
+from synth.notes import NoteEvent, NoteParser, NoteSequence
 from synth.oscillators import Waveform
 from synth.wav_writer import WavWriter
 
@@ -80,6 +80,7 @@ class SynthCli:
         if args.testsequence:
             reporter.light(f"Playing testsequence {args.testsequence}")
             sequence = parser.parse_testsequence(args.testsequence, args.duration)
+            reporter.verbose(f"Sequence events: {self._format_sequence_events(sequence)}")
             buffer = engine.render_sequence(sequence)
         else:
             note_name = args.note if args.note else "C3"
@@ -148,6 +149,11 @@ class SynthCli:
                 f"{device.default_sample_rate:.0f}\t{device.host_api}\t{device.name}"
             )
         return 0
+
+    def _format_sequence_events(self, sequence: NoteSequence) -> str:
+        return ", ".join(
+            f"{event.note.name}{event.note.octave}@{event.start_seconds:.3f}s" for event in sequence.events
+        )
 
 
 def main(argv: list[str] | None = None) -> int:

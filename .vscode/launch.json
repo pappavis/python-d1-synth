@@ -24,6 +24,17 @@
       "args": ["play", "--note", "C3", "--duration", "1.0", "--channel", "stereo", "--audio-device", "Scarlett 8i6 USB", "--debuglevel", "verbose"]
     },
     {
+      "name": "python-d1-synth: play ACGD Scarlett",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synth",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "args": ["play", "--testsequence", "ACGD", "--duration", "0.25", "--channel", "stereo", "--audio-device", "Scarlett 8i6 USB", "--debuglevel", "verbose"]
+    },
+    {
       "name": "python-d1-synth: render patch",
       "type": "debugpy",
       "request": "launch",

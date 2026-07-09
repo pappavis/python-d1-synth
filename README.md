@@ -51,6 +51,12 @@ Speel een testsequence:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --testsequence "ACGD" --duration 0.25 --debuglevel light
 ```
 
+Speel dezelfde testsequence via je Scarlett 8i6 USB:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --testsequence "ACGD" --duration 0.25 --channel stereo --audio-device "Scarlett 8i6 USB" --debuglevel verbose
+```
+
 Scan audio devices:
 
 ```bash
@@ -89,6 +95,7 @@ De launch-config bevat:
 
 - `python-d1-synth: play C3`
 - `python-d1-synth: play C3 Scarlett`
+- `python-d1-synth: play ACGD Scarlett`
 - `python-d1-synth: render patch`
 - `python-d1-synth: list audio devices`
 - `python-d1-synth: list MIDI devices`

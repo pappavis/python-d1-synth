@@ -45,3 +45,33 @@ class TestSynthCli:
 
         assert exit_code == 0
         assert calls == [((441, 2), 2)]
+
+    def test_play_testsequence_renders_one_audio_buffer(self, monkeypatch, capsys) -> None:
+        calls = []
+
+        class FakePlayer:
+            def play(self, buffer, device=None):
+                calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        monkeypatch.setattr(synth.cli, "SoundDeviceAudioPlayer", FakePlayer)
+
+        exit_code = SynthCli().run(
+            [
+                "play",
+                "--testsequence",
+                "ACGD",
+                "--duration",
+                "0.25",
+                "--debuglevel",
+                "verbose",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert calls == [((44100, 2), 44100, "Scarlett 8i6 USB")]
+        assert "Playing testsequence ACGD" in output
+        assert "Sequence events: A3@0.000s, C4@0.250s, G3@0.500s, D4@0.750s" in output
+        assert "Audio buffer: 44100 frames, 44100 Hz" in output
