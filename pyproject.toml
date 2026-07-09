@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-d1-synth"
+version = "0.1.0"
+description = "Commandline-first Python monosynth MVP inspired by classic subtractive synth workflows."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "pappavis" }
+]
+dependencies = [
+  "numpy>=1.26",
+  "PyYAML>=6.0",
+  "sounddevice>=0.4.6"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0"
+]
+midi = [
+  "mido>=1.3",
+  "python-rtmidi>=1.5"
+]
+
+[project.scripts]
+python-d1-synth = "synth.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+

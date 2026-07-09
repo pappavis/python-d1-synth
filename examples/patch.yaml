@@ -1,0 +1,11 @@
+sample_rate: 44100
+duration_seconds: 1.0
+channel: stereo
+debuglevel: light
+oscillator:
+  waveform: sine
+  note: C3
+  amplitude: 0.2
+midi:
+  default_input_device: null
+

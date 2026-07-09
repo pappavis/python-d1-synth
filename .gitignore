@@ -1,0 +1,15 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules
+node_modules/
+dist/
+build/
+*.egg-info/
+outputs/**/*.wav
+outputs/**/*.png
+outputs/**/*.ndjson
