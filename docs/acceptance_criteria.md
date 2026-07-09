@@ -71,6 +71,13 @@ Acceptatie op 2026-07-09:
 
 - Given frequentie, duur en sample rate, when de square oscillator samples genereert, then het aantal samples klopt.
 - Given amplitude-limieten, then samples binnen `-1.0` en `1.0` blijven.
+- Given square output, then samples alleen de twee amplitude-niveaus `-amplitude` en `+amplitude` bevatten.
+- Given US-009 code wordt aangepast, then de betrokken code-docstrings ChatOD, backlog, epicnummer, user story nummer en versie bevatten.
+
+Acceptatie op 2026-07-09:
+
+- Geautomatiseerde tests verifieren square sample count, amplitude-limieten en discrete `-0.2`/`+0.2` niveaus.
+- Traceability-tests verifieren `CHATOD-20260709-D1PY-MVP-001`, `Sprint 1 Kanban Backlog`, `EPIC-003 Oscillator En Audio Rendering`, `US-009 Square Oscillator` en `Version: 0.1.0`.
 
 ## US-010: WAV Export
 

@@ -6,6 +6,16 @@ from numpy.typing import NDArray
 
 
 class Waveform(str, Enum):
+    """Supported oscillator waveform names.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-009
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-003 Oscillator En Audio Rendering
+    - User Story: US-009 Square Oscillator
+    - Version: 0.1.0
+    """
+
     SINE = "sine"
     SAW = "saw"
     SQUARE = "square"
@@ -13,6 +23,16 @@ class Waveform(str, Enum):
 
 @dataclass(frozen=True)
 class OscillatorSettings:
+    """Immutable oscillator settings used by sample generation.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-009
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-003 Oscillator En Audio Rendering
+    - User Story: US-009 Square Oscillator
+    - Version: 0.1.0
+    """
+
     waveform: Waveform
     sample_rate: int
     amplitude: float
@@ -25,6 +45,16 @@ class OscillatorSettings:
 
 
 class Oscillator:
+    """Generate oscillator samples for the selected waveform.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-009
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-003 Oscillator En Audio Rendering
+    - User Story: US-009 Square Oscillator
+    - Version: 0.1.0
+    """
+
     def __init__(self, settings: OscillatorSettings) -> None:
         self._settings = settings
 
@@ -48,4 +78,3 @@ class Oscillator:
             raise ValueError(f"Unsupported waveform '{self._settings.waveform}'")
 
         return (samples * self._settings.amplitude).astype(np.float32)
-

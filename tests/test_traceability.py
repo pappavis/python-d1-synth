@@ -2,6 +2,7 @@ from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
 from synth.debug import DebugLevel, DebugReporter
 from synth.notes import Note, NoteEvent, NoteParser, NoteSequence
+from synth.oscillators import Oscillator, OscillatorSettings, Waveform
 
 
 class TestCodeTraceability:
@@ -14,6 +15,21 @@ class TestCodeTraceability:
             "Version: 0.1.0",
         )
         traceable_objects = (OutputChannel, ChannelRouter, SynthCli)
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us009_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-003 Oscillator En Audio Rendering",
+            "US-009 Square Oscillator",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (Waveform, OscillatorSettings, Oscillator)
 
         for traceable_object in traceable_objects:
             doc = traceable_object.__doc__ or ""

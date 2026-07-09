@@ -84,6 +84,8 @@ Als gebruiker wil ik een square waveform kunnen genereren, zodat ik een tweede k
 Prioriteit: Should
 Sprint: 1
 
+Notitie: US-009 sluit square waveform technisch af met sample count, amplitude, discrete-level tests en code traceability metadata.
+
 ### US-010: WAV Export
 
 Als gebruiker wil ik een patch naar WAV kunnen renderen, zodat ik audio-output objectief kan inspecteren en bewaren.
