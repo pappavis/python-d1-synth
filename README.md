@@ -150,6 +150,10 @@ Nieuwe code die vanaf US-013 wordt toegevoegd of geraakt, krijgt traceerbare met
 
 ## MIDI Troubleshooting
 
+MIDI leerpad:
+
+- [MIDI Leerpad En Terminologie](docs/midi_learning_path_v0.1.0.md)
+
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
 De skeleton voert MIDI device scanning daarom in een apart subprocess uit. Als RtMidi crasht, blijft de hoofd-CLI overeind en meldt `midi list-devices` dat er geen devices gevonden zijn of dat de backend niet bruikbaar is.

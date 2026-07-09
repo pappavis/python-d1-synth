@@ -179,6 +179,13 @@ Acceptatie op 2026-07-09:
 - Given de klant geen MIDI-protocolervaring heeft, when de MIDI sprint start, then er eerst uitleg is over note on/off, note number, velocity, channel, clock en pitch bend.
 - Given een MIDI term wordt gebruikt in stories of code, then de README of docs een korte uitleg bevat.
 
+Acceptatie op 2026-07-09:
+
+- `docs/midi_learning_path_v0.1.0.md` bevat ChatOD, sprintnummer, doc versie, epic en `US-019 MIDI Leerpad En Terminologie`.
+- De gids verklaart `note on`, `note off`, `note number`, `velocity`, `channel`, `MIDI clock` en `pitch bend`.
+- De gids legt uit hoe MIDI later naar `NoteEvent` wordt gemapt.
+- De gids noemt Logic Pro 12.3 en Arturia KeyLab Mk3 als toekomstige context.
+
 ## US-020: Virtual MIDI Input Voor DAW
 
 - Given Logic Pro 12.3 of een andere DAW, when een virtual MIDI route beschikbaar is, then de DAW note events naar de synth kan sturen.

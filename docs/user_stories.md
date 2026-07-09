@@ -176,6 +176,8 @@ Als klant zonder MIDI-protocolervaring wil ik een begeleid MIDI-leerpad, zodat i
 Prioriteit: Must
 Sprint: Future
 
+Notitie: US-019 is afgerond met `docs/midi_learning_path_v0.1.0.md`, inclusief kernbegrippen, mapping naar `NoteEvent`, Logic Pro 12.3 context en Arturia KeyLab Mk3 context.
+
 ### US-020: Virtual MIDI Input Voor DAW
 
 Als Logic Pro 12.3 gebruiker wil ik de synth later via een virtual MIDI input kunnen bespelen, zodat Logic of een andere DAW note events naar de Python synth kan sturen.
