@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import json
+import platform
 import subprocess
 import sys
 
@@ -17,8 +18,31 @@ class MidiDeviceSelection:
     source: str
 
 
+@dataclass(frozen=True)
+class MidiDeviceScanResult:
+    devices: tuple[MidiDevice, ...]
+    error_message: str | None
+
+
 class MidiDeviceScanner:
+    def __init__(self, allow_unsafe_native_scan: bool = False) -> None:
+        self._allow_unsafe_native_scan = allow_unsafe_native_scan
+
+    def scan(self) -> MidiDeviceScanResult:
+        if platform.system() == "Darwin" and not self._allow_unsafe_native_scan:
+            return MidiDeviceScanResult(
+                devices=tuple(),
+                error_message=(
+                    "Native RtMidi/CoreMIDI scanning is disabled by default on macOS because it can abort the "
+                    "Python process. Use --unsafe-rtmidi-scan only when you intentionally want to test it."
+                ),
+            )
+        return self._scan_with_mido_subprocess()
+
     def list_devices(self) -> tuple[MidiDevice, ...]:
+        return self.scan().devices
+
+    def _scan_with_mido_subprocess(self) -> MidiDeviceScanResult:
         scan_code = """
 import json
 try:
@@ -43,16 +67,19 @@ print(json.dumps(devices))
                 timeout=5.0,
             )
         except (OSError, subprocess.SubprocessError):
-            return tuple()
+            return MidiDeviceScanResult(devices=tuple(), error_message="MIDI device scan subprocess failed.")
         if completed.returncode != 0:
-            return tuple()
+            return MidiDeviceScanResult(
+                devices=tuple(),
+                error_message="MIDI backend failed while scanning devices.",
+            )
 
         try:
             raw_devices = json.loads(completed.stdout)
         except json.JSONDecodeError:
-            return tuple()
+            return MidiDeviceScanResult(devices=tuple(), error_message="MIDI backend returned invalid scan data.")
 
-        return tuple(
+        devices = tuple(
             MidiDevice(
                 identifier=str(raw["identifier"]),
                 name=str(raw["name"]),
@@ -61,6 +88,7 @@ print(json.dumps(devices))
             for raw in raw_devices
             if isinstance(raw, dict)
         )
+        return MidiDeviceScanResult(devices=devices, error_message=None)
 
 
 class MidiDeviceSelector:

@@ -1,7 +1,8 @@
 import argparse
+import sys
 from pathlib import Path
 
-from synth.audio import OutputChannel, SoundDeviceAudioPlayer
+from synth.audio import AudioDeviceScanner, AudioDeviceSelector, OutputChannel, SoundDeviceAudioPlayer
 from synth.config import PatchConfigLoader
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import SynthEngine, SynthEngineSettings
@@ -32,7 +33,14 @@ class SynthCli:
         play.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
         play.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
         play.add_argument("--midi-device")
+        play.add_argument("--audio-device")
         play.set_defaults(handler=self._handle_play)
+
+        audio = subparsers.add_parser("audio", help="Audio device utilities.")
+        audio_subparsers = audio.add_subparsers(dest="audio_command", required=True)
+        audio_devices = audio_subparsers.add_parser("list-devices", help="List detected audio devices.")
+        audio_devices.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        audio_devices.set_defaults(handler=self._handle_audio_list_devices)
 
         render = subparsers.add_parser("render", help="Render a YAML patch to WAV.")
         render.add_argument("patch")
@@ -44,6 +52,7 @@ class SynthCli:
         midi_subparsers = midi.add_subparsers(dest="midi_command", required=True)
         list_devices = midi_subparsers.add_parser("list-devices", help="List detected MIDI devices.")
         list_devices.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        list_devices.add_argument("--unsafe-rtmidi-scan", action="store_true")
         list_devices.set_defaults(handler=self._handle_midi_list_devices)
 
         return parser
@@ -55,6 +64,9 @@ class SynthCli:
         selection = selector.select(args.midi_device, None)
         if selection.selected_device is not None:
             reporter.light(f"Selected MIDI device from {selection.source}: {selection.selected_device}")
+        audio_selection = AudioDeviceSelector().select(args.audio_device)
+        if audio_selection.sounddevice_value is not None:
+            reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
 
         engine = SynthEngine(
             SynthEngineSettings(
@@ -75,7 +87,12 @@ class SynthCli:
             note = parser.parse(note_name)
             buffer = engine.render_note(NoteEvent(note=note, duration_seconds=args.duration, velocity=1.0))
 
-        SoundDeviceAudioPlayer().play(buffer)
+        reporter.verbose(f"Audio buffer: {buffer.samples.shape[0]} frames, {buffer.sample_rate} Hz")
+        try:
+            SoundDeviceAudioPlayer().play(buffer, device=audio_selection.sounddevice_value)
+        except RuntimeError as exc:
+            print(f"Audio playback error: {exc}", file=sys.stderr)
+            return 2
         return 0
 
     def _handle_render(self, args: argparse.Namespace) -> int:
@@ -102,8 +119,11 @@ class SynthCli:
 
     def _handle_midi_list_devices(self, args: argparse.Namespace) -> int:
         reporter = DebugReporter(DebugLevel(args.debuglevel))
-        devices = MidiDeviceScanner().list_devices()
+        result = MidiDeviceScanner(allow_unsafe_native_scan=args.unsafe_rtmidi_scan).scan()
+        devices = result.devices
         if not devices:
+            if result.error_message is not None:
+                reporter.light(result.error_message)
             reporter.light("No MIDI devices detected or optional MIDI backend is not installed.")
             print("No MIDI devices found.")
             return 0
@@ -111,7 +131,24 @@ class SynthCli:
             print(f"{device.identifier}\t{device.direction}\t{device.name}")
         return 0
 
+    def _handle_audio_list_devices(self, args: argparse.Namespace) -> int:
+        reporter = DebugReporter(DebugLevel(args.debuglevel))
+        result = AudioDeviceScanner().scan()
+        output_devices = tuple(device for device in result.devices if device.is_output())
+        if not output_devices:
+            if result.error_message is not None:
+                reporter.light(result.error_message)
+            reporter.light("No audio output devices detected or sounddevice could not query PortAudio.")
+            print("No audio output devices found.")
+            return 0
+        print("id\toutputs\tdefault_samplerate\thost_api\tname")
+        for device in output_devices:
+            print(
+                f"{device.identifier}\t{device.max_output_channels}\t"
+                f"{device.default_sample_rate:.0f}\t{device.host_api}\t{device.name}"
+            )
+        return 0
+
 
 def main(argv: list[str] | None = None) -> int:
     return SynthCli().run(argv)
-

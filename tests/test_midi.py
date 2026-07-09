@@ -16,7 +16,8 @@ class TestMidiDeviceSelector:
 
 
 class TestMidiDeviceScanner:
-    def test_scanner_returns_tuple_when_backend_unavailable_or_blocked(self) -> None:
-        devices = MidiDeviceScanner().list_devices()
+    def test_default_scanner_returns_safely_without_native_scan(self) -> None:
+        result = MidiDeviceScanner().scan()
 
-        assert isinstance(devices, tuple)
+        assert result.devices == tuple()
+        assert result.error_message is None or isinstance(result.error_message, str)

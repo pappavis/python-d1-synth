@@ -13,6 +13,17 @@
       "args": ["play", "--note", "C3", "--duration", "1.0", "--debuglevel", "light"]
     },
     {
+      "name": "python-d1-synth: play C3 Scarlett",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synth",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "args": ["play", "--note", "C3", "--duration", "1.0", "--channel", "stereo", "--audio-device", "Scarlett 8i6 USB", "--debuglevel", "verbose"]
+    },
+    {
       "name": "python-d1-synth: render patch",
       "type": "debugpy",
       "request": "launch",
@@ -33,7 +44,17 @@
         "PYTHONPATH": "${workspaceFolder}/src"
       },
       "args": ["midi", "list-devices", "--debuglevel", "light"]
+    },
+    {
+      "name": "python-d1-synth: list audio devices",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synth",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "args": ["audio", "list-devices", "--debuglevel", "light"]
     }
   ]
 }
-

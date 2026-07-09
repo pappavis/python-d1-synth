@@ -39,10 +39,22 @@ Speel een noot:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --channel stereo --debuglevel light
 ```
 
+Speel een noot via je Scarlett 8i6 USB:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --note C3 --duration 1.0 --channel stereo --audio-device "Scarlett 8i6 USB" --debuglevel verbose
+```
+
 Speel een testsequence:
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth play --testsequence "ACGD" --duration 0.25 --debuglevel light
+```
+
+Scan audio devices:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth audio list-devices --debuglevel light
 ```
 
 Scan MIDI devices:
@@ -76,14 +88,43 @@ code /Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_n
 De launch-config bevat:
 
 - `python-d1-synth: play C3`
+- `python-d1-synth: play C3 Scarlett`
 - `python-d1-synth: render patch`
+- `python-d1-synth: list audio devices`
 - `python-d1-synth: list MIDI devices`
 
 Als VS Code jouw venv niet automatisch kiest, zet de interpreter handmatig naar jouw daadwerkelijke venv-python.
 
 ## MIDI Troubleshooting
 
-Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De skeleton voert MIDI device scanning daarom in een apart subprocess uit. Als RtMidi crasht, blijft de hoofd-CLI overeind en meldt `midi list-devices` dat er geen devices gevonden zijn of dat de backend niet bruikbaar is.
+Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
+
+De skeleton voert MIDI device scanning daarom in een apart subprocess uit. Als RtMidi crasht, blijft de hoofd-CLI overeind en meldt `midi list-devices` dat er geen devices gevonden zijn of dat de backend niet bruikbaar is.
+
+Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
+
+```bash
+PYTHONPATH=src python -m synth midi list-devices --debuglevel light
+```
+
+Alleen voor bewuste backenddiagnose:
+
+```bash
+PYTHONPATH=src python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel verbose
+```
+
+## Audio Troubleshooting
+
+Je macOS audio-instellingen tonen `Scarlett 8i6 USB` als outputdevice/default. Test eerst vanuit je gewone Terminal, niet vanuit een gesandboxte Codex-run:
+
+```bash
+cd /Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth
+source /Volumes/data1/michiele/venv/venv3.12/bin/activate
+PYTHONPATH=src python -m synth audio list-devices --debuglevel verbose
+PYTHONPATH=src python -m synth play --note C3 --duration 1.0 --channel stereo --audio-device "Scarlett 8i6 USB" --debuglevel verbose
+```
+
+Als `audio list-devices` geen devices toont in Codex maar macOS ze wel toont, is dat waarschijnlijk sessie-/permissioncontext. Voer de test dan direct in je eigen Terminal of VS Code terminal uit.
 
 ## Sprint 1 Scope
 
@@ -96,6 +137,7 @@ In scope:
 - Sine/saw/square oscillator basis.
 - Stereo/left/right channel routing.
 - WAV writer.
+- Audio device discovery and `--audio-device` selection.
 - Optional realtime playback via `sounddevice`.
 - Optional MIDI device discovery via `mido`.
 - Pytest test skeleton.

@@ -98,6 +98,8 @@ Als gebruiker wil ik `python -m synth play --note C3` kunnen uitvoeren, zodat ik
 Prioriteit: Must
 Sprint: 1
 
+Notitie: voor macOS troubleshooting moet deze story ook `audio list-devices` en `--audio-device` ondersteunen, met `Scarlett 8i6 USB` als concrete klanttest.
+
 ### US-012: Play Testsequence
 
 Als gebruiker wil ik `python -m synth play --testsequence "ACGD"` kunnen uitvoeren, zodat ik een simpele melodische test kan horen.

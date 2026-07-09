@@ -76,6 +76,14 @@ Status: Draft for customer review
 - Given `python -m synth play --note C3`, when de command draait, then realtime audio hoorbaar wordt afgespeeld.
 - Given geen duur is meegegeven, then default `1.0` seconde wordt gebruikt.
 - Given `--duration 2.5`, then playback ongeveer `2.5` seconden duurt.
+- Given `python -m synth audio list-devices`, when de command draait in een gewone macOS Terminal of VS Code terminal, then beschikbare output devices zoals `Scarlett 8i6 USB` zichtbaar kunnen worden.
+- Given `--audio-device "Scarlett 8i6 USB"`, when de command draait, then `sounddevice` dit device als output probeert te gebruiken.
+- Given audio playback faalt, then de CLI een duidelijke foutmelding toont en adviseert om `audio list-devices` te draaien.
+
+Acceptatie op 2026-07-09:
+
+- `audio list-devices` toont `Scarlett 8i6 USB` als Core Audio outputdevice.
+- `play --note C3 --duration 1.0 --channel stereo --audio-device "Scarlett 8i6 USB"` speelde hoorbaar geluid af.
 
 ## US-012: Play Testsequence
 
@@ -156,3 +164,4 @@ Status: Draft for customer review
 - Given een YAML config met `midi.default_input_device`, when geen CLI override is opgegeven, then de synth de config-default gebruikt.
 - Given zowel CLI device als YAML default bestaan, then de CLI keuze voorrang krijgt.
 - Given een gekozen device niet gevonden wordt, then de CLI een duidelijke foutmelding toont met advies om opnieuw te scannen.
+- Given macOS RtMidi/CoreMIDI scanning een native abort kan veroorzaken, then de CLI voert die scan niet standaard uit en vereist een expliciete unsafe diagnostic flag.
