@@ -5,6 +5,16 @@ import re
 
 @dataclass(frozen=True)
 class Note:
+    """Parsed musical note with calculated frequency.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-006
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-002 Muzikale Basisdata
+    - User Story: US-006 NoteEvent En NoteSequence Model
+    - Version: 0.1.0
+    """
+
     name: str
     octave: int
     frequency_hz: float
@@ -12,6 +22,16 @@ class Note:
 
 @dataclass(frozen=True)
 class NoteEvent:
+    """Internal timed note event used by the synth engine and future MIDI mapping.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-006
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-002 Muzikale Basisdata
+    - User Story: US-006 NoteEvent En NoteSequence Model
+    - Version: 0.1.0
+    """
+
     note: Note
     duration_seconds: float
     velocity: float
@@ -28,7 +48,23 @@ class NoteEvent:
 
 @dataclass(frozen=True)
 class NoteSequence:
+    """Ordered immutable collection of note events.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-006
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-002 Muzikale Basisdata
+    - User Story: US-006 NoteEvent En NoteSequence Model
+    - Version: 0.1.0
+    """
+
     events: tuple[NoteEvent, ...]
+
+    def __post_init__(self) -> None:
+        events = tuple(self.events)
+        if any(not isinstance(event, NoteEvent) for event in events):
+            raise ValueError("events must contain NoteEvent instances")
+        object.__setattr__(self, "events", events)
 
     def total_duration_seconds(self) -> float:
         if not self.events:
@@ -37,6 +73,16 @@ class NoteSequence:
 
 
 class NoteParser:
+    """Parse note names and simple test sequences into the internal note model.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-006
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-002 Muzikale Basisdata
+    - User Story: US-006 NoteEvent En NoteSequence Model
+    - Version: 0.1.0
+    """
+
     def parse(self, value: str) -> Note:
         match = re.fullmatch(r"([A-Ga-g])([#b]?)(-?\d+)", value.strip())
         if match is None:
@@ -104,4 +150,3 @@ class NoteParser:
             "G": 3,
         }
         return octave_map[letter.upper()]
-

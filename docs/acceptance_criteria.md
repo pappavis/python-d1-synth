@@ -48,6 +48,13 @@ Status: Draft for customer review
 - Given een noot, duur en velocity, when een `NoteEvent` wordt gemaakt, then het object alle waarden valide bevat.
 - Given meerdere events, when een `NoteSequence` wordt gemaakt, then de volgorde behouden blijft.
 - Given toekomstige MIDI input, then het model voldoende velden heeft voor note, velocity, duration en timing.
+- Given US-006 code wordt aangepast, then de betrokken code-docstrings ChatOD, backlog, epicnummer, user story nummer en versie bevatten.
+
+Acceptatie op 2026-07-09:
+
+- Geautomatiseerde tests verifieren `NoteEvent` validatie voor duration, velocity en start time.
+- Geautomatiseerde tests verifieren dat `NoteSequence` event-volgorde behoudt, events naar tuple normaliseert en non-`NoteEvent` items weigert.
+- Traceability-tests verifieren `CHATOD-20260709-D1PY-MVP-001`, `Sprint 1 Kanban Backlog`, `EPIC-002 Muzikale Basisdata`, `US-006 NoteEvent En NoteSequence Model` en `Version: 0.1.0`.
 
 ## US-007: Sine Oscillator
 

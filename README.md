@@ -132,8 +132,8 @@ Nieuwe code die vanaf US-013 wordt toegevoegd of geraakt, krijgt traceerbare met
 
 - Chatlog ID, bijvoorbeeld `CHATOD-20260709-D1PY-MVP-001`.
 - Backlognaam, bijvoorbeeld `Sprint 1 Kanban Backlog`.
-- Epicnummer en epicnaam, bijvoorbeeld `EPIC-004 Realtime CLI Playback` of `EPIC-005 Configuratie En CLI`.
-- User story nummer en titel, bijvoorbeeld `US-013 Channel Selection` of `US-016 Debuglevel`.
+- Epicnummer en epicnaam, bijvoorbeeld `EPIC-002 Muzikale Basisdata`, `EPIC-004 Realtime CLI Playback` of `EPIC-005 Configuratie En CLI`.
+- User story nummer en titel, bijvoorbeeld `US-006 NoteEvent En NoteSequence Model`, `US-013 Channel Selection` of `US-016 Debuglevel`.
 - Projectversie, bijvoorbeeld `0.1.0`.
 
 ## MIDI Troubleshooting

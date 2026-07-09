@@ -59,6 +59,8 @@ Als toekomstige MIDI-gebruiker wil ik een intern note-event model, zodat MIDI la
 Prioriteit: Must
 Sprint: 1
 
+Notitie: US-006 sluit het interne note-event model af met validatie, volgordebehoud, immutable sequence opslag en code traceability metadata.
+
 ## Epic E3: Oscillator En Audio Rendering
 
 ### US-007: Sine Oscillator
