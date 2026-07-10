@@ -1,17 +1,18 @@
 # Bestand: test_cli.py
 # Versienummer: 0.1.0
-# Doel: CLI tests voor audio, playback, MIDI diagnostics en device selectie.
+# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en live MIDI receive-readiness.
 # Sprint: Future MIDI/DAW
-# User-Story: US-025 MIDI Device Discovery En Default Selection
-# Actie: US-025-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+# User-Story: US-026 Live MIDI Input Receive Loop
+# Actie: US-026-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
 
 import numpy as np
 
 from synth.audio import AudioDevice
 import synth.cli
 from synth.cli import SynthCli
-from synth.midi import MidiDevice
+from synth.midi import MidiDevice, MidiInputReceiveResult, MidiMessage
+from synth.notes import NoteEvent, NoteParser, NoteSequence
 
 
 class TestSynthCli:
@@ -430,3 +431,60 @@ class TestSynthCli:
         assert exit_code == 0
         assert "Requested MIDI input device not found" in output
         assert "Available input devices: input:0 Generic Keyboard" in output
+
+    def test_midi_listen_receives_messages_from_selected_input(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (MidiDevice(identifier="input:0", name="Generic Keyboard", direction="input"),),
+                        "error_message": None,
+                    },
+                )()
+
+        class FakeReceiver:
+            def receive(self, settings):
+                assert settings.input_name == "Generic Keyboard"
+                assert settings.max_messages == 2
+                assert settings.timeout_seconds == 0.5
+                note = NoteParser().parse("C4")
+                return MidiInputReceiveResult(
+                    input_name=settings.input_name,
+                    received_messages=(
+                        MidiMessage(message_type="note_on", note_number=60, velocity=90, channel=1, time_seconds=0.0),
+                        MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.25),
+                    ),
+                    note_sequence=NoteSequence(
+                        events=(NoteEvent(note=note, duration_seconds=0.25, velocity=90 / 127),)
+                    ),
+                    message="Received 2 MIDI note messages from Generic Keyboard.",
+                )
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+        monkeypatch.setattr(synth.cli, "LiveMidiInputReceiver", FakeReceiver)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "listen",
+                "--midi-device",
+                "Generic",
+                "--max-messages",
+                "2",
+                "--timeout",
+                "0.5",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Selected MIDI input device from cli: input:0 Generic Keyboard" in output
+        assert "Received 2 MIDI note messages from Generic Keyboard." in output
+        assert "Received sequence: C4@0.000s" in output

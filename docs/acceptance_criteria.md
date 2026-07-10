@@ -291,3 +291,35 @@ Acceptatie op 2026-07-10:
 - `docs/midi_device_discovery_default_selection_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-025 MIDI Device Discovery En Default Selection`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-025 MIDI Device Discovery En Default Selection` en `Version: 0.1.0`.
 - Er zijn geen hardcoded MIDI device names toegevoegd.
+
+## US-026: Live MIDI Input Receive Loop
+
+- Given een gekozen MIDI input device, when `midi listen` draait, then de command bounded luistert met `--max-messages` en `--timeout`.
+- Given een backend note message, when de normalizer draait, then er een `MidiMessage` ontstaat met 1-based channel.
+- Given een niet-note MIDI message, when US-026 draait, then het bericht wordt genegeerd.
+- Given ontvangen note messages, when de receiver klaar is, then US-024 mapping een `NoteSequence` oplevert.
+- Given hardwaretest nodig is, then de implementatie pauzeert voor klanttestresultaat.
+
+Acceptatie op 2026-07-10:
+
+- `MidiMessageNormalizer` ondersteunt note-on en note-off.
+- `LiveMidiInputReceiver` gebruikt een fake backend in tests.
+- `midi listen` selecteert input via US-025 selector.
+- `midi listen` print ontvangen message count en gemapte sequence.
+- `docs/live_midi_input_receive_loop_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-026 Live MIDI Input Receive Loop`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-026 Live MIDI Input Receive Loop` en `Version: 0.1.0`.
+- US-026 bevat geen Logic virtual device.
+- US-026 bevat geen realtime audio-trigger.
+- Er zijn geen hardcoded MIDI device names toegevoegd.
+
+## US-027: Virtual MIDI Port Voor Logic/DAW
+
+- Given Logic Pro of een andere DAW, when de synth gestart wordt in virtual-port mode, then een MIDI destination zichtbaar kan worden.
+- Given de DAW naar de virtual port routeert, then de synth MIDI note events kan ontvangen.
+- Given macOS CoreMIDI/RtMidi beperkingen, then de implementatie veilig faalt met duidelijke diagnostiek.
+
+## US-028: External MIDI Audio Trigger Integratie
+
+- Given ontvangen `NoteEvent` items, when live audio-triggering actief is, then de synth hoorbaar audio via de gekozen audio-output maakt.
+- Given meerdere inputbronnen, then de audio-trigger dezelfde interne synth-engine gebruikt als CLI play/render.
+- Given audio- of MIDI-backend faalt, then de CLI duidelijke troubleshooting output geeft.

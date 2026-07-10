@@ -1,10 +1,10 @@
 # Bestand: cli.py
 # Versienummer: 0.1.0
-# Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI device workflows.
+# Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI receive workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-025 MIDI Device Discovery En Default Selection
-# Actie: US-025-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+# User-Story: US-026 Live MIDI Input Receive Loop
+# Actie: US-026-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
 
 import argparse
 import importlib.util
@@ -15,7 +15,14 @@ from synth.audio import AudioDeviceScanner, AudioDeviceSelector, OutputChannel, 
 from synth.config import PatchConfigLoader
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import SynthEngine, SynthEngineSettings
-from synth.midi import MidiDeviceScanner, MidiDeviceSelector, UsbMidiHardwareInputAdapter, VirtualMidiInputAdapter
+from synth.midi import (
+    LiveMidiInputReceiver,
+    MidiDeviceScanner,
+    MidiDeviceSelector,
+    MidiInputReceiveSettings,
+    UsbMidiHardwareInputAdapter,
+    VirtualMidiInputAdapter,
+)
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 from synth.oscillators import Waveform
 from synth.wav_writer import WavWriter
@@ -35,6 +42,7 @@ class SynthCli:
     - User Story: US-020 Virtual MIDI Input Voor DAW
     - User Story: US-022 USB MIDI Hardware Input
     - User Story: US-025 MIDI Device Discovery En Default Selection
+    - User Story: US-026 Live MIDI Input Receive Loop
     - Version: 0.1.0
     """
 
@@ -96,6 +104,18 @@ class SynthCli:
         usb_input.add_argument("--config")
         usb_input.add_argument("--unsafe-rtmidi-scan", action="store_true")
         usb_input.set_defaults(handler=self._handle_midi_diagnose_usb_input)
+        listen = midi_subparsers.add_parser(
+            "listen",
+            help="Listen to a selected MIDI input for a bounded number of note messages.",
+        )
+        listen.add_argument("--midi-device")
+        listen.add_argument("--midi-device-id")
+        listen.add_argument("--config")
+        listen.add_argument("--unsafe-rtmidi-scan", action="store_true")
+        listen.add_argument("--max-messages", type=int, default=10)
+        listen.add_argument("--timeout", type=float, default=5.0)
+        listen.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        listen.set_defaults(handler=self._handle_midi_listen)
 
         return parser
 
@@ -232,6 +252,45 @@ class SynthCli:
             print("Compatible USB MIDI inputs:")
             for device in diagnostic.compatible_devices:
                 print(f"{device.identifier}\t{device.name}")
+        return 0
+
+    def _handle_midi_listen(self, args: argparse.Namespace) -> int:
+        reporter = DebugReporter(DebugLevel(args.debuglevel))
+        result = MidiDeviceScanner(allow_unsafe_native_scan=args.unsafe_rtmidi_scan).scan()
+        devices = result.devices
+        if not devices:
+            self._report_midi_scan_details(reporter, result)
+            if result.error_message is not None:
+                reporter.light(result.error_message)
+            print("No MIDI input devices found. Run midi list-devices before midi listen.")
+            return 0
+
+        config_device = self._load_midi_default_device(args.config)
+        selection = MidiDeviceSelector().select_input_device(
+            devices,
+            cli_device=args.midi_device,
+            cli_device_id=args.midi_device_id,
+            config_device=config_device,
+        )
+        if selection.message:
+            reporter.light(selection.message)
+        if selection.matched_device is None:
+            return 0
+
+        settings = MidiInputReceiveSettings(
+            input_name=selection.matched_device.name,
+            max_messages=args.max_messages,
+            timeout_seconds=args.timeout,
+        )
+        try:
+            result = LiveMidiInputReceiver().receive(settings)
+        except RuntimeError as exc:
+            print(f"MIDI listen error: {exc}", file=sys.stderr)
+            return 2
+
+        print(result.message)
+        if result.note_sequence.events:
+            print(f"Received sequence: {self._format_sequence_events(result.note_sequence)}")
         return 0
 
     def _handle_audio_list_devices(self, args: argparse.Namespace) -> int:

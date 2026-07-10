@@ -56,6 +56,9 @@ const futureStories = [
   ["US-023", "Story", "Future MIDI En DAW Integratie", "Studio MIDI Routing Integratietest", "Done", "Should", "QA Engineer", 3, "Future", "Testmatrix dekt DAW bus, USB MIDI, controllers, guitar MIDI, synth hardware, CircuitPython/ESP32, Windows en Raspberry Pi.", "Integratietestplan ontbreekt.", "Routing matrix, host snapshots en placeholder-regel voor device-namen.", "US-022", "docs/studio_midi_routing_integration_v0.1.0.md legt KodeklopperM4 en MuziekM4 snapshots vast als testdata, niet als code constants."],
   ["US-024", "Story", "Future MIDI En DAW Integratie", "MIDI Naar NoteEvent Mapping", "Done", "Must", "DSP Engineer", 5, "Future", "MIDI note on/off wordt correct naar NoteEvent gemapt, inclusief channel en genormaliseerde velocity.", "Mapper tests falen voor note number, channel, velocity, velocity-zero note-off en ontbrekende note-off.", "MidiToNoteEventMapper class en VirtualMidiInputAdapter hergebruik van dezelfde mapper.", "US-006, US-019", "pytest groen: note number 60 -> C4, channels blijven gescheiden, default duration werkt en docs/traceability zijn bijgewerkt."],
   ["US-025", "Story", "Future MIDI En DAW Integratie", "MIDI Device Discovery En Default Selection", "Done", "Must", "Lead Developer", 3, "Future", "CLI scant MIDI devices veilig en kiest input via CLI naam, CLI identifier of YAML default.", "Device discovery, identifier selectie, config precedence en missing-device tests falen.", "MidiDeviceSelector, MidiDeviceSelection en midi list-devices flags --midi-device, --midi-device-id en --config.", "US-019, US-020, US-022", "pytest groen: CLI wint van YAML, output devices worden niet als input geselecteerd, geen hardcoded MIDI device names."],
+  ["US-026", "Story", "Future MIDI En DAW Integratie", "Live MIDI Input Receive Loop", "Done", "Must", "Lead Developer", 5, "Future", "CLI luistert bounded naar gekozen MIDI input en mapped note messages naar NoteSequence.", "Normalizer, fake receive backend en midi listen CLI tests falen.", "MidiMessageNormalizer, LiveMidiInputReceiver, MidiInputReceiveSettings/Result en midi listen command.", "US-024, US-025", "pytest groen: fake backend ontvangt note_on/off, geen Logic virtual device en geen realtime audio-trigger."],
+  ["US-027", "Story", "Future MIDI En DAW Integratie", "Virtual MIDI Port Voor Logic/DAW", "To Do", "Should", "Lead Developer", 5, "Future", "python-d1-synth kan later als virtual MIDI destination zichtbaar worden voor Logic/DAW.", "Virtual port creation tests ontbreken.", "Nog niet implementeren; eerst US-026 hardwaretest en design review.", "US-026", "Bewust uit US-026 gehouden om side quest scope creep te voorkomen."],
+  ["US-028", "Story", "Future MIDI En DAW Integratie", "External MIDI Audio Trigger Integratie", "To Do", "Must", "DSP Engineer", 8, "Future", "Ontvangen MIDI note events triggeren hoorbaar audio via de bestaande synth engine.", "Live MIDI naar audio integration tests ontbreken.", "Nog niet implementeren; vereist receive-loop validatie en audio scheduling ontwerp.", "US-026, US-027", "Bewust uit US-026 gehouden; dit is de eerste live speelbare MIDI-audio story."],
 ];
 
 board.showGridLines = false;
@@ -113,8 +116,8 @@ future.getRange("A1").values = [["python-d1-synth Future MIDI/DAW Backlog"]];
 future.getRange("A2:N2").merge();
 future.getRange("A2").values = [["Scope mutation: Logic Pro 12.3, other DAWs, generic USB MIDI, external MIDI, RaspiMidiHub, physical MIDI hub, MiniFreak, Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave"]];
 future.getRange("A4:N4").values = [headers];
-future.getRange("A5:N11").values = futureStories;
-const futureTable = future.tables.add("A4:N11", true, "FutureMidiDawBacklog");
+future.getRange("A5:N14").values = futureStories;
+const futureTable = future.tables.add("A4:N14", true, "FutureMidiDawBacklog");
 futureTable.style = "TableStyleMedium4";
 futureTable.showFilterButton = true;
 future.getRange("A1:N1").format = {
@@ -132,14 +135,14 @@ future.getRange("A4:N4").format = {
   font: { bold: true, color: "#FFFFFF" },
   wrapText: true,
 };
-future.getRange("A5:N11").format = {
+future.getRange("A5:N14").format = {
   wrapText: true,
   verticalAlignment: "top",
 };
-future.getRange("H5:H11").setNumberFormat("0");
-future.getRange("A4:N11").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
-future.getRange("A4:N11").format.autofitColumns();
-future.getRange("A4:N11").format.autofitRows();
+future.getRange("H5:H14").setNumberFormat("0");
+future.getRange("A4:N14").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
+future.getRange("A4:N14").format.autofitColumns();
+future.getRange("A4:N14").format.autofitRows();
 future.freezePanes.freezeRows(4);
 future.getRange("A:A").format.columnWidth = 10;
 future.getRange("B:B").format.columnWidth = 10;
@@ -175,9 +178,9 @@ summary.getRange("B4:B9").formulas = [
   ["=COUNTIF('Sprint 1 Board'!F5:F22,\"Should\")"],
   ["=SUM('Sprint 1 Board'!H5:H22)"],
   ["=COUNTIF('Sprint 1 Board'!E5:E22,\"In Review\")"],
-  ["=COUNTA('Future MIDI DAW'!A5:A11)"],
+  ["=COUNTA('Future MIDI DAW'!A5:A14)"],
 ];
-summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H11)"]];
+summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H14)"]];
 summary.getRange("D3:F8").values = [
   ["Status", "Count", "Story Points"],
   ["To Do", null, null],
@@ -246,7 +249,7 @@ await fs.writeFile(`${outputDir}/sprint_1_summary_preview.png`, new Uint8Array(a
 
 const futurePreview = await workbook.render({
   sheetName: "Future MIDI DAW",
-  range: "A1:N11",
+  range: "A1:N14",
   scale: 1,
   format: "png",
 });
@@ -264,9 +267,9 @@ console.log(inspect.ndjson);
 
 const futureInspect = await workbook.inspect({
   kind: "table",
-  range: "'Future MIDI DAW'!A4:N11",
+  range: "'Future MIDI DAW'!A4:N14",
   include: "values,formulas",
-  tableMaxRows: 12,
+  tableMaxRows: 15,
   tableMaxCols: 14,
   maxChars: 5000,
 });

@@ -2,20 +2,25 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-025 MIDI Device Discovery En Default Selection
-# Actie: US-025-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+# User-Story: US-026 Live MIDI Input Receive Loop
+# Actie: US-026-TRACEABILITY-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
 
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
 from synth.debug import DebugLevel, DebugReporter
 from synth.midi import (
+    LiveMidiInputReceiver,
+    MidiInputReceiveResult,
+    MidiInputReceiveSettings,
     MidiDeviceScanner,
     MidiDeviceScanResult,
     MidiDeviceSelection,
     MidiDeviceSelector,
+    MidiMessageNormalizer,
     MidiMessage,
     MidiToNoteEventMapper,
+    MidoMidiInputBackend,
     UsbMidiHardwareInputAdapter,
     UsbMidiInputDiagnostic,
     VirtualMidiInputAdapter,
@@ -133,6 +138,28 @@ class TestCodeTraceability:
             "Version: 0.1.0",
         )
         traceable_objects = (MidiDeviceSelection, MidiDeviceSelector, SynthCli)
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us026_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-026 Live MIDI Input Receive Loop",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            MidiInputReceiveSettings,
+            MidiInputReceiveResult,
+            MidiMessageNormalizer,
+            MidoMidiInputBackend,
+            LiveMidiInputReceiver,
+            SynthCli,
+        )
 
         for traceable_object in traceable_objects:
             doc = traceable_object.__doc__ or ""

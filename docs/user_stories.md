@@ -231,3 +231,30 @@ Prioriteit: Must
 Sprint: Future
 
 Notitie: US-025 is Done met `MidiDeviceSelector`, `MidiDeviceSelection`, CLI flags `--midi-device`, `--midi-device-id` en `--config`, plus `docs/midi_device_discovery_default_selection_v0.1.0.md`. CLI selectie wint van YAML default, output devices worden niet als input gekozen en er zijn geen hardcoded MIDI device names toegevoegd.
+
+### US-026: Live MIDI Input Receive Loop
+
+Als gebruiker wil ik de commandline synth bounded naar een gekozen MIDI input kunnen laten luisteren, zodat inkomende note messages veilig naar het interne `MidiMessage` en `NoteSequence` model worden vertaald.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: US-026 is Done met `LiveMidiInputReceiver`, `MidiMessageNormalizer`, `MidiInputReceiveSettings`, `MidiInputReceiveResult`, CLI command `midi listen`, fake-backend tests en `docs/live_midi_input_receive_loop_v0.1.0.md`. Deze story doet nog geen Logic virtual device en geen realtime audio-trigger.
+
+### US-027: Virtual MIDI Port Voor Logic/DAW
+
+Als Logic Pro of DAW gebruiker wil ik dat `python-d1-synth` als virtual MIDI destination zichtbaar kan worden, zodat een DAW MIDI naar de Python synth kan sturen zonder hardware-driver.
+
+Prioriteit: Should
+Sprint: Future
+
+Notitie: To Do. Dit is bewust niet meegenomen in US-026.
+
+### US-028: External MIDI Audio Trigger Integratie
+
+Als gebruiker wil ik ontvangen MIDI note events hoorbaar via de Mac audio-output kunnen triggeren, zodat een hardware controller, DAW route of externe MIDI route de synth live kan bespelen.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: To Do. Dit volgt logisch na US-026 en eventueel US-027.

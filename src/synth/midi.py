@@ -1,16 +1,20 @@
 # Bestand: midi.py
 # Versienummer: 0.1.0
-# Doel: MIDI device discovery, device selectie, readiness diagnostics en MIDI-naar-NoteEvent mapping.
+# Doel: MIDI device discovery, device selectie, live receive-readiness en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-025 MIDI Device Discovery En Default Selection
-# Actie: US-025-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+# User-Story: US-026 Live MIDI Input Receive Loop
+# Actie: US-026-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 import json
 import platform
 import subprocess
 import sys
+import time
+from typing import Protocol
 
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 
@@ -146,6 +150,151 @@ class UsbMidiInputDiagnostic:
     message: str
     selected_device: MidiDevice | None
     compatible_devices: tuple[MidiDevice, ...]
+
+
+@dataclass(frozen=True)
+class MidiInputReceiveSettings:
+    """Settings for a bounded live MIDI input receive loop.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-026
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-026 Live MIDI Input Receive Loop
+    - Version: 0.1.0
+    """
+
+    input_name: str
+    max_messages: int = 10
+    timeout_seconds: float = 5.0
+
+    def __post_init__(self) -> None:
+        if not self.input_name.strip():
+            raise ValueError("input_name must not be empty")
+        if self.max_messages <= 0:
+            raise ValueError("max_messages must be positive")
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+
+
+@dataclass(frozen=True)
+class MidiInputReceiveResult:
+    """Result from a bounded live MIDI input receive loop.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-026
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-026 Live MIDI Input Receive Loop
+    - Version: 0.1.0
+    """
+
+    input_name: str
+    received_messages: tuple[MidiMessage, ...]
+    note_sequence: NoteSequence
+    message: str
+
+
+class MidiInputBackend(Protocol):
+    def receive_messages(
+        self, input_name: str, max_messages: int, timeout_seconds: float
+    ) -> tuple[MidiMessage, ...]:
+        ...
+
+
+class MidiMessageNormalizer:
+    """Normalize backend-specific note messages into project MIDI messages.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-026
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-026 Live MIDI Input Receive Loop
+    - Version: 0.1.0
+    """
+
+    def normalize(self, raw_message) -> MidiMessage | None:
+        message_type = getattr(raw_message, "type", "")
+        if message_type not in {"note_on", "note_off"}:
+            return None
+        channel = int(getattr(raw_message, "channel", 0)) + 1
+        return MidiMessage(
+            message_type=message_type,
+            note_number=int(getattr(raw_message, "note")),
+            velocity=int(getattr(raw_message, "velocity", 0)),
+            channel=channel,
+            time_seconds=float(getattr(raw_message, "time", 0.0)),
+        )
+
+
+class MidoMidiInputBackend:
+    """Bounded adapter around mido input ports for future hardware tests.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-026
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-026 Live MIDI Input Receive Loop
+    - Version: 0.1.0
+    """
+
+    def __init__(self, normalizer: MidiMessageNormalizer | None = None) -> None:
+        self._normalizer = normalizer if normalizer is not None else MidiMessageNormalizer()
+
+    def receive_messages(
+        self, input_name: str, max_messages: int, timeout_seconds: float
+    ) -> tuple[MidiMessage, ...]:
+        try:
+            import mido
+        except ImportError as exc:
+            raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
+
+        received: list[MidiMessage] = []
+        deadline = time.monotonic() + timeout_seconds
+        with mido.open_input(input_name) as port:
+            while len(received) < max_messages and time.monotonic() < deadline:
+                for raw_message in port.iter_pending():
+                    message = self._normalizer.normalize(raw_message)
+                    if message is not None:
+                        received.append(message)
+                    if len(received) >= max_messages:
+                        break
+                time.sleep(0.01)
+        return tuple(received)
+
+
+class LiveMidiInputReceiver:
+    """Run a bounded MIDI receive loop and map note messages to NoteSequence.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-026
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-026 Live MIDI Input Receive Loop
+    - Version: 0.1.0
+    """
+
+    def __init__(
+        self,
+        backend: MidiInputBackend | None = None,
+        mapper: MidiToNoteEventMapper | None = None,
+    ) -> None:
+        self._backend = backend if backend is not None else MidoMidiInputBackend()
+        self._mapper = mapper if mapper is not None else MidiToNoteEventMapper()
+
+    def receive(self, settings: MidiInputReceiveSettings) -> MidiInputReceiveResult:
+        messages = self._backend.receive_messages(
+            settings.input_name,
+            settings.max_messages,
+            settings.timeout_seconds,
+        )
+        sequence = self._mapper.messages_to_note_sequence(messages)
+        return MidiInputReceiveResult(
+            input_name=settings.input_name,
+            received_messages=messages,
+            note_sequence=sequence,
+            message=f"Received {len(messages)} MIDI note messages from {settings.input_name}.",
+        )
 
 
 class UsbMidiHardwareInputAdapter:

@@ -1,18 +1,21 @@
 # Bestand: test_midi.py
 # Versienummer: 0.1.0
-# Doel: Unit tests voor MIDI discovery, selectie en MIDI-naar-NoteEvent mapping.
+# Doel: Unit tests voor MIDI discovery, selectie, live receive-readiness en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-025 MIDI Device Discovery En Default Selection
-# Actie: US-025-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+# User-Story: US-026 Live MIDI Input Receive Loop
+# Actie: US-026-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
 
 import pytest
 
 from synth.midi import (
+    LiveMidiInputReceiver,
     MidiDevice,
     MidiDeviceScanner,
     MidiDeviceSelector,
+    MidiInputReceiveSettings,
     MidiMessage,
+    MidiMessageNormalizer,
     MidiToNoteEventMapper,
     UsbMidiHardwareInputAdapter,
     VirtualMidiInputAdapter,
@@ -192,6 +195,57 @@ class TestMidiToNoteEventMapper:
         assert sequence.events[1].start_seconds == 0.1
         assert sequence.events[1].duration_seconds == 0.5
         assert sequence.events[1].velocity == 45 / 127
+
+
+class TestMidiMessageNormalizer:
+    def test_mido_note_on_normalizes_zero_based_channel_to_one_based(self) -> None:
+        raw_message = type(
+            "RawMidiMessage",
+            (),
+            {"type": "note_on", "note": 60, "velocity": 100, "channel": 0, "time": 0.125},
+        )()
+
+        message = MidiMessageNormalizer().normalize(raw_message)
+
+        assert message == MidiMessage(
+            message_type="note_on",
+            note_number=60,
+            velocity=100,
+            channel=1,
+            time_seconds=0.125,
+        )
+
+    def test_non_note_messages_are_ignored_for_us026(self) -> None:
+        raw_message = type("RawMidiMessage", (), {"type": "clock", "time": 0.0})()
+
+        assert MidiMessageNormalizer().normalize(raw_message) is None
+
+
+class TestLiveMidiInputReceiver:
+    def test_receive_loop_maps_fake_backend_messages_to_note_sequence(self) -> None:
+        class FakeBackend:
+            def receive_messages(self, input_name, max_messages, timeout_seconds):
+                assert input_name == "Generic Keyboard"
+                assert max_messages == 2
+                assert timeout_seconds == 0.5
+                return (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=90, channel=1, time_seconds=0.0),
+                    MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.25),
+                )
+
+        settings = MidiInputReceiveSettings(input_name="Generic Keyboard", max_messages=2, timeout_seconds=0.5)
+
+        result = LiveMidiInputReceiver(backend=FakeBackend()).receive(settings)
+
+        assert result.received_messages[0].note_number == 60
+        assert len(result.note_sequence.events) == 1
+        assert result.note_sequence.events[0].note.name == "C"
+        assert result.note_sequence.events[0].duration_seconds == 0.25
+        assert result.message == "Received 2 MIDI note messages from Generic Keyboard."
+
+    def test_receive_settings_require_selected_input_name(self) -> None:
+        with pytest.raises(ValueError, match="input_name"):
+            MidiInputReceiveSettings(input_name="")
 
 
 class TestUsbMidiHardwareInputAdapter:

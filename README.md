@@ -97,6 +97,12 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi li
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --config examples/patch.yaml --debuglevel light
 ```
 
+Luister bounded naar een gekozen MIDI input zonder audio-trigger:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi listen --unsafe-rtmidi-scan --midi-device "deel van input device naam" --max-messages 10 --timeout 5 --debuglevel light
+```
+
 Diagnoseer virtual MIDI input voorbereiding:
 
 ```bash
@@ -189,6 +195,7 @@ MIDI leerpad:
 - [Studio MIDI Routing Integratietest](docs/studio_midi_routing_integration_v0.1.0.md)
 - [MIDI Naar NoteEvent Mapping](docs/midi_to_note_event_mapping_v0.1.0.md)
 - [MIDI Device Discovery En Default Selection](docs/midi_device_discovery_default_selection_v0.1.0.md)
+- [Live MIDI Input Receive Loop](docs/live_midi_input_receive_loop_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
@@ -203,6 +210,8 @@ US-023 legt de studio MIDI routing testmatrix vast. Device-namen uit `Kodekloppe
 US-024 is afgerond: `MidiToNoteEventMapper` vertaalt device-onafhankelijke `MidiMessage` note-on/off berichten naar `NoteEvent` en `NoteSequence`. De mapper behandelt `note_on` met velocity `0` als note-off, houdt channels gescheiden en gebruikt een default duration wanneer een note-off ontbreekt.
 
 US-025 is afgerond: `midi list-devices` kan naast scannen ook een MIDI input selecteren via `--midi-device`, `--midi-device-id` of `midi.default_input_device` uit `--config`. CLI wint van YAML en runtime device-namen blijven scanresultaten, geen hardcoded constants.
+
+US-026 is afgerond: `midi listen` kan bounded note messages ontvangen van een gekozen MIDI input, normaliseren naar `MidiMessage`, en mappen naar `NoteSequence`. Dit is nog geen Logic virtual device en nog geen realtime audio-trigger.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

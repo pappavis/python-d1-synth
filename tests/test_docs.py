@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-025 MIDI Device Discovery En Default Selection
-# Actie: US-025-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+# User-Story: US-026 Live MIDI Input Receive Loop
+# Actie: US-026-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
 
 from pathlib import Path
 
@@ -208,6 +208,37 @@ class TestDocumentationArtifacts:
             "MuziekM4",
             "Spelen01",
             "Raspberry Pi 2",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us026_live_midi_input_receive_loop_doc_contains_required_terms(self) -> None:
+        document = Path("docs/live_midi_input_receive_loop_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-026 Live MIDI Input Receive Loop",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: Done",
+            "midi listen",
+            "LiveMidiInputReceiver",
+            "MidiInputReceiveSettings",
+            "MidiInputReceiveResult",
+            "MidiMessageNormalizer",
+            "MidoMidiInputBackend",
+            "MidiMessage",
+            "NoteSequence",
+            "fake backend",
+            "geen Logic virtual device",
+            "geen realtime audio-trigger",
+            "hardwaretest pauzeert bij klant",
+            "MidiportA",
+            "SMK 37 Pro BLE",
+            "geen hardcoded MIDI device names",
         )
         for term in required_terms:
             assert term in content
