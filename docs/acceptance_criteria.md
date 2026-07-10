@@ -311,6 +311,10 @@ Acceptatie op 2026-07-10:
 - US-026 bevat geen Logic virtual device.
 - US-026 bevat geen realtime audio-trigger.
 - Er zijn geen hardcoded MIDI device names toegevoegd.
+- Hardwaretest op `KodeklopperM4` is geslaagd met `SMK-37 Pro_BLE Bluetooth`.
+- `--midi-device "MK-37 Pro_BLE"` selecteerde `input:7 SMK-37 Pro_BLE Bluetooth` en ontving 10 MIDI note messages.
+- `--midi-device-id "input:7"` selecteerde hetzelfde device en ontving 4 MIDI note messages.
+- De hardwaretest output bevat gemapte sequences zoals `C5@0.000s`, `B3@0.000s`, `B4@0.000s` en `A3@0.000s`.
 
 ## US-027: Virtual MIDI Port Voor Logic/DAW
 

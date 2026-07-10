@@ -239,7 +239,7 @@ Als gebruiker wil ik de commandline synth bounded naar een gekozen MIDI input ku
 Prioriteit: Must
 Sprint: Future
 
-Notitie: US-026 is Done met `LiveMidiInputReceiver`, `MidiMessageNormalizer`, `MidiInputReceiveSettings`, `MidiInputReceiveResult`, CLI command `midi listen`, fake-backend tests en `docs/live_midi_input_receive_loop_v0.1.0.md`. Deze story doet nog geen Logic virtual device en geen realtime audio-trigger.
+Notitie: US-026 is Done met `LiveMidiInputReceiver`, `MidiMessageNormalizer`, `MidiInputReceiveSettings`, `MidiInputReceiveResult`, CLI command `midi listen`, fake-backend tests en `docs/live_midi_input_receive_loop_v0.1.0.md`. De hardwaretest op `KodeklopperM4` is geslaagd met `SMK-37 Pro_BLE Bluetooth` via naamfragment en `input:7`. Deze story doet nog geen Logic virtual device en geen realtime audio-trigger.
 
 ### US-027: Virtual MIDI Port Voor Logic/DAW
 

@@ -239,6 +239,17 @@ class TestDocumentationArtifacts:
             "MidiportA",
             "SMK 37 Pro BLE",
             "geen hardcoded MIDI device names",
+            "US-026-HARDWARE-TESTRESULT",
+            "Host: KodeklopperM4",
+            "Status: Geslaagd",
+            "SMK-37 Pro_BLE Bluetooth",
+            "Selected MIDI input device from cli: input:7 SMK-37 Pro_BLE Bluetooth",
+            "Received 10 MIDI note messages from SMK-37 Pro_BLE Bluetooth.",
+            "Selected MIDI input device from cli-id: input:7 SMK-37 Pro_BLE Bluetooth",
+            "Received 4 MIDI note messages from SMK-37 Pro_BLE Bluetooth.",
+            "input:9 input   Logic Pro Virtual Out",
+            "output:10       output  Logic Pro Virtual In",
+            "hardwarematig geslaagd op KodeklopperM4",
         )
         for term in required_terms:
             assert term in content

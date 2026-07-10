@@ -96,3 +96,51 @@ Green phase:
 - US-024 mapping wordt hergebruikt voor `NoteSequence`.
 - Tests gebruiken een fake backend.
 - Echte hardwaretest wordt pas uitgevoerd na expliciete klantactie.
+
+## Hardwaretest KodeklopperM4
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-026-HARDWARE-TESTRESULT
+Datum: 2026-07-10
+Host: KodeklopperM4
+Status: Geslaagd
+
+De klant heeft `midi listen` getest met `SMK-37 Pro_BLE Bluetooth`.
+
+Test via naamfragment:
+
+```bash
+PYTHONPATH=src python -m synth midi listen --unsafe-rtmidi-scan --midi-device "MK-37 Pro_BLE" --max-messages 10 --timeout 5 --debuglevel light
+```
+
+Resultaat:
+
+```text
+Selected MIDI input device from cli: input:7 SMK-37 Pro_BLE Bluetooth
+Received 10 MIDI note messages from SMK-37 Pro_BLE Bluetooth.
+Received sequence: B4@0.000s, G4@0.000s, B4@0.000s, A4@0.000s, G4@0.000s, B4@0.000s
+```
+
+Device scan bevatte onder meer:
+
+```text
+input:7 input   SMK-37 Pro_BLE Bluetooth
+input:8 input   SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]
+input:9 input   Logic Pro Virtual Out
+output:10       output  Logic Pro Virtual In
+```
+
+Test via identifier:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi listen --unsafe-rtmidi-scan --midi-device-id "input:7" --max-messages 4 --timeout 10 --debuglevel light
+```
+
+Resultaat:
+
+```text
+Selected MIDI input device from cli-id: input:7 SMK-37 Pro_BLE Bluetooth
+Received 4 MIDI note messages from SMK-37 Pro_BLE Bluetooth.
+Received sequence: C5@0.000s, B3@0.000s, B4@0.000s, A3@0.000s
+```
+
+Conclusie: US-026 is hardwarematig geslaagd op KodeklopperM4. De app ontvangt echte MIDI note messages van een geselecteerde input en mapt deze naar een `NoteSequence`. Hoorbare audio-triggering blijft bewust buiten US-026 en hoort bij US-028.
