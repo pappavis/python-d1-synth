@@ -238,6 +238,16 @@ Acceptatie op 2026-07-09:
 
 - Given RaspiMidiHub, fysieke MIDI routing hub, MiniFreak en KeyLab Mk3, when de MIDI integratiesprint start, then er een testmatrix bestaat voor bron, route en bestemming.
 - Given een routingpad wordt getest, then resultaat en eventuele latency/clock-beperkingen worden vastgelegd.
+- Given een computer andere device-namen heeft, when MIDI routing wordt getest, then de route wordt gekozen via runtime MIDI device discovery en niet via hardcoded constants.
+- Given KodeklopperM4 of MuziekM4 device scans worden gedocumenteerd, then deze als snapshots/placeholders worden behandeld.
+
+Acceptatie op 2026-07-10:
+
+- `docs/studio_midi_routing_integration_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-023 Studio MIDI Routing Integratietest`.
+- De routingmatrix dekt DAW virtual bus, USB MIDI interface, keyboard/controller, guitar MIDI, synth hardware, CircuitPython/ESP32, Windows `Spelen01` en Raspberry Pi 2.
+- KodeklopperM4 en MuziekM4 device scans zijn vastgelegd als testdata.
+- De documentatie zegt expliciet dat device-namen placeholders zijn en niet als constants in code mogen worden gebruikt.
+- US-023 is `Done`.
 
 ## US-024: MIDI Naar NoteEvent Mapping
 

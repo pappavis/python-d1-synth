@@ -212,6 +212,8 @@ Als gebruiker met RaspiMidiHub, een fysieke MIDI routing hub, MiniFreak en KeyLa
 Prioriteit: Should
 Sprint: Future
 
+Notitie: US-023 is Done met `docs/studio_midi_routing_integration_v0.1.0.md`. De testmatrix dekt DAW virtual bus, USB MIDI interface, keyboard/controller, guitar MIDI, synth hardware, CircuitPython/ESP32, Windows `Spelen01` en Raspberry Pi 2. Device-namen uit KodeklopperM4 en MuziekM4 zijn snapshots/placeholders en mogen niet als constants in code worden vastgelegd.
+
 ### US-024: MIDI Naar NoteEvent Mapping
 
 Als ontwikkelaar wil ik MIDI events naar het bestaande `NoteEvent` en `NoteSequence` model mappen, zodat de Sprint 1 synth-engine herbruikbaar blijft.

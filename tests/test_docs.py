@@ -115,3 +115,33 @@ class TestDocumentationArtifacts:
         )
         for term in required_terms:
             assert term in content
+
+    def test_us023_studio_midi_routing_doc_contains_required_terms(self) -> None:
+        document = Path("docs/studio_midi_routing_integration_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-023 Studio MIDI Routing Integratietest",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: Done",
+            "Routing Matrix Template",
+            "KodeklopperM4 Snapshot",
+            "MuziekM4 Snapshot",
+            "Spelen01",
+            "Raspberry Pi 2",
+            "placeholders",
+            "constants",
+            "runtime MIDI device discovery",
+            "Muziekm4_midi_devices_scanned_2026-07-10.txt",
+            "GM-800",
+            "TriplePlay Express Geel strat TP Guitar",
+            "KL Essential 49 mk3 MIDI",
+            "SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]",
+            "CircuitPython/ESP32",
+        )
+        for term in required_terms:
+            assert term in content
