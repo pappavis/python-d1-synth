@@ -2,6 +2,8 @@ from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
 from synth.debug import DebugLevel, DebugReporter
 from synth.midi import (
+    MidiDeviceScanner,
+    MidiDeviceScanResult,
     MidiMessage,
     UsbMidiHardwareInputAdapter,
     UsbMidiInputDiagnostic,
@@ -89,7 +91,7 @@ class TestCodeTraceability:
             "US-022 USB MIDI Hardware Input",
             "Version: 0.1.0",
         )
-        traceable_objects = (UsbMidiInputDiagnostic, UsbMidiHardwareInputAdapter, SynthCli)
+        traceable_objects = (MidiDeviceScanResult, MidiDeviceScanner, UsbMidiInputDiagnostic, UsbMidiHardwareInputAdapter, SynthCli)
 
         for traceable_object in traceable_objects:
             doc = traceable_object.__doc__ or ""

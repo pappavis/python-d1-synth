@@ -22,8 +22,22 @@ class MidiDeviceSelection:
 
 @dataclass(frozen=True)
 class MidiDeviceScanResult:
+    """Result for safe MIDI device discovery diagnostics.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-022-BLOCKER
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-022 USB MIDI Hardware Input
+    - Version: 0.1.0
+    """
+
     devices: tuple[MidiDevice, ...]
     error_message: str | None
+    backend_name: str = "mido/python-rtmidi"
+    returncode: int | None = None
+    stdout: str = ""
+    stderr: str = ""
 
 
 @dataclass(frozen=True)
@@ -242,6 +256,18 @@ class VirtualMidiInputAdapter:
 
 
 class MidiDeviceScanner:
+    """Safe MIDI device scanner with macOS CoreMIDI crash isolation.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-022-BLOCKER
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-022 USB MIDI Hardware Input
+    - Version: 0.1.0
+    """
+
+    _BACKEND_NAME = "mido/python-rtmidi"
+
     def __init__(self, allow_unsafe_native_scan: bool = False) -> None:
         self._allow_unsafe_native_scan = allow_unsafe_native_scan
 
@@ -253,6 +279,7 @@ class MidiDeviceScanner:
                     "Native RtMidi/CoreMIDI scanning is disabled by default on macOS because it can abort the "
                     "Python process. Use --unsafe-rtmidi-scan only when you intentionally want to test it."
                 ),
+                backend_name=self._BACKEND_NAME,
             )
         return self._scan_with_mido_subprocess()
 
@@ -284,17 +311,32 @@ print(json.dumps(devices))
                 timeout=5.0,
             )
         except (OSError, subprocess.SubprocessError):
-            return MidiDeviceScanResult(devices=tuple(), error_message="MIDI device scan subprocess failed.")
+            return MidiDeviceScanResult(
+                devices=tuple(),
+                error_message="MIDI device scan subprocess failed.",
+                backend_name=self._BACKEND_NAME,
+            )
         if completed.returncode != 0:
             return MidiDeviceScanResult(
                 devices=tuple(),
                 error_message="MIDI backend failed while scanning devices.",
+                backend_name=self._BACKEND_NAME,
+                returncode=completed.returncode,
+                stdout=completed.stdout.strip(),
+                stderr=completed.stderr.strip(),
             )
 
         try:
             raw_devices = json.loads(completed.stdout)
         except json.JSONDecodeError:
-            return MidiDeviceScanResult(devices=tuple(), error_message="MIDI backend returned invalid scan data.")
+            return MidiDeviceScanResult(
+                devices=tuple(),
+                error_message="MIDI backend returned invalid scan data.",
+                backend_name=self._BACKEND_NAME,
+                returncode=completed.returncode,
+                stdout=completed.stdout.strip(),
+                stderr=completed.stderr.strip(),
+            )
 
         devices = tuple(
             MidiDevice(
@@ -305,7 +347,14 @@ print(json.dumps(devices))
             for raw in raw_devices
             if isinstance(raw, dict)
         )
-        return MidiDeviceScanResult(devices=devices, error_message=None)
+        return MidiDeviceScanResult(
+            devices=devices,
+            error_message=None,
+            backend_name=self._BACKEND_NAME,
+            returncode=completed.returncode,
+            stdout=completed.stdout.strip(),
+            stderr=completed.stderr.strip(),
+        )
 
 
 class MidiDeviceSelector:

@@ -203,7 +203,7 @@ Als gebruiker met Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave of een ander US
 Prioriteit: Must
 Sprint: Future
 
-Notitie: US-022 staat In Review met `UsbMidiHardwareInputAdapter`, CLI `midi diagnose-usb-input`, en `docs/usb_midi_hardware_input_v0.1.0.md`; elke hardwaretest moet eerst devices listen, daarna een device/default kiezen, en de computernaam `KodeklopperM4` of `MuziekM4` vastleggen.
+Notitie: US-022 staat Blocked omdat Logic Pro MIDI devices toont maar Python `midi list-devices --unsafe-rtmidi-scan` geen devices vindt. Het package-conflict tussen `rtmidi 2.5.0` en `python-rtmidi 1.5.8` is opgelost; de resterende blocker is `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. Elke hardwaretest moet eerst devices listen, daarna een device/default kiezen, en de computernaam `KodeklopperM4` of `MuziekM4` vastleggen. De expliciete hardwaretest is `PYTHON_D1_RUN_HARDWARE_MIDI=1 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m pytest tests/test_hardware_midi.py -s`.
 
 ### US-023: Studio MIDI Routing Integratietest
 

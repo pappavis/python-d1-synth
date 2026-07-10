@@ -96,6 +96,15 @@ class TestDocumentationArtifacts:
             "Logic Pro shows devices but Python does not",
             "2026-07-10 14:28",
             "MIDI backend failed while scanning devices.",
+            "Status: Blocked",
+            "BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.",
+            "tests/test_hardware_midi.py",
+            "PYTHON_D1_RUN_HARDWARE_MIDI=1",
+            "US-022-CRASHLOGS",
+            "35DB83DC-374A-4C19-80DE-8D43E29AF27A",
+            "FEE3C08D-0AB5-492E-BF4A-AC399EA64D14",
+            "MidiInCore::initialize",
+            "EXC_CRASH (SIGABRT)",
         )
         for term in required_terms:
             assert term in content

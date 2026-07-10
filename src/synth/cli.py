@@ -157,12 +157,14 @@ class SynthCli:
         result = MidiDeviceScanner(allow_unsafe_native_scan=args.unsafe_rtmidi_scan).scan()
         devices = result.devices
         if not devices:
+            self._report_midi_scan_details(reporter, result)
             if result.error_message is not None:
                 reporter.light(result.error_message)
                 reporter.light(
                     "If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setup device "
                     "list and treat this as a Python MIDI backend scan issue."
                 )
+                reporter.light("BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.")
             reporter.light("No MIDI devices detected or optional MIDI backend is not installed.")
             print("No MIDI devices found.")
             return 0
@@ -180,12 +182,14 @@ class SynthCli:
         result = MidiDeviceScanner(allow_unsafe_native_scan=args.unsafe_rtmidi_scan).scan()
         diagnostic = UsbMidiHardwareInputAdapter().diagnose(result.devices, requested_device=args.midi_device)
         if result.error_message is not None:
+            self._print_midi_scan_details(result)
             print(result.error_message)
             print("First run: python -m synth midi list-devices --unsafe-rtmidi-scan")
             print(
                 "If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setup device list "
                 "and choose a visible device for the manual test."
             )
+            print("BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.")
         print(diagnostic.message)
         if diagnostic.compatible_devices:
             print("Compatible USB MIDI inputs:")
@@ -215,6 +219,42 @@ class SynthCli:
         return ", ".join(
             f"{event.note.name}{event.note.octave}@{event.start_seconds:.3f}s" for event in sequence.events
         )
+
+    def _report_midi_scan_details(self, reporter: DebugReporter, result) -> None:
+        backend_name = getattr(result, "backend_name", None)
+        returncode = getattr(result, "returncode", None)
+        stderr = getattr(result, "stderr", "")
+        stdout = getattr(result, "stdout", "")
+        if backend_name:
+            reporter.light(f"MIDI backend: {backend_name}")
+        if returncode is not None:
+            reporter.light(f"MIDI backend return code: {returncode}")
+        if stderr:
+            reporter.light(f"MIDI backend stderr: {self._first_line(stderr)}")
+        elif stdout:
+            reporter.verbose(f"MIDI backend stdout: {self._first_line(stdout)}")
+
+    def _print_midi_scan_details(self, result) -> None:
+        backend_name = getattr(result, "backend_name", None)
+        returncode = getattr(result, "returncode", None)
+        stderr = getattr(result, "stderr", "")
+        stdout = getattr(result, "stdout", "")
+        if backend_name:
+            print(f"MIDI backend: {backend_name}")
+        if returncode is not None:
+            print(f"MIDI backend return code: {returncode}")
+        if stderr:
+            print(f"MIDI backend stderr: {self._first_line(stderr)}")
+        elif stdout:
+            print(f"MIDI backend stdout: {self._first_line(stdout)}")
+
+    def _first_line(self, value: str) -> str:
+        lines = [line for line in value.splitlines() if line.strip()]
+        if not lines:
+            return ""
+        if lines[0].startswith("Traceback") and len(lines) > 1:
+            return lines[-1]
+        return lines[0]
 
 
 def main(argv: list[str] | None = None) -> int:

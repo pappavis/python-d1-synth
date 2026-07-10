@@ -103,6 +103,14 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi di
 
 MIDI testprocedure: eerst devices lijsten, daarna een device kiezen of als default noteren. Leg altijd vast of de test op `KodeklopperM4` of `MuziekM4` draait.
 
+US-022 blocker hardwaretest:
+
+```bash
+PYTHON_D1_RUN_HARDWARE_MIDI=1 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m pytest tests/test_hardware_midi.py -s
+```
+
+Deze test gaat ervan uit dat er MIDI devices aangesloten zijn. Als Logic Pro devices toont maar Python niets vindt, meldt de test dit als blocker.
+
 Selecteer later een MIDI device:
 
 ```bash
@@ -174,6 +182,10 @@ MIDI leerpad:
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
 De skeleton voert MIDI device scanning daarom in een apart subprocess uit. Als RtMidi crasht, blijft de hoofd-CLI overeind en meldt `midi list-devices` dat er geen devices gevonden zijn of dat de backend niet bruikbaar is.
+
+US-022 staat momenteel op `Blocked`: Logic Pro toont MIDI devices op de Mac, maar Python device discovery retourneert geen devices. `midi list-devices --unsafe-rtmidi-scan --debuglevel light` toont daarom backenddetails en `BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.`.
+
+Tijdens US-022 is een eerste package-conflict opgelost: het verkeerde pakket `rtmidi 2.5.0` stond naast `python-rtmidi 1.5.8` en overschreef de module die Mido verwacht. Na verwijderen van `rtmidi` en herinstalleren van `python-rtmidi==1.5.8` is `rtmidi.API_UNSPECIFIED` weer beschikbaar. De resterende blocker is nu de CoreMIDI fout `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

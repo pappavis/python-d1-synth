@@ -211,6 +211,10 @@ class TestSynthCli:
                     {
                         "devices": tuple(),
                         "error_message": "MIDI backend failed while scanning devices.",
+                        "backend_name": "mido/python-rtmidi",
+                        "returncode": -6,
+                        "stderr": "CoreMIDI client init failed",
+                        "stdout": "",
                     },
                 )()
 
@@ -222,3 +226,60 @@ class TestSynthCli:
         assert exit_code == 0
         assert "MIDI backend failed while scanning devices." in output
         assert "If Logic Pro shows devices but Python does not" in output
+
+    def test_midi_list_devices_marks_logic_visible_scan_failure_as_blocker(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": tuple(),
+                        "error_message": "MIDI backend failed while scanning devices.",
+                        "backend_name": "mido/python-rtmidi",
+                        "returncode": -6,
+                        "stderr": "MidiInCore::initialize: error creating OS-X MIDI client object (-10833)",
+                        "stdout": "",
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(["midi", "list-devices", "--unsafe-rtmidi-scan", "--debuglevel", "light"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "MIDI backend: mido/python-rtmidi" in output
+        assert "MIDI backend return code: -6" in output
+        assert "MIDI backend stderr: MidiInCore::initialize" in output
+        assert "BLOCKER: Logic Pro shows MIDI devices but Python scan returned none." in output
+
+    def test_midi_list_devices_summarizes_traceback_with_last_error_line(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": tuple(),
+                        "error_message": "MIDI backend failed while scanning devices.",
+                        "backend_name": "mido/python-rtmidi",
+                        "returncode": 1,
+                        "stderr": "Traceback (most recent call last):\nModuleNotFoundError: No module named 'mido'",
+                        "stdout": "",
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(["midi", "list-devices", "--unsafe-rtmidi-scan", "--debuglevel", "light"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "MIDI backend stderr: ModuleNotFoundError: No module named 'mido'" in output

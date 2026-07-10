@@ -6,7 +6,7 @@ Doc versie: 0.1.0
 Datum: 2026-07-09  
 User Story: US-022 USB MIDI Hardware Input  
 Epic: EPIC-007 Future MIDI En DAW Integratie  
-Status: In Review, wacht op handmatige hardwaretest
+Status: Blocked, Python MIDI backend scan ziet geen devices terwijl Logic Pro wel devices toont
 
 ## Doel
 
@@ -21,6 +21,8 @@ Deze story levert een veilige readiness-diagnose. Live note receive en hoorbare 
 - De testprocedure begint altijd met `list-devices` voordat een specifiek device wordt gekozen.
 - Je kunt een device per test kiezen met `--midi-device`, of een default device in de testnotities aanwijzen.
 - Output-only devices worden niet als input-ready beschouwd.
+- `midi list-devices --unsafe-rtmidi-scan --debuglevel light` toont bij scan-falen backenddetails en een expliciete `BLOCKER` regel.
+- De handmatige hardwaretest `tests/test_hardware_midi.py` scant echte MIDI devices en faalt als er geen devices gevonden worden wanneer `PYTHON_D1_RUN_HARDWARE_MIDI=1` is gezet.
 - De CLI heeft een hardwarediagnose:
 
 ```bash
@@ -47,6 +49,13 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi di
 ```
 
 6. Als `MIDI backend failed while scanning devices` verschijnt: behandel dat niet automatisch als geen MIDI setup. Vergelijk dan met Logic/Audio MIDI Setup.
+7. Voor de expliciete hardwaretest, draai:
+
+```bash
+PYTHON_D1_RUN_HARDWARE_MIDI=1 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m pytest tests/test_hardware_midi.py -s
+```
+
+Deze test gaat ervan uit dat er altijd MIDI devices aangesloten zijn. Als Python geen devices vindt terwijl Logic Pro ze wel toont, faalt de test met een US-022 blocker-melding.
 
 Diagnostic guidance:
 
@@ -75,11 +84,46 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi li
 
 ```text
 MIDI backend failed while scanning devices.
+If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setup device list and treat this as a Python MIDI backend scan issue.
 No MIDI devices detected or optional MIDI backend is not installed.
 No MIDI devices found.
 ```
 
-- Beoordeling: US-022 blijft In Review. Logic Pro shows devices but Python does not, dus dit is een Python MIDI backend scan issue en geen bewijs dat de MIDI setup leeg is.
+- Beoordeling: US-022 is Blocked. Logic Pro shows devices but Python does not, dus dit is een Python MIDI backend scan issue en geen bewijs dat de MIDI setup leeg is.
+
+## Impediment / Blocker
+
+- CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-022-BLOCKER-001
+- Datum/tijd: 2026-07-10
+- Computernaam: KodeklopperM4
+- Verwachting: er zijn altijd MIDI devices aangesloten tijdens deze testfase.
+- Werkelijke situatie: Logic Pro toont MIDI devices, maar Python `midi list-devices --unsafe-rtmidi-scan --debuglevel light` toont geen devices.
+- Nieuw CLI-gedrag: bij scan-falen toont de CLI `MIDI backend`, optionele `MIDI backend return code`, optionele stderr/stdout en `BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.`
+- Nieuw testgedrag: `tests/test_hardware_midi.py` kan met `PYTHON_D1_RUN_HARDWARE_MIDI=1` een echte hardware-scan afdwingen, devices listen en falen als Python niets vindt.
+- Eerste technische oorzaak gevonden en opgelost: het conflicterende pakket `rtmidi 2.5.0` stond naast `python-rtmidi 1.5.8` in dezelfde venv. Daardoor importeerde Mido de verkeerde backendmodule en miste `rtmidi.API_UNSPECIFIED`.
+- Venv-herstel uitgevoerd: `rtmidi 2.5.0` verwijderd en `python-rtmidi==1.5.8` opnieuw geinstalleerd. Verificatie: `rtmidi.__version__ == 1.5.8` en `API_UNSPECIFIED=True`.
+- Resterende blocker na package-herstel: `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`.
+- Status: `Blocked` totdat de Python MIDI backend minstens een Logic-zichtbaar device kan listen op `KodeklopperM4` of `MuziekM4`.
+
+Hardwaretest na venv-herstel:
+
+```text
+MIDI backend: mido/python-rtmidi
+MIDI backend return code: -6
+MIDI backend stderr: libc++abi: terminating due to unexpected exception of type RtMidiError: MidiInCore::initialize: error creating OS-X MIDI client object (-10833).
+MIDI backend failed while scanning devices.
+```
+
+Crashlog-bevindingen:
+
+- CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-022-CRASHLOGS
+- Crashlog 1: incident `35DB83DC-374A-4C19-80DE-8D43E29AF27A`, tijd `2026-07-10 17:58:47 +0200`.
+- Crashlog 2: incident `FEE3C08D-0AB5-492E-BF4A-AC399EA64D14`, tijd `2026-07-10 17:58:57 +0200`.
+- Proces: Python 3.12.13 via Homebrew framework, gestart onder `com.openai.codex`.
+- Exception: `EXC_CRASH (SIGABRT)`, termination `Abort trap: 6`.
+- Crashpad: `_rtmidi.cpython-312-darwin.so` -> `MidiInCore::getCoreMidiClientSingleton` -> `MidiInCore::initialize` -> `RtMidiIn`.
+- CoreMIDI thread is aanwezig in de crashlog, wat bevestigt dat de crash optreedt tijdens native CoreMIDI input-client initialisatie.
+- Conclusie: de veilige subprocess-isolatie is nodig. De hoofd-CLI mag niet zelf live CoreMIDI scanning doen totdat deze CoreMIDI/RtMidi blocker opgelost is.
 
 Op macOS blijft native RtMidi/CoreMIDI scanning standaard uitgeschakeld. Als je bewust een echte scan wilt proberen vanuit je eigen Terminal:
 
@@ -123,4 +167,4 @@ Opmerkingen/screenshot:
 - Fishman TriplePlay, M-Vave en andere USB MIDI interfaces zijn expliciet toegestaan.
 - `UsbMidiHardwareInputAdapter` kan een generiek input device selecteren.
 - `midi diagnose-usb-input` geeft duidelijke diagnostiek.
-- US-022 blijft `In Review` totdat minstens een handmatige hardwaretest is ontvangen.
+- US-022 blijft `Blocked` totdat de Python MIDI backend minstens een echte, Logic-zichtbare MIDI input of output kan listen.

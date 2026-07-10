@@ -37,4 +37,6 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-ra"
-
+markers = [
+  "hardware_midi: real US-022 MIDI hardware scan; requires PYTHON_D1_RUN_HARDWARE_MIDI=1"
+]
