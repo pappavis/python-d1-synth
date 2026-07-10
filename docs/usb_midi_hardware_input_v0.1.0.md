@@ -18,12 +18,44 @@ Deze story levert een veilige readiness-diagnose. Live note receive en hoorbare 
 
 - `UsbMidiHardwareInputAdapter` accepteert elk zichtbaar MIDI input device.
 - Device selectie kan op identifier of gedeeltelijke naam, bijvoorbeeld `Fishman`, `M-Vave` of `KeyLab`.
+- De testprocedure begint altijd met `list-devices` voordat een specifiek device wordt gekozen.
+- Je kunt een device per test kiezen met `--midi-device`, of een default device in de testnotities aanwijzen.
 - Output-only devices worden niet als input-ready beschouwd.
 - De CLI heeft een hardwarediagnose:
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi diagnose-usb-input --midi-device "Fishman"
 ```
+
+## Structurele Testprocedure
+
+Gebruik deze volgorde voor elke MIDI hardwaretest op `KodeklopperM4` en later ook op `MuziekM4`.
+
+1. Noteer de computernaam: `KodeklopperM4` of `MuziekM4`.
+2. Open Audio MIDI Setup en/of Logic Pro en noteer welke MIDI devices zichtbaar zijn.
+3. Probeer eerst Python device discovery:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan
+```
+
+4. Kies daarna een device uit de lijst, of wijs een default device aan voor deze test.
+5. Draai de diagnose met de gekozen naam:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi diagnose-usb-input --unsafe-rtmidi-scan --midi-device "SMK-37"
+```
+
+6. Als `MIDI backend failed while scanning devices` verschijnt: behandel dat niet automatisch als geen MIDI setup. Vergelijk dan met Logic/Audio MIDI Setup.
+
+Diagnostic guidance:
+
+```text
+First run: python -m synth midi list-devices --unsafe-rtmidi-scan
+If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setup device list and choose a visible device for the manual test.
+```
+
+Voorbeeld van Logic-zichtbare devices op `KodeklopperM4`: `IAC-besturingsbestand`, `Scarlett 8i6 USB`, `Ampero Mini`, `Haxophone`, `Poort 1`, `Poort 2`, `Poort 3`, `SMK-37 Pro_BLE`, `SN76489 Synth Pappavis`, `Software Synthesizer`, `Logic Pro Virtual Out`.
 
 Op macOS blijft native RtMidi/CoreMIDI scanning standaard uitgeschakeld. Als je bewust een echte scan wilt proberen vanuit je eigen Terminal:
 
@@ -49,6 +81,10 @@ Voer deze test uit met minstens een van je MIDI USB interfaces en plak het Testr
 CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-022-USB-MIDI-TESTRESULT
 Datum/tijd:
 macOS versie:
+Computernaam: KodeklopperM4/MuziekM4
+Logic/Audio MIDI Setup zichtbare devices:
+Python list-devices output:
+Gekozen/default device:
 Getest device:
 Device zichtbaar in Audio MIDI Setup: ja/nee
 Command:

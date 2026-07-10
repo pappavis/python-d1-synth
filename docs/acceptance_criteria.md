@@ -224,6 +224,9 @@ Acceptatie op 2026-07-09:
 - `UsbMidiHardwareInputAdapter` accepteert generieke MIDI input devices en is niet Arturia-only.
 - `python -m synth midi diagnose-usb-input` geeft duidelijke diagnostiek.
 - `docs/usb_midi_hardware_input_v0.1.0.md` bevat een handmatige hardwaretest-template.
+- Elke MIDI hardwaretest start met device listing, daarna kiest de gebruiker een MIDI device of wijst een default device aan.
+- Testresultaten leggen vast of ze op `KodeklopperM4` of `MuziekM4` zijn uitgevoerd.
+- Als Logic Pro devices toont maar Python scanning faalt, wordt dat als apart scan/backend issue vastgelegd.
 - US-022 blijft `In Review` totdat minstens een echte USB MIDI hardwaretest is ontvangen.
 
 ## US-023: Studio MIDI Routing Integratietest

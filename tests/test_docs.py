@@ -89,6 +89,11 @@ class TestDocumentationArtifacts:
             "midi diagnose-usb-input",
             "Handmatige hardwaretest",
             "Testresultaat",
+            "list-devices",
+            "KodeklopperM4",
+            "MuziekM4",
+            "default device",
+            "Logic Pro shows devices but Python does not",
         )
         for term in required_terms:
             assert term in content

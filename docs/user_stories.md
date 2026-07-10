@@ -203,7 +203,7 @@ Als gebruiker met Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave of een ander US
 Prioriteit: Must
 Sprint: Future
 
-Notitie: US-022 staat In Review met `UsbMidiHardwareInputAdapter`, CLI `midi diagnose-usb-input`, en `docs/usb_midi_hardware_input_v0.1.0.md`; afronding wacht op handmatig hardwaretestresultaat.
+Notitie: US-022 staat In Review met `UsbMidiHardwareInputAdapter`, CLI `midi diagnose-usb-input`, en `docs/usb_midi_hardware_input_v0.1.0.md`; elke hardwaretest moet eerst devices listen, daarna een device/default kiezen, en de computernaam `KodeklopperM4` of `MuziekM4` vastleggen.
 
 ### US-023: Studio MIDI Routing Integratietest
 

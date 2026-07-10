@@ -173,3 +173,28 @@ class TestSynthCli:
         output = capsys.readouterr().out
         assert exit_code == 0
         assert "USB MIDI input ready: Fishman TriplePlay" in output
+
+    def test_midi_diagnose_usb_input_guides_user_when_backend_scan_fails(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": tuple(),
+                        "error_message": "MIDI backend failed while scanning devices.",
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(["midi", "diagnose-usb-input", "--midi-device", "Fishman"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "MIDI backend failed while scanning devices." in output
+        assert "First run: python -m synth midi list-devices --unsafe-rtmidi-scan" in output
+        assert "If Logic Pro shows devices but Python does not" in output

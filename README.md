@@ -86,7 +86,7 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth audio l
 Scan MIDI devices:
 
 ```bash
-PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --debuglevel light
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel light
 ```
 
 Diagnoseer virtual MIDI input voorbereiding:
@@ -98,8 +98,10 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi di
 Diagnoseer generieke USB MIDI input voorbereiding:
 
 ```bash
-PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi diagnose-usb-input --midi-device "Fishman"
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi diagnose-usb-input --unsafe-rtmidi-scan --midi-device "SMK-37"
 ```
+
+MIDI testprocedure: eerst devices lijsten, daarna een device kiezen of als default noteren. Leg altijd vast of de test op `KodeklopperM4` of `MuziekM4` draait.
 
 Selecteer later een MIDI device:
 

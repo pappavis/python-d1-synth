@@ -177,6 +177,11 @@ class SynthCli:
         diagnostic = UsbMidiHardwareInputAdapter().diagnose(result.devices, requested_device=args.midi_device)
         if result.error_message is not None:
             print(result.error_message)
+            print("First run: python -m synth midi list-devices --unsafe-rtmidi-scan")
+            print(
+                "If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setup device list "
+                "and choose a visible device for the manual test."
+            )
         print(diagnostic.message)
         if diagnostic.compatible_devices:
             print("Compatible USB MIDI inputs:")
