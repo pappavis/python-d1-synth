@@ -6,7 +6,7 @@ Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie  
 Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog  
 User Story: US-030 Logic MIDI Region Multi-Note Playback  
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -70,4 +70,15 @@ Verwacht CLI-gedrag:
 
 ## Status
 
-US-030 staat op `In Review`. De Product Owner moet nog bevestigen dat een Logic Pro MIDI region met meerdere noten hoorbaar als batch afspeelt.
+US-030 staat op `Done`. De Product Owner bevestigde dat een Logic Pro MIDI region met meerdere noten hoorbaar als batch afspeelt.
+
+Handmatige test op 2026-07-11:
+
+```text
+Played 5 MIDI-triggered note events from virtual MIDI port python-d1-synth.
+Received MIDI messages: note_on:60:velocity=50:channel=1, note_on:60:velocity=50:channel=1, note_on:65:velocity=75:channel=1, note_on:65:velocity=75:channel=1, note_off:60:velocity=64:channel=1, note_off:60:velocity=64:channel=1, note_off:65:velocity=64:channel=1, note_off:65:velocity=64:channel=1, note_on:65:velocity=83:channel=1, note_on:65:velocity=83:channel=1, note_off:65:velocity=64:channel=1, note_off:65:velocity=64:channel=1, note_on:60:velocity=47:channel=1, note_on:60:velocity=47:channel=1, note_off:60:velocity=64:channel=1, note_on:65:velocity=52:channel=1
+Rendered sequence events: C4@0.945s, F4@1.062s, F4@1.560s, C4@1.960s, F4@2.200s
+Audio buffer: 141101 frames, 44100 Hz
+```
+
+Product Owner opmerking: de sequence speelde hoorbaar af, maar met ongeveer 2 seconden vertraging. Dit is verwacht voor US-030, omdat deze story batch-rendering test. Realtime playback hoort bij US-031.

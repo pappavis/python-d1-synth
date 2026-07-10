@@ -412,4 +412,7 @@ Acceptatie op 2026-07-11:
 - `docs/logic_midi_region_multi_note_playback_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-030 Logic MIDI Region Multi-Note Playback`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-030 Logic MIDI Region Multi-Note Playback` en `Version: 0.1.0`.
 - Geen realtime infinite performance-loop, geen pitch bend, geen modulation, geen GUI, geen plugin, geen AU/VST3 en geen hardcoded MIDI hardware device names.
-- Story status is `In Review` tot de Product Owner de Logic Pro multi-note test bevestigt.
+- Product Owner test bevestigde hoorbaar geluid en een afgespeelde sequence met `Played 5 MIDI-triggered note events`.
+- CLI output bevatte `Rendered sequence events: C4@0.945s, F4@1.062s, F4@1.560s, C4@1.960s, F4@2.200s`.
+- De waargenomen vertraging van ongeveer 2 seconden is verwacht binnen de batch-scope van US-030 en wordt niet als blocker behandeld.
+- Story status is `Done`.

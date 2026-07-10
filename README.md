@@ -260,13 +260,13 @@ US-028 is afgerond: `midi play-live` koppelt bounded ontvangen MIDI note events 
 
 US-029 is afgerond: `midi play-virtual` opent zelf een virtual MIDI input port en koppelt ontvangen Logic/DAW note events aan dezelfde synth-engine/audio-output route. De Logic Pro test bevestigde hoorbaar geluid vanuit een MIDI region naar `python-d1-synth`, met `Received MIDI messages: note_on:60:velocity=50:channel=1`. Dit is commandline-only en blijft buiten GUI, AU/VST3, Logic Component en plugin packaging.
 
-US-030 is in review: `midi play-virtual` ondersteunt nu een korte Logic/DAW MIDI region met meerdere noten in dezelfde batch. Gebruik voor deze test een hogere `--max-messages` waarde, bijvoorbeeld 16, zodat meerdere note-on/note-off paren binnenkomen voordat audio wordt gerenderd:
+US-030 is afgerond: `midi play-virtual` ondersteunt nu een korte Logic/DAW MIDI region met meerdere noten in dezelfde batch. Gebruik voor deze test een hogere `--max-messages` waarde, bijvoorbeeld 16, zodat meerdere note-on/note-off paren binnenkomen voordat audio wordt gerenderd:
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 16 --timeout 10 --debuglevel verbose
 ```
 
-Verwacht gedrag: Logic stuurt meerdere MIDI events naar `python-d1-synth`, verbose output toont `Received MIDI messages` en `Rendered sequence events`, en daarna speelt de batch hoorbaar af. Dit is nog steeds batch-rendering na `--max-messages` of `--timeout`; continue realtime streaming, pitch bend en modulation volgen in latere stories.
+Bevestigd gedrag: Logic stuurde meerdere MIDI events naar `python-d1-synth`, verbose output toonde `Received MIDI messages` en `Rendered sequence events: C4@0.945s, F4@1.062s, F4@1.560s, C4@1.960s, F4@2.200s`, en de batch speelde hoorbaar af. Dit is nog steeds batch-rendering na `--max-messages` of `--timeout`; de waargenomen vertraging van ongeveer 2 seconden is verwacht binnen US-030. Continue realtime streaming, pitch bend en modulation volgen in latere stories.
 
 Lessons learned en sprint review:
 

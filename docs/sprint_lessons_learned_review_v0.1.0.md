@@ -78,7 +78,9 @@ Statuslabel: US-029 `Done`.
 
 US-030 past direct de US-029 les toe: niet alleen "er is audio" meten, maar ook tonen welke MIDI messages zijn ontvangen en welke sequence events daadwerkelijk zijn gerenderd. Daarom moet de multi-note Logic test altijd met `--debuglevel verbose` draaien en de output `Received MIDI messages` plus `Rendered sequence events` bevatten.
 
-Statuslabel: US-030 `In Review`.
+Product Owner bevestigde dat de Logic MIDI region meerdere hoorbare noten afspeelde. De waargenomen vertraging van ongeveer 2 seconden is geen defect binnen US-030, omdat de story bewust batch playback test. Realtime latency wordt apart behandeld in US-031.
+
+Statuslabel: US-030 `Done`.
 
 ## Aanbevolen Volgende Stap
 

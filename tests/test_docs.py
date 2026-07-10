@@ -405,7 +405,7 @@ class TestDocumentationArtifacts:
             "Received MIDI messages: note_on:60:velocity=50:channel=1",
             "Product Owner bevestigde",
             "US-029 `Done`",
-            "US-030 `In Review`",
+            "US-030 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -421,13 +421,15 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-030 Logic MIDI Region Multi-Note Playback",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "python-d1-synth",
             "MIDI Destination: python-d1-synth",
             "MIDI Channel: All",
             "--max-messages 16",
             "Received MIDI messages",
             "Rendered sequence events",
+            "Played 5 MIDI-triggered note events",
+            "Realtime playback hoort bij US-031",
             "MidiMessageNormalizer",
             "MidoVirtualMidiInputBackend",
             "VirtualMidiAudioTriggerResult",
