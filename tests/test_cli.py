@@ -657,5 +657,38 @@ class TestSynthCli:
         output = capsys.readouterr().out
         assert exit_code == 0
         assert "Opening virtual MIDI input port: python-d1-synth" in output
+        assert "audio is rendered after --max-messages is reached or --timeout expires" in output
         assert "Selected audio device from cli: Scarlett 8i6 USB" in output
         assert "Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth." in output
+
+    def test_midi_play_virtual_handles_keyboard_interrupt(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                return AudioDeviceSelection(sounddevice_value=None, source="none")
+
+        class FakeVirtualMidiAudioTrigger:
+            def trigger(self, settings):
+                raise KeyboardInterrupt
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "VirtualMidiAudioTrigger", FakeVirtualMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-virtual",
+                "--port-name",
+                "python-d1-synth",
+                "--max-messages",
+                "2",
+                "--timeout",
+                "10",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        captured = capsys.readouterr()
+        assert exit_code == 130
+        assert "Opening virtual MIDI input port: python-d1-synth" in captured.out
+        assert "Virtual MIDI audio trigger interrupted by user." in captured.err

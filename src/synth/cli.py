@@ -8,6 +8,7 @@
 
 import argparse
 import importlib.util
+import signal
 import sys
 from pathlib import Path
 
@@ -431,15 +432,30 @@ class SynthCli:
         reporter.light(
             "Keep this command running while Logic Pro or another DAW sends notes to this MIDI destination."
         )
+        reporter.light(
+            "MVP note: audio is rendered after --max-messages is reached or --timeout expires; "
+            "use --max-messages 2 --timeout 10 for a quick Logic test."
+        )
         reporter.verbose(
             "Virtual MIDI audio trigger settings: "
             f"waveform={args.waveform}, sample_rate={args.sample_rate} Hz, channel={args.channel}"
         )
+        original_sigint_handler = signal.getsignal(signal.SIGINT)
+
+        def _raise_keyboard_interrupt(signum, frame) -> None:
+            raise KeyboardInterrupt
+
         try:
+            signal.signal(signal.SIGINT, _raise_keyboard_interrupt)
             result = VirtualMidiAudioTrigger().trigger(settings)
+        except KeyboardInterrupt:
+            print("Virtual MIDI audio trigger interrupted by user.", file=sys.stderr)
+            return 130
         except RuntimeError as exc:
             print(f"Virtual MIDI audio trigger error: {exc}", file=sys.stderr)
             return 2
+        finally:
+            signal.signal(signal.SIGINT, original_sigint_handler)
 
         print(result.message)
         reporter.verbose(f"Audio buffer: {result.audio_frame_count} frames, {result.sample_rate} Hz")

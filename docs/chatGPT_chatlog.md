@@ -852,7 +852,6 @@ US-028 staat nu `Done` in docs en Kanban.
 ::git-stage{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth"}
 ::git-commit{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth"}
 ::git-push{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth" branch="main"}
-
 # credit limit!!
 10-jul-2026 19:45 Je hebt je gebruikslimiet bereikt. Upgrade je abonnement of voeg tegoed toe om door te gaan of probeer het opnieuw op 23:48.
 
@@ -939,4 +938,35 @@ Een bestand bewerktBewerkt cli.py+56-3
 
 CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-TESTS
 Ik voeg nu de unit- en CLI-tests toe. Die gebruiken alleen fake receiver/audio, dus je Mac MIDI setup wordt niet aangeraakt door de automatische test-suite.
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-IN-REVIEW-PUBLISHED
+
+US-029 is geïmplementeerd, getest, gecommit en gepusht.
+
+Toegevoegd:
+- `midi play-virtual`
+- `MidoVirtualMidiInputBackend`
+- `VirtualMidiAudioTriggerSettings`
+- `VirtualMidiAudioTriggerResult`
+- `VirtualMidiAudioTrigger`
+- Docs: [virtual_midi_audio_trigger_v0.1.0.md](/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth/docs/virtual_midi_audio_trigger_v0.1.0.md)
+- Kanban XLSX bijgewerkt met US-029 op `In Review`
+
+Verificatie:
+- `101 passed, 1 skipped`
+- `git diff --check` schoon
+- Commit/push: `39c0394 Add US-029 virtual MIDI audio trigger`
+
+Test nu in Logic Pro:
+
+```bash
+cd /Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10 --timeout 30 --debuglevel light
+```
+
+Laat de command lopen, kies in Logic `python-d1-synth` als External MIDI destination, speel noten. Let op: dit is bounded; audio speelt zodra `max-messages` bereikt is of de timeout afloopt.
+
+::git-stage{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth"}
+::git-commit{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth"}
+::git-push{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth" branch="main"}
 

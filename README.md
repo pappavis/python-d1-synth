@@ -126,10 +126,18 @@ Laat dit command draaien terwijl je in Logic Pro 12.3 controleert of `python-d1-
 Open een virtual MIDI port en speel Logic/DAW note events hoorbaar af:
 
 ```bash
-PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10 --timeout 30 --debuglevel light
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 2 --timeout 10 --debuglevel light
 ```
 
-Laat dit command draaien, kies in Logic Pro 12.3 `python-d1-synth` als External MIDI destination en speel enkele noten. Dit is nog geen Software Instrument, AU, VST3 of Logic Component.
+Laat dit command draaien en configureer Logic Pro 12.3 als volgt:
+
+- Maak een `MIDI > External MIDI` track.
+- Kies `MIDI Destination: python-d1-synth`.
+- Kies voor de eerste test `MIDI Channel: All` of `1`.
+- Zet een korte MIDI region met 1 of 2 noten op de track, of gebruik Musical Typing.
+- Start playback of speel noten terwijl de Python command loopt.
+
+Deze MVP-route rendert audio nadat `--max-messages` bereikt is of `--timeout` afloopt. Gebruik daarom voor de eerste test `--max-messages 2 --timeout 10`. Stoppen met `Ctrl-C` hoort netjes te melden dat de virtual MIDI audio trigger door de gebruiker is onderbroken. Dit is nog geen Software Instrument, AU, VST3 of Logic Component.
 
 Diagnoseer generieke USB MIDI input voorbereiding:
 
