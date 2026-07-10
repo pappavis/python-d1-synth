@@ -94,6 +94,8 @@ class TestDocumentationArtifacts:
             "MuziekM4",
             "default device",
             "Logic Pro shows devices but Python does not",
+            "2026-07-10 14:28",
+            "MIDI backend failed while scanning devices.",
         )
         for term in required_terms:
             assert term in content

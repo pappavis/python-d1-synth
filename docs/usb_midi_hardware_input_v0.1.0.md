@@ -57,6 +57,30 @@ If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setu
 
 Voorbeeld van Logic-zichtbare devices op `KodeklopperM4`: `IAC-besturingsbestand`, `Scarlett 8i6 USB`, `Ampero Mini`, `Haxophone`, `Poort 1`, `Poort 2`, `Poort 3`, `SMK-37 Pro_BLE`, `SN76489 Synth Pappavis`, `Software Synthesizer`, `Logic Pro Virtual Out`.
 
+## Testresultaat KodeklopperM4
+
+- CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-022-USB-MIDI-TESTRESULT
+- Datum/tijd: 2026-07-10 14:28
+- Computernaam: KodeklopperM4
+- Gekozen/default device: nog niet gekozen, omdat Python `list-devices` geen device kon tonen.
+- Fishman TriplePlay: niet beschikbaar tijdens deze test.
+- Logic Pro zichtbare devices: IAC-besturingsbestand, Scarlett 8i6 USB, Ampero Mini, Haxophone, Poort 1, Poort 2, Poort 3, SMK-37 Pro_BLE, SN76489 Synth Pappavis, Software Synthesizer, Logic Pro Virtual Out.
+- Command:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel light
+```
+
+- CLI output:
+
+```text
+MIDI backend failed while scanning devices.
+No MIDI devices detected or optional MIDI backend is not installed.
+No MIDI devices found.
+```
+
+- Beoordeling: US-022 blijft In Review. Logic Pro shows devices but Python does not, dus dit is een Python MIDI backend scan issue en geen bewijs dat de MIDI setup leeg is.
+
 Op macOS blijft native RtMidi/CoreMIDI scanning standaard uitgeschakeld. Als je bewust een echte scan wilt proberen vanuit je eigen Terminal:
 
 ```bash

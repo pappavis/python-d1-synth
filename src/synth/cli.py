@@ -159,6 +159,10 @@ class SynthCli:
         if not devices:
             if result.error_message is not None:
                 reporter.light(result.error_message)
+                reporter.light(
+                    "If Logic Pro shows devices but Python does not, record the Logic/Audio MIDI Setup device "
+                    "list and treat this as a Python MIDI backend scan issue."
+                )
             reporter.light("No MIDI devices detected or optional MIDI backend is not installed.")
             print("No MIDI devices found.")
             return 0
