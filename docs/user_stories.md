@@ -203,7 +203,7 @@ Als gebruiker met Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave of een ander US
 Prioriteit: Must
 Sprint: Future
 
-Notitie: US-022 staat Blocked omdat Logic Pro MIDI devices toont maar Python `midi list-devices --unsafe-rtmidi-scan` geen devices vindt. Het package-conflict tussen `rtmidi 2.5.0` en `python-rtmidi 1.5.8` is opgelost; de resterende blocker is `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. Elke hardwaretest moet eerst devices listen, daarna een device/default kiezen, en de computernaam `KodeklopperM4` of `MuziekM4` vastleggen. De expliciete hardwaretest is `PYTHON_D1_RUN_HARDWARE_MIDI=1 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m pytest tests/test_hardware_midi.py -s`.
+Notitie: US-022 is Done. Het package-conflict tussen `rtmidi 2.5.0` en `python-rtmidi 1.5.8` is opgelost, waarna `midi list-devices --unsafe-rtmidi-scan --debuglevel light` in een gewone Terminal op `KodeklopperM4` echte MIDI input- en outputdevices liste. De succesvolle test bevat onder meer `Scarlett 8i6 USB`, `SMK-37 Pro_BLE Bluetooth` en `SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]`, waarbij de SN76489 een Lolin Wemos ESP32 S2 met CircuitPython 10 is voor latere porting-context.
 
 ### US-023: Studio MIDI Routing Integratietest
 

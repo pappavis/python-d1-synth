@@ -229,8 +229,10 @@ Acceptatie op 2026-07-09:
 - Als Logic Pro devices toont maar Python scanning faalt, wordt dat als apart scan/backend issue vastgelegd.
 - De CLI toont backenddetails en `BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.` wanneer Python geen MIDI devices vindt terwijl Logic Pro ze wel toont.
 - De expliciete hardwaretest `PYTHON_D1_RUN_HARDWARE_MIDI=1 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m pytest tests/test_hardware_midi.py -s` scant echte MIDI devices en faalt als er geen devices gevonden worden.
-- Het package-conflict tussen `rtmidi 2.5.0` en `python-rtmidi 1.5.8` is vastgelegd als opgelost; de resterende blocker is `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`.
-- US-022 blijft `Blocked` totdat de Python MIDI backend minstens een echte, Logic-zichtbare MIDI input of output kan listen.
+- Het package-conflict tussen `rtmidi 2.5.0` en `python-rtmidi 1.5.8` is vastgelegd als opgelost.
+- `midi list-devices --unsafe-rtmidi-scan --debuglevel light` heeft op `KodeklopperM4` echte MIDI input- en outputdevices gelist.
+- `SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]` is vastgelegd als Lolin Wemos ESP32 S2 met CircuitPython 10 voor latere porting-context.
+- US-022 is `Done` op basis van de succesvolle handmatige hardwaretest.
 
 ## US-023: Studio MIDI Routing Integratietest
 

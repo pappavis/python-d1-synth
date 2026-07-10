@@ -6,7 +6,7 @@ Doc versie: 0.1.0
 Datum: 2026-07-09  
 User Story: US-022 USB MIDI Hardware Input  
 Epic: EPIC-007 Future MIDI En DAW Integratie  
-Status: Blocked, Python MIDI backend scan ziet geen devices terwijl Logic Pro wel devices toont
+Status: Done, MIDI device discovery geslaagd in gewone Terminal op KodeklopperM4
 
 ## Doel
 
@@ -22,6 +22,7 @@ Deze story levert een veilige readiness-diagnose. Live note receive en hoorbare 
 - Je kunt een device per test kiezen met `--midi-device`, of een default device in de testnotities aanwijzen.
 - Output-only devices worden niet als input-ready beschouwd.
 - `midi list-devices --unsafe-rtmidi-scan --debuglevel light` toont bij scan-falen backenddetails en een expliciete `BLOCKER` regel.
+- `midi list-devices --unsafe-rtmidi-scan --debuglevel light` kan in een gewone Terminal op `KodeklopperM4` echte MIDI input- en outputdevices listen.
 - De handmatige hardwaretest `tests/test_hardware_midi.py` scant echte MIDI devices en faalt als er geen devices gevonden worden wanneer `PYTHON_D1_RUN_HARDWARE_MIDI=1` is gezet.
 - De CLI heeft een hardwarediagnose:
 
@@ -91,7 +92,7 @@ No MIDI devices found.
 
 - Beoordeling: US-022 is Blocked. Logic Pro shows devices but Python does not, dus dit is een Python MIDI backend scan issue en geen bewijs dat de MIDI setup leeg is.
 
-## Impediment / Blocker
+## Historische Impediment / Blocker
 
 - CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-022-BLOCKER-001
 - Datum/tijd: 2026-07-10
@@ -102,8 +103,8 @@ No MIDI devices found.
 - Nieuw testgedrag: `tests/test_hardware_midi.py` kan met `PYTHON_D1_RUN_HARDWARE_MIDI=1` een echte hardware-scan afdwingen, devices listen en falen als Python niets vindt.
 - Eerste technische oorzaak gevonden en opgelost: het conflicterende pakket `rtmidi 2.5.0` stond naast `python-rtmidi 1.5.8` in dezelfde venv. Daardoor importeerde Mido de verkeerde backendmodule en miste `rtmidi.API_UNSPECIFIED`.
 - Venv-herstel uitgevoerd: `rtmidi 2.5.0` verwijderd en `python-rtmidi==1.5.8` opnieuw geinstalleerd. Verificatie: `rtmidi.__version__ == 1.5.8` en `API_UNSPECIFIED=True`.
-- Resterende blocker na package-herstel: `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`.
-- Status: `Blocked` totdat de Python MIDI backend minstens een Logic-zichtbaar device kan listen op `KodeklopperM4` of `MuziekM4`.
+- Resterende blocker na package-herstel in de Codex-run context: `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`.
+- Status toen: `Blocked` totdat de Python MIDI backend minstens een Logic-zichtbaar device kon listen op `KodeklopperM4` of `MuziekM4`.
 
 Hardwaretest na venv-herstel:
 
@@ -124,6 +125,46 @@ Crashlog-bevindingen:
 - Crashpad: `_rtmidi.cpython-312-darwin.so` -> `MidiInCore::getCoreMidiClientSingleton` -> `MidiInCore::initialize` -> `RtMidiIn`.
 - CoreMIDI thread is aanwezig in de crashlog, wat bevestigt dat de crash optreedt tijdens native CoreMIDI input-client initialisatie.
 - Conclusie: de veilige subprocess-isolatie is nodig. De hoofd-CLI mag niet zelf live CoreMIDI scanning doen totdat deze CoreMIDI/RtMidi blocker opgelost is.
+
+## Succesvolle Hardwaretest KodeklopperM4
+
+- CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-022-SUCCESS-TESTRESULT
+- Datum/tijd: 2026-07-10 18:01:41
+- Computernaam: KodeklopperM4
+- Testomgeving: gewone macOS Terminal met `/Volumes/data1/michiele/venv/venv3.12/bin/python`
+- Command:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel light
+```
+
+- CLI output:
+
+```text
+input:0 input   IAC-besturingsbestand Bus 1
+input:1 input   Scarlett 8i6 USB
+input:2 input   Ampero Mini
+input:3 input   Haxophone
+input:4 input     Poort 1
+input:5 input     Poort 2
+input:6 input     Poort 3
+input:7 input   SMK-37 Pro_BLE Bluetooth
+input:8 input   SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]
+output:0        output  IAC-besturingsbestand Bus 1
+output:1        output  Scarlett 8i6 USB
+output:2        output  Ampero Mini
+output:3        output  Haxophone
+output:4        output    Poort 1
+output:5        output    Poort 2
+output:6        output    Poort 3
+output:7        output  SMK-37 Pro_BLE Bluetooth
+output:8        output  SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]
+output:9        output  Software Synthesizer
+```
+
+- Beoordeling: test geslaagd. Python MIDI device discovery werkt in gewone Terminal en toont generieke input- en outputdevices.
+- Extra hardwarecontext: `SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]` is een Lolin Wemos ESP32 S2 met CircuitPython 10 en is kandidaat voor een latere CircuitPython-port van `python-d1-synth`.
+- US-022 status: `Done`.
 
 Op macOS blijft native RtMidi/CoreMIDI scanning standaard uitgeschakeld. Als je bewust een echte scan wilt proberen vanuit je eigen Terminal:
 
@@ -167,4 +208,5 @@ Opmerkingen/screenshot:
 - Fishman TriplePlay, M-Vave en andere USB MIDI interfaces zijn expliciet toegestaan.
 - `UsbMidiHardwareInputAdapter` kan een generiek input device selecteren.
 - `midi diagnose-usb-input` geeft duidelijke diagnostiek.
-- US-022 blijft `Blocked` totdat de Python MIDI backend minstens een echte, Logic-zichtbare MIDI input of output kan listen.
+- `midi list-devices --unsafe-rtmidi-scan --debuglevel light` heeft echte MIDI input- en outputdevices gelist op `KodeklopperM4`.
+- US-022 is `Done` op basis van de succesvolle handmatige hardwaretest.

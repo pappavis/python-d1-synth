@@ -183,9 +183,9 @@ Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoor
 
 De skeleton voert MIDI device scanning daarom in een apart subprocess uit. Als RtMidi crasht, blijft de hoofd-CLI overeind en meldt `midi list-devices` dat er geen devices gevonden zijn of dat de backend niet bruikbaar is.
 
-US-022 staat momenteel op `Blocked`: Logic Pro toont MIDI devices op de Mac, maar Python device discovery retourneert geen devices. `midi list-devices --unsafe-rtmidi-scan --debuglevel light` toont daarom backenddetails en `BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.`.
+US-022 is afgerond: na herstel van de MIDI Python packages toont `midi list-devices --unsafe-rtmidi-scan --debuglevel light` in een gewone Terminal op `KodeklopperM4` echte MIDI input- en outputdevices, waaronder `Scarlett 8i6 USB`, `SMK-37 Pro_BLE Bluetooth` en `SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]`.
 
-Tijdens US-022 is een eerste package-conflict opgelost: het verkeerde pakket `rtmidi 2.5.0` stond naast `python-rtmidi 1.5.8` en overschreef de module die Mido verwacht. Na verwijderen van `rtmidi` en herinstalleren van `python-rtmidi==1.5.8` is `rtmidi.API_UNSPECIFIED` weer beschikbaar. De resterende blocker is nu de CoreMIDI fout `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`.
+Tijdens US-022 is een package-conflict opgelost: het verkeerde pakket `rtmidi 2.5.0` stond naast `python-rtmidi 1.5.8` en overschreef de module die Mido verwacht. Na verwijderen van `rtmidi` en herinstalleren van `python-rtmidi==1.5.8` is `rtmidi.API_UNSPECIFIED` weer beschikbaar. In de Codex-run context kan CoreMIDI scanning nog crashen met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`, daarom blijft de scan standaard veilig uit en gebruiken we `--unsafe-rtmidi-scan` alleen voor bewuste hardwarediagnose.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 
