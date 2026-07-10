@@ -266,4 +266,4 @@ Als Logic Pro of DAW gebruiker wil ik `python-d1-synth` als virtual MIDI destina
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `MidoVirtualMidiInputBackend`, `VirtualMidiAudioTriggerSettings`, `VirtualMidiAudioTriggerResult`, `VirtualMidiAudioTrigger`, CLI command `midi play-virtual`, fake receiver tests, fake audio player tests en `docs/virtual_midi_audio_trigger_v0.1.0.md`. Deze story combineert US-027 virtual port zichtbaarheid met US-028 audio-triggering. Geen GUI, geen plugin, geen AU/VST3 en geen hardcoded MIDI hardware device names.
+Notitie: Done met `MidoVirtualMidiInputBackend`, `VirtualMidiAudioTriggerSettings`, `VirtualMidiAudioTriggerResult`, `VirtualMidiAudioTrigger`, CLI command `midi play-virtual`, fake receiver tests, fake audio player tests en `docs/virtual_midi_audio_trigger_v0.1.0.md`. De Logic Pro test is geslaagd: een MIDI region stuurde `note_on:60:velocity=50:channel=1` naar `python-d1-synth` en er was hoorbaar geluid via `Scarlett 8i6 USB`. Deze story combineert US-027 virtual port zichtbaarheid met US-028 audio-triggering. Geen GUI, geen plugin, geen AU/VST3 en geen hardcoded MIDI hardware device names.

@@ -343,7 +343,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-029 Logic/DAW Virtual MIDI Naar Audio Trigger",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-virtual",
             "python-d1-synth",
             "Logic Pro 12.3",
@@ -375,11 +375,36 @@ class TestDocumentationArtifacts:
             "US-029-IMPEDIMENT-002",
             "SMK 37 Pro",
             "Received MIDI messages: note_on:60:velocity=96:channel=1",
+            "Received MIDI messages: note_on:60:velocity=50:channel=1",
             "Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.",
+            "Beoordeling: geslaagd",
             "Virtual MIDI audio trigger interrupted by user.",
             "exit code `130`",
             "Played ... MIDI-triggered note events from virtual MIDI port python-d1-synth.",
-            "US-029 status: `In Review`",
+            "US-029 status: `Done`",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_lessons_learned_review_doc_contains_required_terms(self) -> None:
+        document = Path("docs/sprint_lessons_learned_review_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "LESSONS-LEARNED-001",
+            "Sprint 0, Sprint 1, Future MIDI/DAW",
+            "US-001 t/m US-029",
+            "Scope-discipline",
+            "MIDI moet altijd eerst diagnostisch bewezen worden",
+            "Traceability",
+            "KeyboardInterrupt",
+            "US-029-IMPEDIMENT-001",
+            "US-029-IMPEDIMENT-002",
+            "Received MIDI messages: note_on:60:velocity=50:channel=1",
+            "Product Owner bevestigde",
+            "US-029 `Done`",
         )
         for term in required_terms:
             assert term in content

@@ -389,4 +389,8 @@ Acceptatie op 2026-07-11:
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-029 Logic/DAW Virtual MIDI Naar Audio Trigger` en `Version: 0.1.0`.
 - Geen GUI, geen plugin, geen AU/VST3, geen Logic Component en geen onbeperkte realtime performance-loop.
 - Er zijn geen hardcoded MIDI hardware device names toegevoegd.
-- Story status is `In Review` tot de handmatige Logic Pro test is bevestigd.
+- Handmatige Logic Pro test is geslaagd: een MIDI region track speelde hoorbaar geluid via Python.
+- CLI output bevatte `Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.`
+- CLI output bevatte `Received MIDI messages: note_on:60:velocity=50:channel=1`.
+- CLI output bevatte `Audio buffer: 44100 frames, 44100 Hz`.
+- Story status is `Done`.

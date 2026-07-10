@@ -258,7 +258,11 @@ US-027 is afgerond: `midi virtual-port` kan bounded een virtual MIDI input port 
 
 US-028 is afgerond: `midi play-live` koppelt bounded ontvangen MIDI note events aan de bestaande synth-engine en audio-output. De klanttest op `KodeklopperM4` bevestigde hoorbaar stereo geluid met `SMK-37 Pro_BLE Bluetooth` naar `Scarlett 8i6 USB`.
 
-US-029 is in review: `midi play-virtual` opent zelf een virtual MIDI input port en koppelt ontvangen Logic/DAW note events aan dezelfde synth-engine/audio-output route. Dit is commandline-only en blijft buiten GUI, AU/VST3, Logic Component en plugin packaging.
+US-029 is afgerond: `midi play-virtual` opent zelf een virtual MIDI input port en koppelt ontvangen Logic/DAW note events aan dezelfde synth-engine/audio-output route. De Logic Pro test bevestigde hoorbaar geluid vanuit een MIDI region naar `python-d1-synth`, met `Received MIDI messages: note_on:60:velocity=50:channel=1`. Dit is commandline-only en blijft buiten GUI, AU/VST3, Logic Component en plugin packaging.
+
+Lessons learned en sprint review:
+
+- [Sprint Lessons Learned En Review](docs/sprint_lessons_learned_review_v0.1.0.md)
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

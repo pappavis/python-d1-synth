@@ -5,7 +5,7 @@ Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0  
 Epic: EPIC-007 Future MIDI En DAW Integratie  
 User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger  
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -102,7 +102,7 @@ Oplossing in deze impediment-fix:
 
 ## Impediment US-029-IMPEDIMENT-002
 
-Testresultaat:
+Eerste testresultaat:
 
 - Logic Pro toont `python-d1-synth` als External MIDI destination.
 - Er is een MIDI region opgenomen via `SMK 37 Pro`.
@@ -115,6 +115,24 @@ Diagnosewijziging:
 - `midi play-virtual --debuglevel verbose` toont ontvangen note messages met type, note number, velocity en channel.
 - Bij timeout zonder MIDI wordt expliciet `Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.` getoond.
 - De aanbevolen diagnose gebruikt `--max-messages 1 --timeout 10 --debuglevel verbose`, zodat één note-on genoeg is om de Logic-to-Python route te bewijzen.
+
+Tweede testresultaat:
+
+CHATOD-20260709-D1PY-MVP-001 / US-029-IMPEDIMENT-002-PUBLISHED
+
+```text
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 1 --timeout 10 --debuglevel verbose
+Selected audio device from cli: Scarlett 8i6 USB
+Opening virtual MIDI input port: python-d1-synth
+Keep this command running while Logic Pro or another DAW sends notes to this MIDI destination.
+MVP note: audio is rendered after --max-messages is reached or --timeout expires; use --max-messages 2 --timeout 10 for a quick Logic test.
+Virtual MIDI audio trigger settings: port=python-d1-synth, max_messages=1, timeout=10s, waveform=sine, sample_rate=44100 Hz, channel=stereo
+Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.
+Received MIDI messages: note_on:60:velocity=50:channel=1
+Audio buffer: 44100 frames, 44100 Hz
+```
+
+Beoordeling: geslaagd. De MIDI region track in Logic Pro stuurde note events naar de virtual MIDI port, Python ontving `note_on:60:velocity=50:channel=1`, en er werd hoorbaar geluid afgespeeld via `Scarlett 8i6 USB`.
 
 ## Acceptatiecriteria
 
@@ -131,4 +149,4 @@ Diagnosewijziging:
 
 ## Status
 
-US-029 status: `In Review`. Automatische tests zijn groen; handmatige Logic/DAW test pauzeert bij klant.
+US-029 status: `Done`. Automatische tests zijn groen en de handmatige Logic Pro test bevestigt hoorbaar geluid vanuit een MIDI region naar `python-d1-synth`.
