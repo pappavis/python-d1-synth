@@ -1,14 +1,18 @@
 # Bestand: test_midi.py
 # Versienummer: 0.1.0
-# Doel: Unit tests voor MIDI discovery, selectie, virtual port lifecycle en MIDI-naar-NoteEvent mapping.
+# Doel: Unit tests voor MIDI discovery, selectie, MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
-# Actie: US-027-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
+# User-Story: US-028 External MIDI Audio Trigger Integratie
+# Actie: US-028-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
 
 import pytest
 
+from synth.audio import OutputChannel
 from synth.midi import (
+    MidiAudioTrigger,
+    MidiAudioTriggerResult,
+    MidiAudioTriggerSettings,
     LiveMidiInputReceiver,
     MidiDevice,
     MidiDeviceScanner,
@@ -278,6 +282,102 @@ class TestVirtualMidiPortManager:
     def test_virtual_port_settings_require_positive_timeout(self) -> None:
         with pytest.raises(ValueError, match="timeout_seconds"):
             VirtualMidiPortSettings(timeout_seconds=0)
+
+
+class TestMidiAudioTrigger:
+    def test_trigger_receives_midi_sequence_renders_audio_and_plays_selected_device(self) -> None:
+        class FakeReceiver:
+            def receive(self, settings):
+                note = MidiToNoteEventMapper().messages_to_note_sequence(
+                    (
+                        MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                        MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
+                    )
+                )
+                return type(
+                    "FakeReceiveResult",
+                    (),
+                    {
+                        "input_name": settings.input_name,
+                        "received_messages": (
+                            MidiMessage(
+                                message_type="note_on",
+                                note_number=60,
+                                velocity=100,
+                                channel=1,
+                                time_seconds=0.0,
+                            ),
+                            MidiMessage(
+                                message_type="note_off",
+                                note_number=60,
+                                velocity=0,
+                                channel=1,
+                                time_seconds=0.1,
+                            ),
+                        ),
+                        "note_sequence": note,
+                        "message": "Received 2 MIDI note messages from Generic Keyboard.",
+                    },
+                )()
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = MidiAudioTriggerSettings(
+            input_name="Generic Keyboard",
+            max_messages=2,
+            timeout_seconds=0.5,
+            sample_rate=44100,
+            channel=OutputChannel.STEREO,
+            audio_device="Scarlett 8i6 USB",
+        )
+
+        result = MidiAudioTrigger(receiver=FakeReceiver(), audio_player=audio_player).trigger(settings)
+
+        assert result == MidiAudioTriggerResult(
+            input_name="Generic Keyboard",
+            received_message_count=2,
+            played_event_count=1,
+            audio_frame_count=4410,
+            sample_rate=44100,
+            message="Played 1 MIDI-triggered note events from Generic Keyboard.",
+        )
+        assert audio_player.calls == [((4410, 2), 44100, "Scarlett 8i6 USB")]
+
+    def test_trigger_does_not_play_audio_when_no_note_events_are_received(self) -> None:
+        class FakeReceiver:
+            def receive(self, settings):
+                return type(
+                    "FakeReceiveResult",
+                    (),
+                    {
+                        "input_name": settings.input_name,
+                        "received_messages": tuple(),
+                        "note_sequence": MidiToNoteEventMapper().messages_to_note_sequence(tuple()),
+                        "message": "Received 0 MIDI note messages from Generic Keyboard.",
+                    },
+                )()
+
+        class FakeAudioPlayer:
+            def play(self, buffer, device=None):
+                raise AssertionError("audio should not play without note events")
+
+        settings = MidiAudioTriggerSettings(input_name="Generic Keyboard")
+
+        result = MidiAudioTrigger(receiver=FakeReceiver(), audio_player=FakeAudioPlayer()).trigger(settings)
+
+        assert result.played_event_count == 0
+        assert result.audio_frame_count == 0
+        assert result.message == "Received 0 MIDI-triggered note events from Generic Keyboard; no audio played."
+
+    def test_trigger_settings_require_positive_values(self) -> None:
+        with pytest.raises(ValueError, match="sample_rate"):
+            MidiAudioTriggerSettings(input_name="Generic Keyboard", sample_rate=0)
 
 
 class TestUsbMidiHardwareInputAdapter:

@@ -1,10 +1,10 @@
 # Bestand: midi.py
 # Versienummer: 0.1.0
-# Doel: MIDI device discovery, device selectie, virtual port lifecycle en MIDI-naar-NoteEvent mapping.
+# Doel: MIDI device discovery, device selectie, MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
-# Actie: US-027-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
+# User-Story: US-028 External MIDI Audio Trigger Integratie
+# Actie: US-028-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
 
 from __future__ import annotations
 
@@ -16,7 +16,10 @@ import sys
 import time
 from typing import Protocol
 
+from synth.audio import AudioBuffer, OutputChannel, SoundDeviceAudioPlayer
+from synth.engine import SynthEngine, SynthEngineSettings
 from synth.notes import NoteEvent, NoteParser, NoteSequence
+from synth.oscillators import Waveform
 
 
 @dataclass(frozen=True)
@@ -234,6 +237,60 @@ class VirtualMidiPortResult:
     message: str
 
 
+@dataclass(frozen=True)
+class MidiAudioTriggerSettings:
+    """Settings for bounded external MIDI to audio triggering.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-028
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-028 External MIDI Audio Trigger Integratie
+    - Version: 0.1.0
+    """
+
+    input_name: str
+    max_messages: int = 10
+    timeout_seconds: float = 5.0
+    sample_rate: int = 44100
+    waveform: Waveform = Waveform.SINE
+    amplitude: float = 0.2
+    channel: OutputChannel = OutputChannel.STEREO
+    audio_device: int | str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.input_name.strip():
+            raise ValueError("input_name must not be empty")
+        if self.max_messages <= 0:
+            raise ValueError("max_messages must be positive")
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        if self.sample_rate <= 0:
+            raise ValueError("sample_rate must be positive")
+        if not 0 < self.amplitude <= 1.0:
+            raise ValueError("amplitude must be between 0 and 1")
+
+
+@dataclass(frozen=True)
+class MidiAudioTriggerResult:
+    """Result from bounded external MIDI to audio triggering.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-028
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-028 External MIDI Audio Trigger Integratie
+    - Version: 0.1.0
+    """
+
+    input_name: str
+    received_message_count: int
+    played_event_count: int
+    audio_frame_count: int
+    sample_rate: int
+    message: str
+
+
 class MidiInputBackend(Protocol):
     def receive_messages(
         self, input_name: str, max_messages: int, timeout_seconds: float
@@ -243,6 +300,11 @@ class MidiInputBackend(Protocol):
 
 class VirtualMidiPortBackend(Protocol):
     def open_virtual_input(self, port_name: str, timeout_seconds: float) -> VirtualMidiPortResult:
+        ...
+
+
+class AudioPlayer(Protocol):
+    def play(self, buffer: AudioBuffer, device: int | str | None = None) -> None:
         ...
 
 
@@ -394,6 +456,64 @@ class LiveMidiInputReceiver:
             received_messages=messages,
             note_sequence=sequence,
             message=f"Received {len(messages)} MIDI note messages from {settings.input_name}.",
+        )
+
+
+class MidiAudioTrigger:
+    """Receive bounded MIDI note events, render them, and play one audio buffer.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-028
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-028 External MIDI Audio Trigger Integratie
+    - Version: 0.1.0
+    """
+
+    def __init__(
+        self,
+        receiver: LiveMidiInputReceiver | None = None,
+        audio_player: AudioPlayer | None = None,
+    ) -> None:
+        self._receiver = receiver if receiver is not None else LiveMidiInputReceiver()
+        self._audio_player = audio_player if audio_player is not None else SoundDeviceAudioPlayer()
+
+    def trigger(self, settings: MidiAudioTriggerSettings) -> MidiAudioTriggerResult:
+        receive_result = self._receiver.receive(
+            MidiInputReceiveSettings(
+                input_name=settings.input_name,
+                max_messages=settings.max_messages,
+                timeout_seconds=settings.timeout_seconds,
+            )
+        )
+        event_count = len(receive_result.note_sequence.events)
+        if event_count == 0:
+            return MidiAudioTriggerResult(
+                input_name=settings.input_name,
+                received_message_count=len(receive_result.received_messages),
+                played_event_count=0,
+                audio_frame_count=0,
+                sample_rate=settings.sample_rate,
+                message=f"Received 0 MIDI-triggered note events from {settings.input_name}; no audio played.",
+            )
+
+        engine = SynthEngine(
+            SynthEngineSettings(
+                sample_rate=settings.sample_rate,
+                waveform=settings.waveform,
+                amplitude=settings.amplitude,
+                channel=settings.channel,
+            )
+        )
+        buffer = engine.render_sequence(receive_result.note_sequence)
+        self._audio_player.play(buffer, device=settings.audio_device)
+        return MidiAudioTriggerResult(
+            input_name=settings.input_name,
+            received_message_count=len(receive_result.received_messages),
+            played_event_count=event_count,
+            audio_frame_count=buffer.samples.shape[0],
+            sample_rate=buffer.sample_rate,
+            message=f"Played {event_count} MIDI-triggered note events from {settings.input_name}.",
         )
 
 

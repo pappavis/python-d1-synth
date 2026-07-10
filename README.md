@@ -103,6 +103,12 @@ Luister bounded naar een gekozen MIDI input zonder audio-trigger:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi listen --unsafe-rtmidi-scan --midi-device "deel van input device naam" --max-messages 10 --timeout 5 --debuglevel light
 ```
 
+Speel ontvangen MIDI note events bounded af via de synth-engine:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-live --unsafe-rtmidi-scan --midi-device "deel van input device naam" --audio-device "Scarlett 8i6 USB" --max-messages 10 --timeout 10 --debuglevel light
+```
+
 Diagnoseer virtual MIDI input voorbereiding:
 
 ```bash
@@ -205,6 +211,7 @@ MIDI leerpad:
 - [MIDI Device Discovery En Default Selection](docs/midi_device_discovery_default_selection_v0.1.0.md)
 - [Live MIDI Input Receive Loop](docs/live_midi_input_receive_loop_v0.1.0.md)
 - [Virtual MIDI Port Voor Logic/DAW](docs/virtual_midi_port_logic_daw_v0.1.0.md)
+- [External MIDI Audio Trigger Integratie](docs/external_midi_audio_trigger_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
@@ -223,6 +230,8 @@ US-025 is afgerond: `midi list-devices` kan naast scannen ook een MIDI input sel
 US-026 is afgerond: `midi listen` kan bounded note messages ontvangen van een gekozen MIDI input, normaliseren naar `MidiMessage`, en mappen naar `NoteSequence`. Dit is nog geen Logic virtual device en nog geen realtime audio-trigger.
 
 US-027 is afgerond: `midi virtual-port` kan bounded een virtual MIDI input port openen voor Logic/DAW zichtbaarheid. De klanttest in Logic Pro 12.3 bevestigde dat `python-d1-synth` beschikbaar is als External MIDI destination. Niet zichtbaar als Software Instrument / virtual instrument is verwacht; AU/VST3/Logic Component hoort bij latere plugin-packaging stories. Realtime audio-triggering blijft US-028.
+
+US-028 is In Review: `midi play-live` koppelt bounded ontvangen MIDI note events aan de bestaande synth-engine en audio-output. Automatische tests gebruiken fake MIDI en fake audio; hoorbare hardwarevalidatie op je Mac/Scarlett moet nog worden bevestigd.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

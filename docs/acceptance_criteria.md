@@ -343,3 +343,18 @@ Acceptatie op 2026-07-10:
 - Given ontvangen `NoteEvent` items, when live audio-triggering actief is, then de synth hoorbaar audio via de gekozen audio-output maakt.
 - Given meerdere inputbronnen, then de audio-trigger dezelfde interne synth-engine gebruikt als CLI play/render.
 - Given audio- of MIDI-backend faalt, then de CLI duidelijke troubleshooting output geeft.
+
+Acceptatie op 2026-07-10:
+
+- `midi play-live` luistert bounded naar een gekozen MIDI input en speelt ontvangen note events af.
+- `MidiAudioTriggerSettings`, `MidiAudioTriggerResult` en `MidiAudioTrigger` zijn class-based en traceerbaar.
+- De trigger gebruikt `LiveMidiInputReceiver`, `SynthEngine` en `SoundDeviceAudioPlayer`.
+- CLI selectie gebruikt runtime MIDI device discovery via `--midi-device`, `--midi-device-id` of `--config`.
+- CLI audio-output gebruikt `--audio-device`.
+- Unit tests gebruiken een fake MIDI backend / fake receiver en fake audio player.
+- CLI tests gebruiken fake scanner, fake audio selector en fake trigger.
+- Er zijn geen hardcoded MIDI device names toegevoegd.
+- US-028 bevat geen GUI, geen plugin, geen AU/VST3 en geen onbeperkte realtime performance-loop.
+- `docs/external_midi_audio_trigger_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-028 External MIDI Audio Trigger Integratie`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-028 External MIDI Audio Trigger Integratie` en `Version: 0.1.0`.
+- Story status blijft `In Review` totdat de hoorbare hardwaretest door de klant is bevestigd.

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
-# Actie: US-027-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
+# User-Story: US-028 External MIDI Audio Trigger Integratie
+# Actie: US-028-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
 
 from pathlib import Path
 
@@ -287,6 +287,40 @@ class TestDocumentationArtifacts:
             "virtual instrument",
             "verwacht en geen US-027 defect",
             "geslaagd is",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us028_external_midi_audio_trigger_doc_contains_required_terms(self) -> None:
+        document = Path("docs/external_midi_audio_trigger_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-028 External MIDI Audio Trigger Integratie",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-live",
+            "MidiAudioTriggerSettings",
+            "MidiAudioTriggerResult",
+            "MidiAudioTrigger",
+            "LiveMidiInputReceiver",
+            "SynthEngine",
+            "SoundDeviceAudioPlayer",
+            "fake MIDI backend",
+            "fake audio player",
+            "bounded",
+            "geen GUI",
+            "geen plugin",
+            "geen onbeperkte realtime performance-loop",
+            "hardwaretest pauzeert bij klant",
+            "geen hardcoded MIDI device names",
+            "Scarlett 8i6 USB",
+            "SMK-37 Pro_BLE",
+            "US-028-HARDWARE-TEST",
         )
         for term in required_terms:
             assert term in content

@@ -257,4 +257,4 @@ Als gebruiker wil ik ontvangen MIDI note events hoorbaar via de Mac audio-output
 Prioriteit: Must
 Sprint: Future
 
-Notitie: To Do. Dit volgt logisch na US-026 en eventueel US-027.
+Notitie: In Review met `MidiAudioTriggerSettings`, `MidiAudioTriggerResult`, `MidiAudioTrigger`, CLI command `midi play-live`, fake MIDI backend tests, fake audio player tests en `docs/external_midi_audio_trigger_v0.1.0.md`. De automatische tests openen geen echte MIDI of audio hardware. De hoorbare hardwaretest pauzeert bij klant.

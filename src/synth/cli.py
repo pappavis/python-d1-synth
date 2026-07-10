@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
-# Actie: US-027-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
+# User-Story: US-028 External MIDI Audio Trigger Integratie
+# Actie: US-028-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
 
 import argparse
 import importlib.util
@@ -17,6 +17,8 @@ from synth.debug import DebugLevel, DebugReporter
 from synth.engine import SynthEngine, SynthEngineSettings
 from synth.midi import (
     LiveMidiInputReceiver,
+    MidiAudioTrigger,
+    MidiAudioTriggerSettings,
     MidiDeviceScanner,
     MidiDeviceSelector,
     MidiInputReceiveSettings,
@@ -46,6 +48,7 @@ class SynthCli:
     - User Story: US-025 MIDI Device Discovery En Default Selection
     - User Story: US-026 Live MIDI Input Receive Loop
     - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
+    - User Story: US-028 External MIDI Audio Trigger Integratie
     - Version: 0.1.0
     """
 
@@ -127,6 +130,22 @@ class SynthCli:
         listen.add_argument("--timeout", type=float, default=5.0)
         listen.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
         listen.set_defaults(handler=self._handle_midi_listen)
+        play_live = midi_subparsers.add_parser(
+            "play-live",
+            help="Listen to a selected MIDI input and play received note events through the synth engine.",
+        )
+        play_live.add_argument("--midi-device")
+        play_live.add_argument("--midi-device-id")
+        play_live.add_argument("--config")
+        play_live.add_argument("--unsafe-rtmidi-scan", action="store_true")
+        play_live.add_argument("--max-messages", type=int, default=10)
+        play_live.add_argument("--timeout", type=float, default=5.0)
+        play_live.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
+        play_live.add_argument("--sample-rate", type=int, default=44100)
+        play_live.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
+        play_live.add_argument("--audio-device")
+        play_live.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        play_live.set_defaults(handler=self._handle_midi_play_live)
 
         return parser
 
@@ -321,6 +340,56 @@ class SynthCli:
         print(result.message)
         if result.note_sequence.events:
             print(f"Received sequence: {self._format_sequence_events(result.note_sequence)}")
+        return 0
+
+    def _handle_midi_play_live(self, args: argparse.Namespace) -> int:
+        reporter = DebugReporter(DebugLevel(args.debuglevel))
+        result = MidiDeviceScanner(allow_unsafe_native_scan=args.unsafe_rtmidi_scan).scan()
+        devices = result.devices
+        if not devices:
+            self._report_midi_scan_details(reporter, result)
+            if result.error_message is not None:
+                reporter.light(result.error_message)
+            print("No MIDI input devices found. Run midi list-devices before midi play-live.")
+            return 0
+
+        config_device = self._load_midi_default_device(args.config)
+        selection = MidiDeviceSelector().select_input_device(
+            devices,
+            cli_device=args.midi_device,
+            cli_device_id=args.midi_device_id,
+            config_device=config_device,
+        )
+        if selection.message:
+            reporter.light(selection.message)
+        if selection.matched_device is None:
+            return 0
+
+        audio_selection = AudioDeviceSelector().select(args.audio_device)
+        if audio_selection.sounddevice_value is not None:
+            reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
+
+        settings = MidiAudioTriggerSettings(
+            input_name=selection.matched_device.name,
+            max_messages=args.max_messages,
+            timeout_seconds=args.timeout,
+            sample_rate=args.sample_rate,
+            waveform=Waveform(args.waveform),
+            channel=OutputChannel(args.channel),
+            audio_device=audio_selection.sounddevice_value,
+        )
+        reporter.verbose(
+            "MIDI audio trigger settings: "
+            f"waveform={args.waveform}, sample_rate={args.sample_rate} Hz, channel={args.channel}"
+        )
+        try:
+            result = MidiAudioTrigger().trigger(settings)
+        except RuntimeError as exc:
+            print(f"MIDI audio trigger error: {exc}", file=sys.stderr)
+            return 2
+
+        print(result.message)
+        reporter.verbose(f"Audio buffer: {result.audio_frame_count} frames, {result.sample_rate} Hz")
         return 0
 
     def _handle_audio_list_devices(self, args: argparse.Namespace) -> int:

@@ -1,17 +1,17 @@
 # Bestand: test_cli.py
 # Versienummer: 0.1.0
-# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI port workflows.
+# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
-# Actie: US-027-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
+# User-Story: US-028 External MIDI Audio Trigger Integratie
+# Actie: US-028-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
 
 import numpy as np
 
-from synth.audio import AudioDevice
+from synth.audio import AudioDevice, AudioDeviceSelection, OutputChannel
 import synth.cli
 from synth.cli import SynthCli
-from synth.midi import MidiDevice, MidiInputReceiveResult, MidiMessage, VirtualMidiPortResult
+from synth.midi import MidiAudioTriggerResult, MidiDevice, MidiInputReceiveResult, MidiMessage, VirtualMidiPortResult
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 
 
@@ -539,3 +539,67 @@ class TestSynthCli:
         assert "Selected MIDI input device from cli: input:0 Generic Keyboard" in output
         assert "Received 2 MIDI note messages from Generic Keyboard." in output
         assert "Received sequence: C4@0.000s" in output
+
+    def test_midi_play_live_triggers_audio_from_selected_input(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (MidiDevice(identifier="input:0", name="Generic Keyboard", direction="input"),),
+                        "error_message": None,
+                    },
+                )()
+
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                assert cli_device == "Scarlett 8i6 USB"
+                return AudioDeviceSelection(sounddevice_value="Scarlett 8i6 USB", source="cli")
+
+        class FakeMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.input_name == "Generic Keyboard"
+                assert settings.max_messages == 2
+                assert settings.timeout_seconds == 0.5
+                assert settings.sample_rate == 44100
+                assert settings.channel is OutputChannel.STEREO
+                assert settings.audio_device == "Scarlett 8i6 USB"
+                return MidiAudioTriggerResult(
+                    input_name=settings.input_name,
+                    received_message_count=2,
+                    played_event_count=1,
+                    audio_frame_count=4410,
+                    sample_rate=44100,
+                    message="Played 1 MIDI-triggered note events from Generic Keyboard.",
+                )
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "MidiAudioTrigger", FakeMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-live",
+                "--midi-device",
+                "Generic",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+                "--max-messages",
+                "2",
+                "--timeout",
+                "0.5",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Selected MIDI input device from cli: input:0 Generic Keyboard" in output
+        assert "Selected audio device from cli: Scarlett 8i6 USB" in output
+        assert "Played 1 MIDI-triggered note events from Generic Keyboard." in output
