@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
-# Actie: US-029-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
+# User-Story: US-030 Logic MIDI Region Multi-Note Playback
+# Actie: US-030-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
 
 import argparse
 import importlib.util
@@ -53,6 +53,7 @@ class SynthCli:
     - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
     - User Story: US-028 External MIDI Audio Trigger Integratie
     - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - Version: 0.1.0
     """
 
@@ -462,6 +463,8 @@ class SynthCli:
         print(result.message)
         if result.received_messages:
             reporter.verbose(f"Received MIDI messages: {self._format_midi_messages(result.received_messages)}")
+        if result.played_events:
+            reporter.verbose(f"Rendered sequence events: {self._format_sequence_events(NoteSequence(result.played_events))}")
         reporter.verbose(f"Audio buffer: {result.audio_frame_count} frames, {result.sample_rate} Hz")
         return 0
 

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
-# Actie: US-029-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
+# User-Story: US-030 Logic MIDI Region Multi-Note Playback
+# Actie: US-030-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
 
 import pytest
 
@@ -30,6 +30,7 @@ from synth.midi import (
     VirtualMidiPortResult,
     VirtualMidiPortSettings,
 )
+from synth.notes import NoteEvent, NoteParser
 
 
 class TestMidiDeviceSelector:
@@ -206,6 +207,22 @@ class TestMidiToNoteEventMapper:
         assert sequence.events[1].duration_seconds == 0.5
         assert sequence.events[1].velocity == 45 / 127
 
+    def test_logic_region_multiple_note_pairs_map_to_multiple_ordered_events(self) -> None:
+        messages = (
+            MidiMessage(message_type="note_on", note_number=60, velocity=80, channel=1, time_seconds=0.00),
+            MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.20),
+            MidiMessage(message_type="note_on", note_number=62, velocity=82, channel=1, time_seconds=0.25),
+            MidiMessage(message_type="note_off", note_number=62, velocity=0, channel=1, time_seconds=0.45),
+            MidiMessage(message_type="note_on", note_number=64, velocity=84, channel=1, time_seconds=0.50),
+            MidiMessage(message_type="note_off", note_number=64, velocity=0, channel=1, time_seconds=0.70),
+        )
+
+        sequence = MidiToNoteEventMapper().messages_to_note_sequence(messages)
+
+        assert [f"{event.note.name}{event.note.octave}" for event in sequence.events] == ["C4", "D4", "E4"]
+        assert [event.start_seconds for event in sequence.events] == [0.0, 0.25, 0.5]
+        assert [event.duration_seconds for event in sequence.events] == pytest.approx([0.2, 0.2, 0.2])
+
 
 class TestMidiMessageNormalizer:
     def test_mido_note_on_normalizes_zero_based_channel_to_one_based(self) -> None:
@@ -229,6 +246,23 @@ class TestMidiMessageNormalizer:
         raw_message = type("RawMidiMessage", (), {"type": "clock", "time": 0.0})()
 
         assert MidiMessageNormalizer().normalize(raw_message) is None
+
+    def test_zero_backend_time_uses_receive_loop_fallback_time_for_us030(self) -> None:
+        raw_message = type(
+            "RawMidiMessage",
+            (),
+            {"type": "note_on", "note": 62, "velocity": 90, "channel": 0, "time": 0.0},
+        )()
+
+        message = MidiMessageNormalizer().normalize(raw_message, fallback_time_seconds=0.375)
+
+        assert message == MidiMessage(
+            message_type="note_on",
+            note_number=62,
+            velocity=90,
+            channel=1,
+            time_seconds=0.375,
+        )
 
 
 class TestLiveMidiInputReceiver:
@@ -437,6 +471,12 @@ class TestVirtualMidiAudioTrigger:
         )
 
         result = VirtualMidiAudioTrigger(receiver=FakeReceiver(), audio_player=audio_player).trigger(settings)
+        expected_event = NoteEvent(
+            note=NoteParser().parse("C4"),
+            duration_seconds=0.1,
+            velocity=100 / 127,
+            start_seconds=0.0,
+        )
 
         assert result == VirtualMidiAudioTriggerResult(
             port_name="python-d1-synth",
@@ -449,8 +489,58 @@ class TestVirtualMidiAudioTrigger:
                 MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
                 MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
             ),
+            played_events=(expected_event,),
         )
         assert audio_player.calls == [((4410, 2), 44100, "Scarlett 8i6 USB")]
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4"]
+
+    def test_virtual_trigger_renders_multiple_logic_region_notes(self) -> None:
+        class FakeReceiver:
+            def receive(self, settings):
+                messages = (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                    MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
+                    MidiMessage(message_type="note_on", note_number=62, velocity=96, channel=1, time_seconds=0.2),
+                    MidiMessage(message_type="note_off", note_number=62, velocity=0, channel=1, time_seconds=0.3),
+                    MidiMessage(message_type="note_on", note_number=64, velocity=90, channel=1, time_seconds=0.4),
+                    MidiMessage(message_type="note_off", note_number=64, velocity=0, channel=1, time_seconds=0.5),
+                )
+                return type(
+                    "FakeReceiveResult",
+                    (),
+                    {
+                        "input_name": settings.input_name,
+                        "received_messages": messages,
+                        "note_sequence": MidiToNoteEventMapper().messages_to_note_sequence(messages),
+                        "message": "Received 6 MIDI note messages from python-d1-synth.",
+                    },
+                )()
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = VirtualMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=6,
+            timeout_seconds=1.0,
+            sample_rate=44100,
+            channel=OutputChannel.STEREO,
+            audio_device="Scarlett 8i6 USB",
+        )
+
+        result = VirtualMidiAudioTrigger(receiver=FakeReceiver(), audio_player=audio_player).trigger(settings)
+
+        assert result.received_message_count == 6
+        assert result.played_event_count == 3
+        assert result.audio_frame_count == 22050
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "D4", "E4"]
+        assert [event.start_seconds for event in result.played_events] == [0.0, 0.2, 0.4]
+        assert audio_player.calls == [((22050, 2), 44100, "Scarlett 8i6 USB")]
 
     def test_virtual_trigger_reports_zero_midi_messages_without_audio(self) -> None:
         class FakeReceiver:
@@ -482,6 +572,7 @@ class TestVirtualMidiAudioTrigger:
             sample_rate=44100,
             message="Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.",
             received_messages=tuple(),
+            played_events=tuple(),
         )
 
     def test_virtual_trigger_settings_require_non_empty_port_name(self) -> None:

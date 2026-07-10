@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-029
+Betrokken stories: US-001 t/m US-030
 
 ## Doel
 
@@ -73,6 +73,12 @@ Audio buffer: 44100 frames, 44100 Hz
 Product Owner bevestigde dat er hoorbaar geluid werd afgespeeld door de MIDI region track in Logic. Daardoor is US-029 `Done`.
 
 Statuslabel: US-029 `Done`.
+
+## US-030 Review Voorbereiding
+
+US-030 past direct de US-029 les toe: niet alleen "er is audio" meten, maar ook tonen welke MIDI messages zijn ontvangen en welke sequence events daadwerkelijk zijn gerenderd. Daarom moet de multi-note Logic test altijd met `--debuglevel verbose` draaien en de output `Received MIDI messages` plus `Rendered sequence events` bevatten.
+
+Statuslabel: US-030 `In Review`.
 
 ## Aanbevolen Volgende Stap
 

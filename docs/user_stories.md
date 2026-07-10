@@ -267,3 +267,12 @@ Prioriteit: Must
 Sprint: Future
 
 Notitie: Done met `MidoVirtualMidiInputBackend`, `VirtualMidiAudioTriggerSettings`, `VirtualMidiAudioTriggerResult`, `VirtualMidiAudioTrigger`, CLI command `midi play-virtual`, fake receiver tests, fake audio player tests en `docs/virtual_midi_audio_trigger_v0.1.0.md`. De Logic Pro test is geslaagd: een MIDI region stuurde `note_on:60:velocity=50:channel=1` naar `python-d1-synth` en er was hoorbaar geluid via `Scarlett 8i6 USB`. Deze story combineert US-027 virtual port zichtbaarheid met US-028 audio-triggering. Geen GUI, geen plugin, geen AU/VST3 en geen hardcoded MIDI hardware device names.
+
+### US-030: Logic MIDI Region Multi-Note Playback
+
+Als Logic Pro of DAW gebruiker wil ik een korte MIDI region met meerdere noten naar `python-d1-synth` kunnen sturen, zodat de batch-route meer dan één ontvangen noot hoorbaar kan renderen.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: In Review met multi-note MIDI mapping tests, `VirtualMidiAudioTriggerResult.played_events`, verbose CLI output voor `Rendered sequence events`, en `docs/logic_midi_region_multi_note_playback_v0.1.0.md`. Scope blijft batchgewijs: audio speelt nadat `--max-messages` bereikt is of `--timeout` afloopt. Realtime streaming, pitch bend en modulation blijven buiten US-030.

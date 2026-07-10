@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
-# Actie: US-029-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
+# User-Story: US-030 Logic MIDI Region Multi-Note Playback
+# Actie: US-030-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
 
 from pathlib import Path
 
@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-029",
+            "US-001 t/m US-030",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -405,6 +405,39 @@ class TestDocumentationArtifacts:
             "Received MIDI messages: note_on:60:velocity=50:channel=1",
             "Product Owner bevestigde",
             "US-029 `Done`",
+            "US-030 `In Review`",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us030_logic_midi_region_multi_note_playback_doc_contains_required_terms(self) -> None:
+        document = Path("docs/logic_midi_region_multi_note_playback_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-030 Logic MIDI Region Multi-Note Playback",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "python-d1-synth",
+            "MIDI Destination: python-d1-synth",
+            "MIDI Channel: All",
+            "--max-messages 16",
+            "Received MIDI messages",
+            "Rendered sequence events",
+            "MidiMessageNormalizer",
+            "MidoVirtualMidiInputBackend",
+            "VirtualMidiAudioTriggerResult",
+            "VirtualMidiAudioTrigger",
+            "NoteSequence",
+            "NoteEvent",
+            "fallback time",
+            "geen hardcoded MIDI hardware device names",
+            "pitch bend",
+            "modulation",
         )
         for term in required_terms:
             assert term in content

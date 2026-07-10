@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
-# Actie: US-029-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
+# User-Story: US-030 Logic MIDI Region Multi-Note Playback
+# Actie: US-030-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
 
 import numpy as np
 
@@ -681,6 +681,9 @@ class TestSynthCli:
                     received_messages=(
                         MidiMessage(message_type="note_on", note_number=60, velocity=96, channel=1, time_seconds=0.0),
                     ),
+                    played_events=(
+                        NoteEvent(note=NoteParser().parse("C4"), duration_seconds=1.0, velocity=96 / 127),
+                    ),
                 )
 
         monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
@@ -705,6 +708,63 @@ class TestSynthCli:
         assert exit_code == 0
         assert "port=python-d1-synth, max_messages=1, timeout=10s" in output
         assert "Received MIDI messages: note_on:60:velocity=96:channel=1" in output
+        assert "Rendered sequence events: C4@0.000s" in output
+
+    def test_midi_play_virtual_verbose_prints_multi_note_region_sequence(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                return AudioDeviceSelection(sounddevice_value="Scarlett 8i6 USB", source="cli")
+
+        class FakeVirtualMidiAudioTrigger:
+            def trigger(self, settings):
+                parser = NoteParser()
+                return VirtualMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=6,
+                    played_event_count=3,
+                    audio_frame_count=22050,
+                    sample_rate=44100,
+                    message="Played 3 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+                    received_messages=(
+                        MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                        MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
+                        MidiMessage(message_type="note_on", note_number=62, velocity=96, channel=1, time_seconds=0.2),
+                        MidiMessage(message_type="note_off", note_number=62, velocity=0, channel=1, time_seconds=0.3),
+                        MidiMessage(message_type="note_on", note_number=64, velocity=90, channel=1, time_seconds=0.4),
+                        MidiMessage(message_type="note_off", note_number=64, velocity=0, channel=1, time_seconds=0.5),
+                    ),
+                    played_events=(
+                        NoteEvent(note=parser.parse("C4"), duration_seconds=0.1, velocity=100 / 127, start_seconds=0.0),
+                        NoteEvent(note=parser.parse("D4"), duration_seconds=0.1, velocity=96 / 127, start_seconds=0.2),
+                        NoteEvent(note=parser.parse("E4"), duration_seconds=0.1, velocity=90 / 127, start_seconds=0.4),
+                    ),
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "VirtualMidiAudioTrigger", FakeVirtualMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-virtual",
+                "--port-name",
+                "python-d1-synth",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+                "--max-messages",
+                "16",
+                "--timeout",
+                "10",
+                "--debuglevel",
+                "verbose",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Played 3 MIDI-triggered note events from virtual MIDI port python-d1-synth." in output
+        assert "Received MIDI messages: note_on:60:velocity=100:channel=1" in output
+        assert "Rendered sequence events: C4@0.000s, D4@0.200s, E4@0.400s" in output
 
     def test_midi_play_virtual_reports_zero_received_messages(self, monkeypatch, capsys) -> None:
         class FakeAudioSelector:

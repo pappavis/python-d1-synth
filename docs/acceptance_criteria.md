@@ -394,3 +394,22 @@ Acceptatie op 2026-07-11:
 - CLI output bevatte `Received MIDI messages: note_on:60:velocity=50:channel=1`.
 - CLI output bevatte `Audio buffer: 44100 frames, 44100 Hz`.
 - Story status is `Done`.
+
+## US-030: Logic MIDI Region Multi-Note Playback
+
+- Given Logic Pro 12.3 of een andere DAW een korte MIDI region met meerdere noten naar `python-d1-synth` stuurt, when `midi play-virtual --max-messages 16 --timeout 10 --debuglevel verbose` draait, then meerdere note-on/note-off paren worden ontvangen en naar meerdere `NoteEvent`s gemapt.
+- Given meerdere note events zijn gemapt, then de bestaande synth-engine een `NoteSequence` rendert met behoud van de ontvangen starttijden.
+- Given verbose logging actief is, then CLI output zowel `Received MIDI messages` als `Rendered sequence events` toont.
+- Given `mido` raw messages geen absolute message-tijd leveren, then de receive-loop een monotonic elapsed-time fallback gebruikt zodat Logic region timing niet allemaal op 0.000s valt.
+- Given de test in Logic wordt uitgevoerd, then de gebruiker een korte MIDI region met meerdere noten gebruikt en `MIDI Destination: python-d1-synth`, `MIDI Channel: All` of `1` instelt.
+
+Acceptatie op 2026-07-11:
+
+- `MidiToNoteEventMapper` tests verifieren meerdere Logic-style note-on/off paren naar meerdere geordende events.
+- `MidiMessageNormalizer` tests verifieren fallback timing voor raw messages met `time=0`.
+- `VirtualMidiAudioTrigger` tests verifieren drie ontvangen noten, zes MIDI messages en een stereo audiobuffer.
+- CLI tests verifieren multi-note verbose output.
+- `docs/logic_midi_region_multi_note_playback_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-030 Logic MIDI Region Multi-Note Playback`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-030 Logic MIDI Region Multi-Note Playback` en `Version: 0.1.0`.
+- Geen realtime infinite performance-loop, geen pitch bend, geen modulation, geen GUI, geen plugin, geen AU/VST3 en geen hardcoded MIDI hardware device names.
+- Story status is `In Review` tot de Product Owner de Logic Pro multi-note test bevestigt.

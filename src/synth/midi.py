@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
-# Actie: US-029-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
+# User-Story: US-030 Logic MIDI Region Multi-Note Playback
+# Actie: US-030-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
 
 from __future__ import annotations
 
@@ -334,6 +334,7 @@ class VirtualMidiAudioTriggerResult:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - Version: 0.1.0
     """
 
@@ -344,6 +345,7 @@ class VirtualMidiAudioTriggerResult:
     sample_rate: int
     message: str
     received_messages: tuple[MidiMessage, ...] = tuple()
+    played_events: tuple[NoteEvent, ...] = tuple()
 
 
 class MidiInputBackend(Protocol):
@@ -371,20 +373,23 @@ class MidiMessageNormalizer:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-026 Live MIDI Input Receive Loop
+    - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - Version: 0.1.0
     """
 
-    def normalize(self, raw_message) -> MidiMessage | None:
+    def normalize(self, raw_message, fallback_time_seconds: float | None = None) -> MidiMessage | None:
         message_type = getattr(raw_message, "type", "")
         if message_type not in {"note_on", "note_off"}:
             return None
+        raw_time = float(getattr(raw_message, "time", 0.0))
+        time_seconds = fallback_time_seconds if raw_time == 0.0 and fallback_time_seconds is not None else raw_time
         channel = int(getattr(raw_message, "channel", 0)) + 1
         return MidiMessage(
             message_type=message_type,
             note_number=int(getattr(raw_message, "note")),
             velocity=int(getattr(raw_message, "velocity", 0)),
             channel=channel,
-            time_seconds=float(getattr(raw_message, "time", 0.0)),
+            time_seconds=time_seconds,
         )
 
 
@@ -411,11 +416,13 @@ class MidoMidiInputBackend:
             raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
 
         received: list[MidiMessage] = []
-        deadline = time.monotonic() + timeout_seconds
+        start_time = time.monotonic()
+        deadline = start_time + timeout_seconds
         with mido.open_input(input_name) as port:
             while len(received) < max_messages and time.monotonic() < deadline:
+                elapsed_seconds = time.monotonic() - start_time
                 for raw_message in port.iter_pending():
-                    message = self._normalizer.normalize(raw_message)
+                    message = self._normalizer.normalize(raw_message, fallback_time_seconds=elapsed_seconds)
                     if message is not None:
                         received.append(message)
                     if len(received) >= max_messages:
@@ -432,6 +439,7 @@ class MidoVirtualMidiInputBackend:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - Version: 0.1.0
     """
 
@@ -447,12 +455,14 @@ class MidoVirtualMidiInputBackend:
             raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
 
         received: list[MidiMessage] = []
-        deadline = time.monotonic() + timeout_seconds
+        start_time = time.monotonic()
+        deadline = start_time + timeout_seconds
         try:
             with mido.open_input(input_name, virtual=True) as port:
                 while len(received) < max_messages and time.monotonic() < deadline:
+                    elapsed_seconds = time.monotonic() - start_time
                     for raw_message in port.iter_pending():
-                        message = self._normalizer.normalize(raw_message)
+                        message = self._normalizer.normalize(raw_message, fallback_time_seconds=elapsed_seconds)
                         if message is not None:
                             received.append(message)
                         if len(received) >= max_messages:
@@ -627,6 +637,7 @@ class VirtualMidiAudioTrigger:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - Version: 0.1.0
     """
 
@@ -661,8 +672,10 @@ class VirtualMidiAudioTrigger:
                     f"{settings.port_name}; no audio played."
                 ),
                 received_messages=receive_result.received_messages,
+                played_events=tuple(),
             )
 
+        played_events = receive_result.note_sequence.events
         engine = SynthEngine(
             SynthEngineSettings(
                 sample_rate=settings.sample_rate,
@@ -681,6 +694,7 @@ class VirtualMidiAudioTrigger:
             sample_rate=buffer.sample_rate,
             message=f"Played {event_count} MIDI-triggered note events from virtual MIDI port {settings.port_name}.",
             received_messages=receive_result.received_messages,
+            played_events=played_events,
         )
 
 
