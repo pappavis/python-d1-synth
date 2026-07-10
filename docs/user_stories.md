@@ -248,7 +248,7 @@ Als Logic Pro of DAW gebruiker wil ik dat `python-d1-synth` als virtual MIDI des
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `VirtualMidiPortSettings`, `VirtualMidiPortResult`, `MidoVirtualMidiPortBackend`, `VirtualMidiPortManager`, CLI command `midi virtual-port`, fake-backend tests en `docs/virtual_midi_port_logic_daw_v0.1.0.md`. De story bevat nog geen realtime audio-trigger; dat blijft US-028. De Logic Pro 12.3 zichtbaarheidstest pauzeert bij klant.
+Notitie: Done met `VirtualMidiPortSettings`, `VirtualMidiPortResult`, `MidoVirtualMidiPortBackend`, `VirtualMidiPortManager`, CLI command `midi virtual-port`, fake-backend tests en `docs/virtual_midi_port_logic_daw_v0.1.0.md`. De Logic Pro 12.3 klanttest is geslaagd: `python-d1-synth` is beschikbaar als External MIDI destination. Niet zichtbaar als Software Instrument / virtual instrument is verwacht en valt buiten US-027. Realtime audio-triggering blijft US-028.
 
 ### US-028: External MIDI Audio Trigger Integratie
 

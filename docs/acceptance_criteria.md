@@ -333,7 +333,10 @@ Acceptatie op 2026-07-10:
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-027 Virtual MIDI Port Voor Logic/DAW` en `Version: 0.1.0`.
 - US-027 bevat geen realtime audio-trigger; dit blijft US-028.
 - Er zijn geen hardcoded MIDI device names toegevoegd.
-- Story status blijft `In Review` totdat de Logic Pro 12.3 handmatige zichtbaarheidstest is uitgevoerd.
+- Logic Pro 12.3 handmatige zichtbaarheidstest is geslaagd op 2026-07-10 19:25.
+- `python-d1-synth` is zichtbaar bij `Create New Track` > `MIDI` > `External MIDI` als MIDI destination.
+- `python-d1-synth` is niet zichtbaar als Software Instrument / virtual instrument; dit is verwacht en valt buiten US-027.
+- Story status is `Done`.
 
 ## US-028: External MIDI Audio Trigger Integratie
 

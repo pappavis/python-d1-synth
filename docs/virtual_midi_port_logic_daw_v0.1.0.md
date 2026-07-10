@@ -1,11 +1,11 @@
 # US-027 Virtual MIDI Port Voor Logic/DAW
 
-Chatlog ID: CHATOD-20260709-D1PY-MVP-001 / US-027-VIRTUAL-MIDI-PORT-001  
-Sprintnummer: Future MIDI/DAW  
-Doc versie: 0.1.0  
-Epic: EPIC-007 Future MIDI En DAW Integratie  
-User Story: US-027 Virtual MIDI Port Voor Logic/DAW  
-Status: In Review  
+Chatlog ID: CHATOD-20260709-D1PY-MVP-001 / US-027-VIRTUAL-MIDI-PORT-001
+Sprintnummer: Future MIDI/DAW
+Doc versie: 0.1.0
+Epic: EPIC-007 Future MIDI En DAW Integratie
+User Story: US-027 Virtual MIDI Port Voor Logic/DAW
+Status: Done
 
 ## Doel
 
@@ -60,7 +60,28 @@ Let op: door de bounded timeout verschijnt de laatste regel pas nadat de port we
 7. Noteer of de destination zichtbaar is en of Logic Pro foutmeldingen toont.
 8. Stuur het terminalresultaat en je Logic-observatie terug naar de backlog.
 
-hardware/Logic test pauzeert bij klant: deze story blijft `In Review` totdat de Logic-zichtbaarheid is bevestigd of als blocker is vastgelegd.
+hardware/Logic test pauzeert bij klant: deze story bleef `In Review` totdat de Logic-zichtbaarheid is bevestigd.
+
+## Klanttestresultaat
+
+CHATOD-20260709-D1PY-MVP-001 / US-027-IN-REVIEW
+Datum/tijd: 2026-07-10 19:25
+Host: KodeklopperM4
+DAW: Logic Pro 12.3
+Status: Geslaagd voor US-027
+
+Resultaat:
+
+- `python-d1-synth` is bij `Create New Track` > `MIDI` > `External MIDI` beschikbaar als MIDI destination.
+- `python-d1-synth` verschijnt in de MIDI Destination lijst naast andere runtime MIDI endpoints.
+- `python-d1-synth` is niet beschikbaar als Software Instrument / virtual instrument.
+
+Beoordeling:
+
+- Het External MIDI resultaat bewijst dat US-027 geslaagd is: Logic Pro kan `python-d1-synth` als virtual MIDI destination zien.
+- Dat `python-d1-synth` niet als Software Instrument / virtual instrument verschijnt is verwacht en geen US-027 defect.
+- Software Instrument, Audio Unit, VST3 of Logic Component functionaliteit hoort bij een latere plugin/packaging story, niet bij US-027.
+- US-028 blijft de logische volgende MIDI-audio story: ontvangen MIDI events hoorbaar maken via de bestaande synth-engine.
 
 ## Teststrategie
 
@@ -84,4 +105,5 @@ Groene fase:
 - Automatische tests openen geen echte CoreMIDI-port.
 - De story bevat geen realtime audio-trigger en verwijst dat bewust naar US-028.
 - Er zijn geen hardcoded MIDI device names toegevoegd.
-- Logic Pro 12.3 handmatige test moet nog klantmatig worden uitgevoerd.
+- Logic Pro 12.3 handmatige test is geslaagd: `python-d1-synth` is zichtbaar als External MIDI destination.
+- Niet zichtbaar als Software Instrument / virtual instrument is verwacht en valt buiten US-027.

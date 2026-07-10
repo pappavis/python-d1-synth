@@ -265,7 +265,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-027 Virtual MIDI Port Voor Logic/DAW",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi virtual-port",
             "python-d1-synth",
             "Logic Pro 12.3",
@@ -279,6 +279,14 @@ class TestDocumentationArtifacts:
             "US-028",
             "hardware/Logic test pauzeert bij klant",
             "geen hardcoded MIDI device names",
+            "US-027-IN-REVIEW",
+            "2026-07-10 19:25",
+            "External MIDI",
+            "MIDI destination",
+            "Software Instrument",
+            "virtual instrument",
+            "verwacht en geen US-027 defect",
+            "geslaagd is",
         )
         for term in required_terms:
             assert term in content

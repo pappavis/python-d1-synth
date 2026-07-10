@@ -222,7 +222,7 @@ US-025 is afgerond: `midi list-devices` kan naast scannen ook een MIDI input sel
 
 US-026 is afgerond: `midi listen` kan bounded note messages ontvangen van een gekozen MIDI input, normaliseren naar `MidiMessage`, en mappen naar `NoteSequence`. Dit is nog geen Logic virtual device en nog geen realtime audio-trigger.
 
-US-027 is In Review: `midi virtual-port` kan bounded een virtual MIDI input port openen voor Logic/DAW zichtbaarheid. De automatische tests gebruiken een fake backend; de handmatige Logic Pro 12.3 test moet bevestigen of `python-d1-synth` zichtbaar wordt. Realtime audio-triggering blijft US-028.
+US-027 is afgerond: `midi virtual-port` kan bounded een virtual MIDI input port openen voor Logic/DAW zichtbaarheid. De klanttest in Logic Pro 12.3 bevestigde dat `python-d1-synth` beschikbaar is als External MIDI destination. Niet zichtbaar als Software Instrument / virtual instrument is verwacht; AU/VST3/Logic Component hoort bij latere plugin-packaging stories. Realtime audio-triggering blijft US-028.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 
