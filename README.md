@@ -109,6 +109,14 @@ Diagnoseer virtual MIDI input voorbereiding:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi diagnose-virtual-input
 ```
 
+Open een bounded virtual MIDI port voor Logic/DAW zichtbaarheid:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi virtual-port --name python-d1-synth --timeout 60 --debuglevel light
+```
+
+Laat dit command draaien terwijl je in Logic Pro 12.3 controleert of `python-d1-synth` als MIDI destination verschijnt.
+
 Diagnoseer generieke USB MIDI input voorbereiding:
 
 ```bash
@@ -196,6 +204,7 @@ MIDI leerpad:
 - [MIDI Naar NoteEvent Mapping](docs/midi_to_note_event_mapping_v0.1.0.md)
 - [MIDI Device Discovery En Default Selection](docs/midi_device_discovery_default_selection_v0.1.0.md)
 - [Live MIDI Input Receive Loop](docs/live_midi_input_receive_loop_v0.1.0.md)
+- [Virtual MIDI Port Voor Logic/DAW](docs/virtual_midi_port_logic_daw_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
@@ -212,6 +221,8 @@ US-024 is afgerond: `MidiToNoteEventMapper` vertaalt device-onafhankelijke `Midi
 US-025 is afgerond: `midi list-devices` kan naast scannen ook een MIDI input selecteren via `--midi-device`, `--midi-device-id` of `midi.default_input_device` uit `--config`. CLI wint van YAML en runtime device-namen blijven scanresultaten, geen hardcoded constants.
 
 US-026 is afgerond: `midi listen` kan bounded note messages ontvangen van een gekozen MIDI input, normaliseren naar `MidiMessage`, en mappen naar `NoteSequence`. Dit is nog geen Logic virtual device en nog geen realtime audio-trigger.
+
+US-027 is In Review: `midi virtual-port` kan bounded een virtual MIDI input port openen voor Logic/DAW zichtbaarheid. De automatische tests gebruiken een fake backend; de handmatige Logic Pro 12.3 test moet bevestigen of `python-d1-synth` zichtbaar wordt. Realtime audio-triggering blijft US-028.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

@@ -1,10 +1,10 @@
 # Bestand: midi.py
 # Versienummer: 0.1.0
-# Doel: MIDI device discovery, device selectie, live receive-readiness en MIDI-naar-NoteEvent mapping.
+# Doel: MIDI device discovery, device selectie, virtual port lifecycle en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-026 Live MIDI Input Receive Loop
-# Actie: US-026-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
+# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
+# Actie: US-027-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
 
 from __future__ import annotations
 
@@ -195,10 +195,54 @@ class MidiInputReceiveResult:
     message: str
 
 
+@dataclass(frozen=True)
+class VirtualMidiPortSettings:
+    """Settings for opening a bounded virtual MIDI input port.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-027
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
+    - Version: 0.1.0
+    """
+
+    port_name: str = "python-d1-synth"
+    timeout_seconds: float = 60.0
+
+    def __post_init__(self) -> None:
+        if not self.port_name.strip():
+            raise ValueError("port_name must not be empty")
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+
+
+@dataclass(frozen=True)
+class VirtualMidiPortResult:
+    """Result from opening a bounded virtual MIDI input port.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-027
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
+    - Version: 0.1.0
+    """
+
+    port_name: str
+    opened: bool
+    message: str
+
+
 class MidiInputBackend(Protocol):
     def receive_messages(
         self, input_name: str, max_messages: int, timeout_seconds: float
     ) -> tuple[MidiMessage, ...]:
+        ...
+
+
+class VirtualMidiPortBackend(Protocol):
+    def open_virtual_input(self, port_name: str, timeout_seconds: float) -> VirtualMidiPortResult:
         ...
 
 
@@ -261,6 +305,62 @@ class MidoMidiInputBackend:
                         break
                 time.sleep(0.01)
         return tuple(received)
+
+
+class MidoVirtualMidiPortBackend:
+    """Open a bounded mido virtual input port for Logic/DAW visibility tests.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-027
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
+    - Version: 0.1.0
+    """
+
+    def open_virtual_input(self, port_name: str, timeout_seconds: float) -> VirtualMidiPortResult:
+        try:
+            import mido
+        except ImportError as exc:
+            raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
+
+        try:
+            with mido.open_input(port_name, virtual=True):
+                time.sleep(timeout_seconds)
+        except TypeError as exc:
+            raise RuntimeError(
+                "Virtual MIDI port could not be opened because the active mido backend does not support "
+                "virtual=True for input ports."
+            ) from exc
+        except Exception as exc:
+            raise RuntimeError(
+                "Virtual MIDI port could not be opened. Check the mido/python-rtmidi backend and macOS "
+                "CoreMIDI permissions."
+            ) from exc
+
+        return VirtualMidiPortResult(
+            port_name=port_name,
+            opened=True,
+            message=f"Virtual MIDI input port opened: {port_name}.",
+        )
+
+
+class VirtualMidiPortManager:
+    """Manage the lifecycle of a bounded virtual MIDI input port.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-027
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
+    - Version: 0.1.0
+    """
+
+    def __init__(self, backend: VirtualMidiPortBackend | None = None) -> None:
+        self._backend = backend if backend is not None else MidoVirtualMidiPortBackend()
+
+    def open(self, settings: VirtualMidiPortSettings) -> VirtualMidiPortResult:
+        return self._backend.open_virtual_input(settings.port_name, settings.timeout_seconds)
 
 
 class LiveMidiInputReceiver:

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-026 Live MIDI Input Receive Loop
-# Actie: US-026-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
+# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
+# Actie: US-027-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
 
 from pathlib import Path
 
@@ -250,6 +250,35 @@ class TestDocumentationArtifacts:
             "input:9 input   Logic Pro Virtual Out",
             "output:10       output  Logic Pro Virtual In",
             "hardwarematig geslaagd op KodeklopperM4",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us027_virtual_midi_port_logic_daw_doc_contains_required_terms(self) -> None:
+        document = Path("docs/virtual_midi_port_logic_daw_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-027 Virtual MIDI Port Voor Logic/DAW",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi virtual-port",
+            "python-d1-synth",
+            "Logic Pro 12.3",
+            "virtual MIDI destination",
+            "VirtualMidiPortSettings",
+            "VirtualMidiPortResult",
+            "MidoVirtualMidiPortBackend",
+            "VirtualMidiPortManager",
+            "fake backend",
+            "geen realtime audio-trigger",
+            "US-028",
+            "hardware/Logic test pauzeert bij klant",
+            "geen hardcoded MIDI device names",
         )
         for term in required_terms:
             assert term in content

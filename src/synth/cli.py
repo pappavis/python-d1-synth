@@ -1,10 +1,10 @@
 # Bestand: cli.py
 # Versienummer: 0.1.0
-# Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI receive workflows.
+# Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-026 Live MIDI Input Receive Loop
-# Actie: US-026-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
+# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
+# Actie: US-027-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
 
 import argparse
 import importlib.util
@@ -22,6 +22,8 @@ from synth.midi import (
     MidiInputReceiveSettings,
     UsbMidiHardwareInputAdapter,
     VirtualMidiInputAdapter,
+    VirtualMidiPortManager,
+    VirtualMidiPortSettings,
 )
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 from synth.oscillators import Waveform
@@ -43,6 +45,7 @@ class SynthCli:
     - User Story: US-022 USB MIDI Hardware Input
     - User Story: US-025 MIDI Device Discovery En Default Selection
     - User Story: US-026 Live MIDI Input Receive Loop
+    - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
     - Version: 0.1.0
     """
 
@@ -95,6 +98,14 @@ class SynthCli:
             help="Diagnose whether virtual MIDI input prerequisites are present.",
         )
         virtual_input.set_defaults(handler=self._handle_midi_diagnose_virtual_input)
+        virtual_port = midi_subparsers.add_parser(
+            "virtual-port",
+            help="Open a bounded virtual MIDI input port for Logic/DAW visibility tests.",
+        )
+        virtual_port.add_argument("--name", default="python-d1-synth")
+        virtual_port.add_argument("--timeout", type=float, default=60.0)
+        virtual_port.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        virtual_port.set_defaults(handler=self._handle_midi_virtual_port)
         usb_input = midi_subparsers.add_parser(
             "diagnose-usb-input",
             help="Diagnose whether a generic USB MIDI input device is visible.",
@@ -219,6 +230,25 @@ class SynthCli:
         backend_available = importlib.util.find_spec("mido") is not None
         diagnostic = VirtualMidiInputAdapter().diagnose(backend_available=backend_available)
         print(diagnostic.message)
+        return 0
+
+    def _handle_midi_virtual_port(self, args: argparse.Namespace) -> int:
+        reporter = DebugReporter(DebugLevel(args.debuglevel))
+        try:
+            settings = VirtualMidiPortSettings(port_name=args.name, timeout_seconds=args.timeout)
+        except ValueError as exc:
+            print(f"Virtual MIDI port error: {exc}", file=sys.stderr)
+            return 2
+        reporter.light(f"Opening virtual MIDI input port: {settings.port_name}")
+        reporter.light(
+            "Keep this command running while you check Logic Pro or another DAW for the virtual MIDI destination."
+        )
+        try:
+            result = VirtualMidiPortManager().open(settings)
+        except RuntimeError as exc:
+            print(f"Virtual MIDI port error: {exc}", file=sys.stderr)
+            return 2
+        print(result.message)
         return 0
 
     def _handle_midi_diagnose_usb_input(self, args: argparse.Namespace) -> int:

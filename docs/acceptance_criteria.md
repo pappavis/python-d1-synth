@@ -322,6 +322,19 @@ Acceptatie op 2026-07-10:
 - Given de DAW naar de virtual port routeert, then de synth MIDI note events kan ontvangen.
 - Given macOS CoreMIDI/RtMidi beperkingen, then de implementatie veilig faalt met duidelijke diagnostiek.
 
+Acceptatie op 2026-07-10:
+
+- `midi virtual-port` opent een bounded virtual MIDI input port via `--name` en `--timeout`.
+- `VirtualMidiPortSettings` valideert port name en timeout.
+- `VirtualMidiPortManager` gebruikt een fake backend in unit tests.
+- `MidoVirtualMidiPortBackend` gebruikt `mido.open_input(name, virtual=True)` alleen in de echte runtime route.
+- CLI-fouten worden als `Virtual MIDI port error` gemeld.
+- `docs/virtual_midi_port_logic_daw_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-027 Virtual MIDI Port Voor Logic/DAW`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-027 Virtual MIDI Port Voor Logic/DAW` en `Version: 0.1.0`.
+- US-027 bevat geen realtime audio-trigger; dit blijft US-028.
+- Er zijn geen hardcoded MIDI device names toegevoegd.
+- Story status blijft `In Review` totdat de Logic Pro 12.3 handmatige zichtbaarheidstest is uitgevoerd.
+
 ## US-028: External MIDI Audio Trigger Integratie
 
 - Given ontvangen `NoteEvent` items, when live audio-triggering actief is, then de synth hoorbaar audio via de gekozen audio-output maakt.

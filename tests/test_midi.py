@@ -1,10 +1,10 @@
 # Bestand: test_midi.py
 # Versienummer: 0.1.0
-# Doel: Unit tests voor MIDI discovery, selectie, live receive-readiness en MIDI-naar-NoteEvent mapping.
+# Doel: Unit tests voor MIDI discovery, selectie, virtual port lifecycle en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-026 Live MIDI Input Receive Loop
-# Actie: US-026-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
+# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
+# Actie: US-027-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
 
 import pytest
 
@@ -19,6 +19,9 @@ from synth.midi import (
     MidiToNoteEventMapper,
     UsbMidiHardwareInputAdapter,
     VirtualMidiInputAdapter,
+    VirtualMidiPortManager,
+    VirtualMidiPortResult,
+    VirtualMidiPortSettings,
 )
 
 
@@ -246,6 +249,35 @@ class TestLiveMidiInputReceiver:
     def test_receive_settings_require_selected_input_name(self) -> None:
         with pytest.raises(ValueError, match="input_name"):
             MidiInputReceiveSettings(input_name="")
+
+
+class TestVirtualMidiPortManager:
+    def test_open_uses_backend_with_selected_port_name_and_timeout(self) -> None:
+        class FakeVirtualPortBackend:
+            def open_virtual_input(self, port_name, timeout_seconds):
+                assert port_name == "python-d1-synth"
+                assert timeout_seconds == 0.5
+                return VirtualMidiPortResult(
+                    port_name=port_name,
+                    opened=True,
+                    message="Virtual MIDI input port opened: python-d1-synth.",
+                )
+
+        settings = VirtualMidiPortSettings(port_name="python-d1-synth", timeout_seconds=0.5)
+
+        result = VirtualMidiPortManager(backend=FakeVirtualPortBackend()).open(settings)
+
+        assert result.opened is True
+        assert result.port_name == "python-d1-synth"
+        assert result.message == "Virtual MIDI input port opened: python-d1-synth."
+
+    def test_virtual_port_settings_require_non_empty_port_name(self) -> None:
+        with pytest.raises(ValueError, match="port_name"):
+            VirtualMidiPortSettings(port_name="")
+
+    def test_virtual_port_settings_require_positive_timeout(self) -> None:
+        with pytest.raises(ValueError, match="timeout_seconds"):
+            VirtualMidiPortSettings(timeout_seconds=0)
 
 
 class TestUsbMidiHardwareInputAdapter:

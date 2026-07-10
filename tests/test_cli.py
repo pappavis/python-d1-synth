@@ -1,17 +1,17 @@
 # Bestand: test_cli.py
 # Versienummer: 0.1.0
-# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en live MIDI receive-readiness.
+# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI port workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-026 Live MIDI Input Receive Loop
-# Actie: US-026-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-026
+# User-Story: US-027 Virtual MIDI Port Voor Logic/DAW
+# Actie: US-027-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-027
 
 import numpy as np
 
 from synth.audio import AudioDevice
 import synth.cli
 from synth.cli import SynthCli
-from synth.midi import MidiDevice, MidiInputReceiveResult, MidiMessage
+from synth.midi import MidiDevice, MidiInputReceiveResult, MidiMessage, VirtualMidiPortResult
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 
 
@@ -156,6 +156,57 @@ class TestSynthCli:
         output = capsys.readouterr().out
         assert exit_code == 0
         assert "Virtual MIDI input backend is not available" in output
+
+    def test_midi_virtual_port_opens_selected_port_with_bounded_timeout(self, monkeypatch, capsys) -> None:
+        class FakeVirtualMidiPortManager:
+            def open(self, settings):
+                assert settings.port_name == "python-d1-synth"
+                assert settings.timeout_seconds == 0.5
+                return VirtualMidiPortResult(
+                    port_name=settings.port_name,
+                    opened=True,
+                    message="Virtual MIDI input port opened: python-d1-synth.",
+                )
+
+        monkeypatch.setattr(synth.cli, "VirtualMidiPortManager", FakeVirtualMidiPortManager)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "virtual-port",
+                "--name",
+                "python-d1-synth",
+                "--timeout",
+                "0.5",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Opening virtual MIDI input port: python-d1-synth" in output
+        assert "Virtual MIDI input port opened: python-d1-synth." in output
+
+    def test_midi_virtual_port_reports_backend_error(self, monkeypatch, capsys) -> None:
+        class FakeVirtualMidiPortManager:
+            def open(self, settings):
+                raise RuntimeError("Virtual MIDI port could not be opened.")
+
+        monkeypatch.setattr(synth.cli, "VirtualMidiPortManager", FakeVirtualMidiPortManager)
+
+        exit_code = SynthCli().run(["midi", "virtual-port", "--name", "python-d1-synth", "--timeout", "0.5"])
+
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert "Virtual MIDI port error: Virtual MIDI port could not be opened." in captured.err
+
+    def test_midi_virtual_port_reports_invalid_settings_without_traceback(self, capsys) -> None:
+        exit_code = SynthCli().run(["midi", "virtual-port", "--name", "python-d1-synth", "--timeout", "0"])
+
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert "Virtual MIDI port error: timeout_seconds must be positive" in captured.err
 
     def test_midi_diagnose_usb_input_accepts_generic_input_device(self, monkeypatch, capsys) -> None:
         class FakeScanner:
