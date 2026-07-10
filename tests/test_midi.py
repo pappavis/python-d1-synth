@@ -1,10 +1,10 @@
 # Bestand: test_midi.py
 # Versienummer: 0.1.0
-# Doel: Unit tests voor MIDI discovery, selectie, MIDI audio trigger en MIDI-naar-NoteEvent mapping.
+# Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-028 External MIDI Audio Trigger Integratie
-# Actie: US-028-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
+# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+# Actie: US-029-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
 
 import pytest
 
@@ -22,6 +22,9 @@ from synth.midi import (
     MidiMessageNormalizer,
     MidiToNoteEventMapper,
     UsbMidiHardwareInputAdapter,
+    VirtualMidiAudioTrigger,
+    VirtualMidiAudioTriggerResult,
+    VirtualMidiAudioTriggerSettings,
     VirtualMidiInputAdapter,
     VirtualMidiPortManager,
     VirtualMidiPortResult,
@@ -378,6 +381,76 @@ class TestMidiAudioTrigger:
     def test_trigger_settings_require_positive_values(self) -> None:
         with pytest.raises(ValueError, match="sample_rate"):
             MidiAudioTriggerSettings(input_name="Generic Keyboard", sample_rate=0)
+
+
+class TestVirtualMidiAudioTrigger:
+    def test_virtual_trigger_receives_daw_sequence_and_plays_audio(self) -> None:
+        class FakeReceiver:
+            def receive(self, settings):
+                note_sequence = MidiToNoteEventMapper().messages_to_note_sequence(
+                    (
+                        MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                        MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
+                    )
+                )
+                return type(
+                    "FakeReceiveResult",
+                    (),
+                    {
+                        "input_name": settings.input_name,
+                        "received_messages": (
+                            MidiMessage(
+                                message_type="note_on",
+                                note_number=60,
+                                velocity=100,
+                                channel=1,
+                                time_seconds=0.0,
+                            ),
+                            MidiMessage(
+                                message_type="note_off",
+                                note_number=60,
+                                velocity=0,
+                                channel=1,
+                                time_seconds=0.1,
+                            ),
+                        ),
+                        "note_sequence": note_sequence,
+                        "message": "Received 2 MIDI note messages from python-d1-synth.",
+                    },
+                )()
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = VirtualMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=2,
+            timeout_seconds=0.5,
+            sample_rate=44100,
+            channel=OutputChannel.STEREO,
+            audio_device="Scarlett 8i6 USB",
+        )
+
+        result = VirtualMidiAudioTrigger(receiver=FakeReceiver(), audio_player=audio_player).trigger(settings)
+
+        assert result == VirtualMidiAudioTriggerResult(
+            port_name="python-d1-synth",
+            received_message_count=2,
+            played_event_count=1,
+            audio_frame_count=4410,
+            sample_rate=44100,
+            message="Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+        )
+        assert audio_player.calls == [((4410, 2), 44100, "Scarlett 8i6 USB")]
+
+    def test_virtual_trigger_settings_require_non_empty_port_name(self) -> None:
+        with pytest.raises(ValueError, match="port_name"):
+            VirtualMidiAudioTriggerSettings(port_name="")
 
 
 class TestUsbMidiHardwareInputAdapter:

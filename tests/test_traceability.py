@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-028 External MIDI Audio Trigger Integratie
-# Actie: US-028-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
+# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+# Actie: US-029-TRACEABILITY-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
 
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
@@ -24,9 +24,13 @@ from synth.midi import (
     MidiMessage,
     MidiToNoteEventMapper,
     MidoMidiInputBackend,
+    MidoVirtualMidiInputBackend,
     MidoVirtualMidiPortBackend,
     UsbMidiHardwareInputAdapter,
     UsbMidiInputDiagnostic,
+    VirtualMidiAudioTrigger,
+    VirtualMidiAudioTriggerResult,
+    VirtualMidiAudioTriggerSettings,
     VirtualMidiInputAdapter,
     VirtualMidiInputDiagnostic,
     VirtualMidiInputSettings,
@@ -206,6 +210,27 @@ class TestCodeTraceability:
             MidiAudioTriggerSettings,
             MidiAudioTriggerResult,
             MidiAudioTrigger,
+            SynthCli,
+        )
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us029_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-029 Logic/DAW Virtual MIDI Naar Audio Trigger",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            VirtualMidiAudioTriggerSettings,
+            VirtualMidiAudioTriggerResult,
+            MidoVirtualMidiInputBackend,
+            VirtualMidiAudioTrigger,
             SynthCli,
         )
 

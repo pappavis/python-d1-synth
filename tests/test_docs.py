@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-028 External MIDI Audio Trigger Integratie
-# Actie: US-028-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
+# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+# Actie: US-029-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
 
 from pathlib import Path
 
@@ -328,6 +328,45 @@ class TestDocumentationArtifacts:
             "hoorbaar stereo geluid",
             "Logic Pro externe MIDI zichtbaarheidobservatie",
             "geen US-028 blocker",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us029_virtual_midi_audio_trigger_doc_contains_required_terms(self) -> None:
+        document = Path("docs/virtual_midi_audio_trigger_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-029 Logic/DAW Virtual MIDI Naar Audio Trigger",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-virtual",
+            "python-d1-synth",
+            "Logic Pro 12.3",
+            "virtual MIDI input port",
+            "MidoVirtualMidiInputBackend",
+            "VirtualMidiAudioTriggerSettings",
+            "VirtualMidiAudioTriggerResult",
+            "VirtualMidiAudioTrigger",
+            "LiveMidiInputReceiver",
+            "MidiAudioTrigger",
+            "SynthEngine",
+            "SoundDeviceAudioPlayer",
+            "fake receiver",
+            "fake audio player",
+            "geen GUI",
+            "geen plugin",
+            "geen AU/VST3",
+            "geen onbeperkte realtime performance-loop",
+            "geen hardcoded MIDI hardware device names",
+            "US-029-HARDWARE-TEST",
+            "Scarlett 8i6 USB",
+            "Played ... MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+            "US-029 status: `In Review`",
         )
         for term in required_terms:
             assert term in content

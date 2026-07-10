@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-028 External MIDI Audio Trigger Integratie
-# Actie: US-028-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
+# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+# Actie: US-029-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
 
 import argparse
 import importlib.util
@@ -23,6 +23,8 @@ from synth.midi import (
     MidiDeviceSelector,
     MidiInputReceiveSettings,
     UsbMidiHardwareInputAdapter,
+    VirtualMidiAudioTrigger,
+    VirtualMidiAudioTriggerSettings,
     VirtualMidiInputAdapter,
     VirtualMidiPortManager,
     VirtualMidiPortSettings,
@@ -49,6 +51,7 @@ class SynthCli:
     - User Story: US-026 Live MIDI Input Receive Loop
     - User Story: US-027 Virtual MIDI Port Voor Logic/DAW
     - User Story: US-028 External MIDI Audio Trigger Integratie
+    - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
     - Version: 0.1.0
     """
 
@@ -146,6 +149,19 @@ class SynthCli:
         play_live.add_argument("--audio-device")
         play_live.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
         play_live.set_defaults(handler=self._handle_midi_play_live)
+        play_virtual = midi_subparsers.add_parser(
+            "play-virtual",
+            help="Open a virtual MIDI input port and play received Logic/DAW notes through the synth engine.",
+        )
+        play_virtual.add_argument("--port-name", "--name", dest="port_name", default="python-d1-synth")
+        play_virtual.add_argument("--max-messages", type=int, default=10)
+        play_virtual.add_argument("--timeout", type=float, default=30.0)
+        play_virtual.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
+        play_virtual.add_argument("--sample-rate", type=int, default=44100)
+        play_virtual.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
+        play_virtual.add_argument("--audio-device")
+        play_virtual.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        play_virtual.set_defaults(handler=self._handle_midi_play_virtual)
 
         return parser
 
@@ -386,6 +402,43 @@ class SynthCli:
             result = MidiAudioTrigger().trigger(settings)
         except RuntimeError as exc:
             print(f"MIDI audio trigger error: {exc}", file=sys.stderr)
+            return 2
+
+        print(result.message)
+        reporter.verbose(f"Audio buffer: {result.audio_frame_count} frames, {result.sample_rate} Hz")
+        return 0
+
+    def _handle_midi_play_virtual(self, args: argparse.Namespace) -> int:
+        reporter = DebugReporter(DebugLevel(args.debuglevel))
+        audio_selection = AudioDeviceSelector().select(args.audio_device)
+        if audio_selection.sounddevice_value is not None:
+            reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
+        try:
+            settings = VirtualMidiAudioTriggerSettings(
+                port_name=args.port_name,
+                max_messages=args.max_messages,
+                timeout_seconds=args.timeout,
+                sample_rate=args.sample_rate,
+                waveform=Waveform(args.waveform),
+                channel=OutputChannel(args.channel),
+                audio_device=audio_selection.sounddevice_value,
+            )
+        except ValueError as exc:
+            print(f"Virtual MIDI audio trigger error: {exc}", file=sys.stderr)
+            return 2
+
+        reporter.light(f"Opening virtual MIDI input port: {settings.port_name}")
+        reporter.light(
+            "Keep this command running while Logic Pro or another DAW sends notes to this MIDI destination."
+        )
+        reporter.verbose(
+            "Virtual MIDI audio trigger settings: "
+            f"waveform={args.waveform}, sample_rate={args.sample_rate} Hz, channel={args.channel}"
+        )
+        try:
+            result = VirtualMidiAudioTrigger().trigger(settings)
+        except RuntimeError as exc:
+            print(f"Virtual MIDI audio trigger error: {exc}", file=sys.stderr)
             return 2
 
         print(result.message)

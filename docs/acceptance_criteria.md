@@ -362,3 +362,23 @@ Acceptatie op 2026-07-10:
 - De klant hoorde stereo geluid.
 - De Logic Pro externe MIDI zichtbaarheidobservatie valt buiten US-028 en is geen blocker voor deze story.
 - Story status is `Done`.
+
+## US-029: Logic/DAW Virtual MIDI Naar Audio Trigger
+
+- Given Logic Pro 12.3 of een andere DAW MIDI naar een virtual destination kan sturen, when `midi play-virtual` draait, then de synth een virtual MIDI input port opent en ontvangen note events hoorbaar afspeelt.
+- Given de command draait, then de gebruiker `--port-name`, `--audio-device`, `--max-messages`, `--timeout`, `--waveform`, `--sample-rate`, `--channel` en `--debuglevel` kan instellen.
+- Given ontvangen note messages, then de bestaande US-024/US-026 mapping en US-028 audio-trigger route worden hergebruikt.
+- Given Logic de destination niet ziet, then dit als virtual-port/DAW zichtbaarheidstest wordt behandeld en niet als plugin-issue.
+
+Acceptatie op 2026-07-11:
+
+- `midi play-virtual` bestaat als bounded command voor Logic/DAW virtual MIDI naar audio.
+- `VirtualMidiAudioTriggerSettings`, `VirtualMidiAudioTriggerResult`, `MidoVirtualMidiInputBackend` en `VirtualMidiAudioTrigger` zijn class-based en traceerbaar.
+- `MidoVirtualMidiInputBackend` gebruikt `mido.open_input(port_name, virtual=True)` alleen in de echte runtime route.
+- Unit tests gebruiken een fake receiver en fake audio player.
+- CLI tests gebruiken een fake virtual trigger en fake audio selector.
+- `docs/virtual_midi_audio_trigger_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-029 Logic/DAW Virtual MIDI Naar Audio Trigger`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-029 Logic/DAW Virtual MIDI Naar Audio Trigger` en `Version: 0.1.0`.
+- Geen GUI, geen plugin, geen AU/VST3, geen Logic Component en geen onbeperkte realtime performance-loop.
+- Er zijn geen hardcoded MIDI hardware device names toegevoegd.
+- Story status is `In Review` tot de handmatige Logic Pro test is bevestigd.

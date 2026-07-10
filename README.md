@@ -123,6 +123,14 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi vi
 
 Laat dit command draaien terwijl je in Logic Pro 12.3 controleert of `python-d1-synth` als MIDI destination verschijnt.
 
+Open een virtual MIDI port en speel Logic/DAW note events hoorbaar af:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10 --timeout 30 --debuglevel light
+```
+
+Laat dit command draaien, kies in Logic Pro 12.3 `python-d1-synth` als External MIDI destination en speel enkele noten. Dit is nog geen Software Instrument, AU, VST3 of Logic Component.
+
 Diagnoseer generieke USB MIDI input voorbereiding:
 
 ```bash
@@ -212,6 +220,7 @@ MIDI leerpad:
 - [Live MIDI Input Receive Loop](docs/live_midi_input_receive_loop_v0.1.0.md)
 - [Virtual MIDI Port Voor Logic/DAW](docs/virtual_midi_port_logic_daw_v0.1.0.md)
 - [External MIDI Audio Trigger Integratie](docs/external_midi_audio_trigger_v0.1.0.md)
+- [Logic/DAW Virtual MIDI Naar Audio Trigger](docs/virtual_midi_audio_trigger_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
@@ -232,6 +241,8 @@ US-026 is afgerond: `midi listen` kan bounded note messages ontvangen van een ge
 US-027 is afgerond: `midi virtual-port` kan bounded een virtual MIDI input port openen voor Logic/DAW zichtbaarheid. De klanttest in Logic Pro 12.3 bevestigde dat `python-d1-synth` beschikbaar is als External MIDI destination. Niet zichtbaar als Software Instrument / virtual instrument is verwacht; AU/VST3/Logic Component hoort bij latere plugin-packaging stories. Realtime audio-triggering blijft US-028.
 
 US-028 is afgerond: `midi play-live` koppelt bounded ontvangen MIDI note events aan de bestaande synth-engine en audio-output. De klanttest op `KodeklopperM4` bevestigde hoorbaar stereo geluid met `SMK-37 Pro_BLE Bluetooth` naar `Scarlett 8i6 USB`.
+
+US-029 is in review: `midi play-virtual` opent zelf een virtual MIDI input port en koppelt ontvangen Logic/DAW note events aan dezelfde synth-engine/audio-output route. Dit is commandline-only en blijft buiten GUI, AU/VST3, Logic Component en plugin packaging.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

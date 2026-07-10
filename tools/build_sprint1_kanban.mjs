@@ -59,6 +59,7 @@ const futureStories = [
   ["US-026", "Story", "Future MIDI En DAW Integratie", "Live MIDI Input Receive Loop", "Done", "Must", "Lead Developer", 5, "Future", "CLI luistert bounded naar gekozen MIDI input en mapped note messages naar NoteSequence.", "Normalizer, fake receive backend en midi listen CLI tests falen.", "MidiMessageNormalizer, LiveMidiInputReceiver, MidiInputReceiveSettings/Result en midi listen command.", "US-024, US-025", "pytest groen en hardwaretest geslaagd op KodeklopperM4: SMK-37 Pro_BLE Bluetooth via naamfragment en input:7 ontving echte MIDI note messages."],
   ["US-027", "Story", "Future MIDI En DAW Integratie", "Virtual MIDI Port Voor Logic/DAW", "Done", "Should", "Lead Developer", 5, "Future", "python-d1-synth kan bounded als virtual MIDI destination zichtbaar worden voor Logic/DAW.", "Logic Pro 12.3 moet python-d1-synth tonen als External MIDI destination.", "VirtualMidiPortManager, MidoVirtualMidiPortBackend en midi virtual-port command met fake-backend tests.", "US-026", "Klanttest geslaagd op 2026-07-10 19:25: python-d1-synth zichtbaar als External MIDI destination; niet als Software Instrument is verwacht en buiten US-027."],
   ["US-028", "Story", "Future MIDI En DAW Integratie", "External MIDI Audio Trigger Integratie", "Done", "Must", "DSP Engineer", 8, "Future", "Ontvangen MIDI note events triggeren hoorbaar audio via de bestaande synth engine.", "MidiAudioTrigger en midi play-live tests falen totdat fake MIDI naar fake audio werkt.", "MidiAudioTriggerSettings/Result, MidiAudioTrigger en midi play-live command met fake MIDI en fake audio tests.", "US-026, US-027", "Klanttest geslaagd op KodeklopperM4: SMK-37 Pro_BLE Bluetooth speelde hoorbaar stereo audio via Scarlett 8i6 USB; Logic observatie buiten US-028."],
+  ["US-029", "Story", "Future MIDI En DAW Integratie", "Logic/DAW Virtual MIDI Naar Audio Trigger", "In Review", "Must", "DSP Engineer", 8, "Future", "Logic/DAW stuurt MIDI naar virtual port en python-d1-synth speelt hoorbare audio.", "Virtual MIDI audio trigger en CLI play-virtual tests falen totdat fake virtual MIDI naar fake audio werkt.", "MidoVirtualMidiInputBackend, VirtualMidiAudioTriggerSettings/Result, VirtualMidiAudioTrigger en midi play-virtual command.", "US-027, US-028", "pytest groen; handmatige Logic Pro test pauzeert bij klant."],
 ];
 
 board.showGridLines = false;
@@ -116,8 +117,8 @@ future.getRange("A1").values = [["python-d1-synth Future MIDI/DAW Backlog"]];
 future.getRange("A2:N2").merge();
 future.getRange("A2").values = [["Scope mutation: Logic Pro 12.3, other DAWs, generic USB MIDI, external MIDI, RaspiMidiHub, physical MIDI hub, MiniFreak, Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave"]];
 future.getRange("A4:N4").values = [headers];
-future.getRange("A5:N14").values = futureStories;
-const futureTable = future.tables.add("A4:N14", true, "FutureMidiDawBacklog");
+future.getRange("A5:N15").values = futureStories;
+const futureTable = future.tables.add("A4:N15", true, "FutureMidiDawBacklog");
 futureTable.style = "TableStyleMedium4";
 futureTable.showFilterButton = true;
 future.getRange("A1:N1").format = {
@@ -135,14 +136,14 @@ future.getRange("A4:N4").format = {
   font: { bold: true, color: "#FFFFFF" },
   wrapText: true,
 };
-future.getRange("A5:N14").format = {
+future.getRange("A5:N15").format = {
   wrapText: true,
   verticalAlignment: "top",
 };
-future.getRange("H5:H14").setNumberFormat("0");
-future.getRange("A4:N14").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
-future.getRange("A4:N14").format.autofitColumns();
-future.getRange("A4:N14").format.autofitRows();
+future.getRange("H5:H15").setNumberFormat("0");
+future.getRange("A4:N15").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
+future.getRange("A4:N15").format.autofitColumns();
+future.getRange("A4:N15").format.autofitRows();
 future.freezePanes.freezeRows(4);
 future.getRange("A:A").format.columnWidth = 10;
 future.getRange("B:B").format.columnWidth = 10;
@@ -178,9 +179,9 @@ summary.getRange("B4:B9").formulas = [
   ["=COUNTIF('Sprint 1 Board'!F5:F22,\"Should\")"],
   ["=SUM('Sprint 1 Board'!H5:H22)"],
   ["=COUNTIF('Sprint 1 Board'!E5:E22,\"In Review\")"],
-  ["=COUNTA('Future MIDI DAW'!A5:A14)"],
+  ["=COUNTA('Future MIDI DAW'!A5:A15)"],
 ];
-summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H14)"]];
+summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H15)"]];
 summary.getRange("D3:F8").values = [
   ["Status", "Count", "Story Points"],
   ["To Do", null, null],
@@ -249,7 +250,7 @@ await fs.writeFile(`${outputDir}/sprint_1_summary_preview.png`, new Uint8Array(a
 
 const futurePreview = await workbook.render({
   sheetName: "Future MIDI DAW",
-  range: "A1:N14",
+  range: "A1:N15",
   scale: 1,
   format: "png",
 });
@@ -267,7 +268,7 @@ console.log(inspect.ndjson);
 
 const futureInspect = await workbook.inspect({
   kind: "table",
-  range: "'Future MIDI DAW'!A4:N14",
+  range: "'Future MIDI DAW'!A4:N15",
   include: "values,formulas",
   tableMaxRows: 15,
   tableMaxCols: 14,

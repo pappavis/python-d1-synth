@@ -258,3 +258,12 @@ Prioriteit: Must
 Sprint: Future
 
 Notitie: Done met `MidiAudioTriggerSettings`, `MidiAudioTriggerResult`, `MidiAudioTrigger`, CLI command `midi play-live`, fake MIDI backend tests, fake audio player tests en `docs/external_midi_audio_trigger_v0.1.0.md`. De klanttest is geslaagd op KodeklopperM4: `SMK-37 Pro_BLE Bluetooth` triggerde hoorbaar stereo geluid via `Scarlett 8i6 USB`. De Logic Pro externe MIDI zichtbaarheidobservatie blijft buiten US-028.
+
+### US-029: Logic/DAW Virtual MIDI Naar Audio Trigger
+
+Als Logic Pro of DAW gebruiker wil ik `python-d1-synth` als virtual MIDI destination kunnen starten en direct hoorbare audio kunnen triggeren, zodat een DAW MIDI naar de Python synth kan sturen zonder plugin.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: In Review met `MidoVirtualMidiInputBackend`, `VirtualMidiAudioTriggerSettings`, `VirtualMidiAudioTriggerResult`, `VirtualMidiAudioTrigger`, CLI command `midi play-virtual`, fake receiver tests, fake audio player tests en `docs/virtual_midi_audio_trigger_v0.1.0.md`. Deze story combineert US-027 virtual port zichtbaarheid met US-028 audio-triggering. Geen GUI, geen plugin, geen AU/VST3 en geen hardcoded MIDI hardware device names.

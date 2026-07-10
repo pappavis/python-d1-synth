@@ -1,17 +1,24 @@
 # Bestand: test_cli.py
 # Versienummer: 0.1.0
-# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en MIDI audio trigger workflows.
+# Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-028 External MIDI Audio Trigger Integratie
-# Actie: US-028-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
+# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+# Actie: US-029-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
 
 import numpy as np
 
 from synth.audio import AudioDevice, AudioDeviceSelection, OutputChannel
 import synth.cli
 from synth.cli import SynthCli
-from synth.midi import MidiAudioTriggerResult, MidiDevice, MidiInputReceiveResult, MidiMessage, VirtualMidiPortResult
+from synth.midi import (
+    MidiAudioTriggerResult,
+    MidiDevice,
+    MidiInputReceiveResult,
+    MidiMessage,
+    VirtualMidiAudioTriggerResult,
+    VirtualMidiPortResult,
+)
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 
 
@@ -603,3 +610,52 @@ class TestSynthCli:
         assert "Selected MIDI input device from cli: input:0 Generic Keyboard" in output
         assert "Selected audio device from cli: Scarlett 8i6 USB" in output
         assert "Played 1 MIDI-triggered note events from Generic Keyboard." in output
+
+    def test_midi_play_virtual_triggers_audio_from_virtual_port(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                assert cli_device == "Scarlett 8i6 USB"
+                return AudioDeviceSelection(sounddevice_value="Scarlett 8i6 USB", source="cli")
+
+        class FakeVirtualMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.port_name == "python-d1-synth"
+                assert settings.max_messages == 2
+                assert settings.timeout_seconds == 0.5
+                assert settings.sample_rate == 44100
+                assert settings.channel is OutputChannel.STEREO
+                assert settings.audio_device == "Scarlett 8i6 USB"
+                return VirtualMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=2,
+                    played_event_count=1,
+                    audio_frame_count=4410,
+                    sample_rate=44100,
+                    message="Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "VirtualMidiAudioTrigger", FakeVirtualMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-virtual",
+                "--port-name",
+                "python-d1-synth",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+                "--max-messages",
+                "2",
+                "--timeout",
+                "0.5",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Opening virtual MIDI input port: python-d1-synth" in output
+        assert "Selected audio device from cli: Scarlett 8i6 USB" in output
+        assert "Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth." in output

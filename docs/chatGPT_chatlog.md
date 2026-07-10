@@ -830,12 +830,113 @@ Wat is de erstvolgnde logisch in volgorde user story?  Ga door met die user stor
 
 
 
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-028-DONE-PUBLISHED
 
+US-028 is afgerond, vastgelegd en gepusht.
 
+Resultaat vastgelegd:
+- MIDI scan werkte.
+- `midi play-live` met `SMK-37 Pro_BLE Bluetooth` naar `Scarlett 8i6 USB` werkte.
+- Jij hoorde stereo geluid.
+- Logic Pro externe MIDI zichtbaarheid is als observatie genoteerd, maar bewust niet als US-028 side quest opgepakt.
 
+Verificatie:
+- `96 passed, 1 skipped`
+- `git diff --check` schoon
+- Commit/push: `6958938 Record US-028 hardware validation`
+
+US-028 staat nu `Done` in docs en Kanban.
+
+[external_midi_audio_trigger_v0.1.0.md](/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth/docs/external_midi_audio_trigger_v0.1.0.md)
+
+::git-stage{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth"}
+::git-commit{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth"}
+::git-push{cwd="/Volumes/data1/Yandex.Disk.localized/michiele/Programmering/Python/python_normaal/github_python_normaal/desktop_synth" branch="main"}
+
+# credit limit!!
 10-jul-2026 19:45 Je hebt je gebruikslimiet bereikt. Upgrade je abonnement of voeg tegoed toe om door te gaan of probeer het opnieuw op 23:48.
 
 
 
 
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-PLAN
+
+De eerstvolgende logische story is **US-029: Logic/DAW Virtual MIDI Naar Audio Trigger**.
+
+Waarom deze nu logisch is: US-027 bewees dat `python-d1-synth` als virtual MIDI destination in Logic kan verschijnen. US-028 bewees dat een bestaand MIDI input device hoorbare audio kan triggeren. US-029 combineert die twee gecontroleerd: één commandline-run opent een virtual MIDI input port, Logic stuurt daar MIDI naartoe, en de Python synth speelt hoorbaar audio af via gekozen audio-output. Dit blijft strikt commandline-only; geen AU/VST3/plugin, geen GUI, geen echte USB-device driver.
+
+Uitvoerplan:
+- Backlog uitbreiden met US-029.
+- CLI uitbreiden met iets als `python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --timeout 30`.
+- Implementatie class-based houden in `src/synth/midi.py` en `src/synth/cli.py`.
+- Tests toevoegen met fake virtual MIDI backend en fake audio player.
+- Docs bijwerken: user stories, acceptatiecriteria, README, nieuw US-029 doc, Kanban XLSX.
+- De eerdere observatie “Logic ziet python-d1-synth niet meer” opnemen als testpunt, niet als losse zijroute.
+
+Ik zie ook een bestaande lokale wijziging in `docs/chatGPT_chatlog.md`; die behandel ik voorzichtig en ga ik niet overschrijven.
+
+Mag ik US-029 volgens dit plan implementeren?
+
+# chat
+HATOD-20260709-D1PY-MVP-001 / US-029-PLAN; goedgekeurd, ga door met **US-029: Logic/DAW Virtual MIDI Naar Audio Trigger.**
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-START
+Goedgekeurd, ik start US-029. Ik hou deze strak op de lijn: virtual MIDI port vanuit Logic/DAW naar hoorbare audio, commandline-only, geen plugin/GUI zijspoor.
+
+
+
+
+Bestanden gelezen en een opdracht uitgevoerd
+
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-CONTEXT
+De code heeft al twee bruikbare bouwstenen: VirtualMidiPortManager voor de Logic-zichtbaarheid en MidiAudioTrigger voor MIDI-naar-audio. US-029 wordt dus vooral een nette compositie daarvan met fake-backend tests, niet een nieuwe MIDI-stack.
+
+
+
+
+Bestanden gelezen
+
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-EDITING
+Ik ga nu de US-029 laag toevoegen: een virtual-input receive backend, een VirtualMidiAudioTrigger, en een CLI-command midi play-virtual. Daarna werk ik de tests en artefacts bij zodat de code, docs en Kanban dezelfde story-status vertellen.
+
+
+
+
+Bestanden gelezen
+
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-RED-GREEN
+Ik voeg eerst de tests toe rond de gewenste route en laat die het ontwerp vastpinnen: virtual portnaam erin, fake MIDI erin, fake audio eruit. Daarna vul ik de implementatie aan zodat dezelfde codepad later door Logic getest kan worden.
+
+
+
+
+Een bestand bewerktBewerkt midi.py+152-4
+
+
+
+
+
+
+
+
+
+
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-CLI
+De kernklasse staat erin. Nu koppel ik die aan de CLI als midi play-virtual, met dezelfde audio-opties als play-live, maar zonder MIDI-device scan omdat de command zelf de virtual port opent.
+
+
+
+
+Een bestand bewerktBewerkt cli.py+56-3
+
+
+
+
+CHATOD: CHATOD-20260709-D1PY-MVP-001 / US-029-TESTS
+Ik voeg nu de unit- en CLI-tests toe. Die gebruiken alleen fake receiver/audio, dus je Mac MIDI setup wordt niet aangeraakt door de automatische test-suite.
 

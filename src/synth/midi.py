@@ -1,10 +1,10 @@
 # Bestand: midi.py
 # Versienummer: 0.1.0
-# Doel: MIDI device discovery, device selectie, MIDI audio trigger en MIDI-naar-NoteEvent mapping.
+# Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-028 External MIDI Audio Trigger Integratie
-# Actie: US-028-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-028
+# User-Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+# Actie: US-029-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-029
 
 from __future__ import annotations
 
@@ -291,6 +291,60 @@ class MidiAudioTriggerResult:
     message: str
 
 
+@dataclass(frozen=True)
+class VirtualMidiAudioTriggerSettings:
+    """Settings for bounded Logic/DAW virtual MIDI to audio triggering.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-029
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - Version: 0.1.0
+    """
+
+    port_name: str = "python-d1-synth"
+    max_messages: int = 10
+    timeout_seconds: float = 30.0
+    sample_rate: int = 44100
+    waveform: Waveform = Waveform.SINE
+    amplitude: float = 0.2
+    channel: OutputChannel = OutputChannel.STEREO
+    audio_device: int | str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.port_name.strip():
+            raise ValueError("port_name must not be empty")
+        if self.max_messages <= 0:
+            raise ValueError("max_messages must be positive")
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        if self.sample_rate <= 0:
+            raise ValueError("sample_rate must be positive")
+        if not 0 < self.amplitude <= 1.0:
+            raise ValueError("amplitude must be between 0 and 1")
+
+
+@dataclass(frozen=True)
+class VirtualMidiAudioTriggerResult:
+    """Result from bounded Logic/DAW virtual MIDI to audio triggering.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-029
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - Version: 0.1.0
+    """
+
+    port_name: str
+    received_message_count: int
+    played_event_count: int
+    audio_frame_count: int
+    sample_rate: int
+    message: str
+
+
 class MidiInputBackend(Protocol):
     def receive_messages(
         self, input_name: str, max_messages: int, timeout_seconds: float
@@ -366,6 +420,53 @@ class MidoMidiInputBackend:
                     if len(received) >= max_messages:
                         break
                 time.sleep(0.01)
+        return tuple(received)
+
+
+class MidoVirtualMidiInputBackend:
+    """Bounded adapter around a mido virtual input port for Logic/DAW notes.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-029
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - Version: 0.1.0
+    """
+
+    def __init__(self, normalizer: MidiMessageNormalizer | None = None) -> None:
+        self._normalizer = normalizer if normalizer is not None else MidiMessageNormalizer()
+
+    def receive_messages(
+        self, input_name: str, max_messages: int, timeout_seconds: float
+    ) -> tuple[MidiMessage, ...]:
+        try:
+            import mido
+        except ImportError as exc:
+            raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
+
+        received: list[MidiMessage] = []
+        deadline = time.monotonic() + timeout_seconds
+        try:
+            with mido.open_input(input_name, virtual=True) as port:
+                while len(received) < max_messages and time.monotonic() < deadline:
+                    for raw_message in port.iter_pending():
+                        message = self._normalizer.normalize(raw_message)
+                        if message is not None:
+                            received.append(message)
+                        if len(received) >= max_messages:
+                            break
+                    time.sleep(0.01)
+        except TypeError as exc:
+            raise RuntimeError(
+                "Virtual MIDI input could not be opened because the active mido backend does not support "
+                "virtual=True for input ports."
+            ) from exc
+        except Exception as exc:
+            raise RuntimeError(
+                "Virtual MIDI input could not be opened. Check the mido/python-rtmidi backend and macOS "
+                "CoreMIDI permissions."
+            ) from exc
         return tuple(received)
 
 
@@ -514,6 +615,53 @@ class MidiAudioTrigger:
             audio_frame_count=buffer.samples.shape[0],
             sample_rate=buffer.sample_rate,
             message=f"Played {event_count} MIDI-triggered note events from {settings.input_name}.",
+        )
+
+
+class VirtualMidiAudioTrigger:
+    """Open a virtual MIDI input port, receive DAW notes, and play audio.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-029
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
+    - Version: 0.1.0
+    """
+
+    def __init__(
+        self,
+        receiver: LiveMidiInputReceiver | None = None,
+        audio_player: AudioPlayer | None = None,
+    ) -> None:
+        self._receiver = (
+            receiver if receiver is not None else LiveMidiInputReceiver(backend=MidoVirtualMidiInputBackend())
+        )
+        self._audio_player = audio_player if audio_player is not None else SoundDeviceAudioPlayer()
+
+    def trigger(self, settings: VirtualMidiAudioTriggerSettings) -> VirtualMidiAudioTriggerResult:
+        trigger_result = MidiAudioTrigger(
+            receiver=self._receiver,
+            audio_player=self._audio_player,
+        ).trigger(
+            MidiAudioTriggerSettings(
+                input_name=settings.port_name,
+                max_messages=settings.max_messages,
+                timeout_seconds=settings.timeout_seconds,
+                sample_rate=settings.sample_rate,
+                waveform=settings.waveform,
+                amplitude=settings.amplitude,
+                channel=settings.channel,
+                audio_device=settings.audio_device,
+            )
+        )
+        return VirtualMidiAudioTriggerResult(
+            port_name=settings.port_name,
+            received_message_count=trigger_result.received_message_count,
+            played_event_count=trigger_result.played_event_count,
+            audio_frame_count=trigger_result.audio_frame_count,
+            sample_rate=trigger_result.sample_rate,
+            message=trigger_result.message.replace(settings.port_name, f"virtual MIDI port {settings.port_name}"),
         )
 
 
