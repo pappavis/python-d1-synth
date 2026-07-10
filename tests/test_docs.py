@@ -1,3 +1,11 @@
+# Bestand: test_docs.py
+# Versienummer: 0.1.0
+# Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
+# Sprint: Future MIDI/DAW
+# User-Story: US-024 MIDI Naar NoteEvent Mapping
+# Actie: US-024-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-024
+
 from pathlib import Path
 
 
@@ -142,6 +150,34 @@ class TestDocumentationArtifacts:
             "KL Essential 49 mk3 MIDI",
             "SN76489 Synth Pappavis CircuitPython usb_midi.ports[0]",
             "CircuitPython/ESP32",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us024_midi_to_note_event_mapping_doc_contains_required_terms(self) -> None:
+        document = Path("docs/midi_to_note_event_mapping_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-024 MIDI Naar NoteEvent Mapping",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: Done",
+            "MidiToNoteEventMapper",
+            "MidiMessage",
+            "NoteEvent",
+            "NoteSequence",
+            "note_on",
+            "note_off",
+            "velocity 0",
+            "channel",
+            "default duration",
+            "C4",
+            "MIDI note number 60",
+            "geen hardcoded MIDI device names",
         )
         for term in required_terms:
             assert term in content

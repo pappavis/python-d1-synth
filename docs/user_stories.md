@@ -221,6 +221,8 @@ Als ontwikkelaar wil ik MIDI events naar het bestaande `NoteEvent` en `NoteSeque
 Prioriteit: Must
 Sprint: Future
 
+Notitie: US-024 is Done met `MidiToNoteEventMapper` en `docs/midi_to_note_event_mapping_v0.1.0.md`. De mapper vertaalt `MidiMessage` note-on/off paren naar `NoteEvent`, behandelt `note_on` met velocity 0 als note-off, houdt channels gescheiden en gebruikt default duration bij ontbrekende note-off. Er zijn geen hardcoded MIDI device names toegevoegd.
+
 ### US-025: MIDI Device Discovery En Default Selection
 
 Als gebruiker wil ik via de commandline beschikbare USB, virtual en external MIDI devices kunnen scannen en een device kunnen kiezen, zodat ik de synth bewust met Logic, KeyLab Mk3, RaspiMidiHub of andere MIDI-bronnen kan verbinden.

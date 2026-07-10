@@ -179,6 +179,7 @@ MIDI leerpad:
 - [External MIDI Workflow In Logic](docs/logic_external_midi_workflow_v0.1.0.md)
 - [USB MIDI Hardware Input](docs/usb_midi_hardware_input_v0.1.0.md)
 - [Studio MIDI Routing Integratietest](docs/studio_midi_routing_integration_v0.1.0.md)
+- [MIDI Naar NoteEvent Mapping](docs/midi_to_note_event_mapping_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
@@ -189,6 +190,8 @@ US-022 is afgerond: na herstel van de MIDI Python packages toont `midi list-devi
 Tijdens US-022 is een package-conflict opgelost: het verkeerde pakket `rtmidi 2.5.0` stond naast `python-rtmidi 1.5.8` en overschreef de module die Mido verwacht. Na verwijderen van `rtmidi` en herinstalleren van `python-rtmidi==1.5.8` is `rtmidi.API_UNSPECIFIED` weer beschikbaar. In de Codex-run context kan CoreMIDI scanning nog crashen met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`, daarom blijft de scan standaard veilig uit en gebruiken we `--unsafe-rtmidi-scan` alleen voor bewuste hardwarediagnose.
 
 US-023 legt de studio MIDI routing testmatrix vast. Device-namen uit `KodeklopperM4`, `MuziekM4`, toekomstig Windows `Spelen01` of Raspberry Pi 2 zijn runtime snapshots en mogen niet als constants in applicatiecode worden vastgelegd.
+
+US-024 is afgerond: `MidiToNoteEventMapper` vertaalt device-onafhankelijke `MidiMessage` note-on/off berichten naar `NoteEvent` en `NoteSequence`. De mapper behandelt `note_on` met velocity `0` als note-off, houdt channels gescheiden en gebruikt een default duration wanneer een note-off ontbreekt.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

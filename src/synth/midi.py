@@ -1,3 +1,11 @@
+# Bestand: midi.py
+# Versienummer: 0.1.0
+# Doel: MIDI device discovery, readiness diagnostics en MIDI-naar-NoteEvent mapping.
+# Sprint: Future MIDI/DAW
+# User-Story: US-024 MIDI Naar NoteEvent Mapping
+# Actie: US-024-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-024
+
 from dataclasses import dataclass
 import json
 import platform
@@ -178,37 +186,22 @@ class UsbMidiHardwareInputAdapter:
         return None
 
 
-class VirtualMidiInputAdapter:
-    """Map virtual MIDI note messages to the internal note sequence model.
+class MidiToNoteEventMapper:
+    """Map device-independent MIDI note messages to the internal note model.
 
     Traceability:
-    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-020
-    - Backlog: Sprint 1 Kanban Backlog
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-024
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
-    - User Story: US-020 Virtual MIDI Input Voor DAW
+    - User Story: US-024 MIDI Naar NoteEvent Mapping
     - Version: 0.1.0
     """
 
-    def __init__(self, settings: VirtualMidiInputSettings | None = None) -> None:
-        self._settings = settings if settings is not None else VirtualMidiInputSettings()
+    def __init__(self, default_note_duration_seconds: float = 1.0) -> None:
+        if default_note_duration_seconds <= 0:
+            raise ValueError("default_note_duration_seconds must be positive")
+        self._default_note_duration_seconds = default_note_duration_seconds
         self._parser = NoteParser()
-
-    def diagnose(self, backend_available: bool) -> VirtualMidiInputDiagnostic:
-        if backend_available:
-            return VirtualMidiInputDiagnostic(
-                available=True,
-                message=(
-                    f"Virtual MIDI input backend is installed. Route a DAW track to '{self._settings.input_name}' "
-                    "when the live input story opens the port."
-                ),
-            )
-        return VirtualMidiInputDiagnostic(
-            available=False,
-            message=(
-                "Virtual MIDI input backend is not available. Install the MIDI extras and verify a virtual MIDI "
-                "route before DAW input."
-            ),
-        )
 
     def messages_to_note_sequence(self, messages: tuple[MidiMessage, ...]) -> NoteSequence:
         active_notes: dict[tuple[int, int], MidiMessage] = {}
@@ -232,7 +225,7 @@ class VirtualMidiInputAdapter:
     def _event_from_pair(self, started: MidiMessage, stopped: MidiMessage) -> NoteEvent:
         duration = stopped.time_seconds - started.time_seconds
         if duration <= 0:
-            duration = self._settings.default_note_duration_seconds
+            duration = self._default_note_duration_seconds
         return NoteEvent(
             note=self._note_from_midi_number(started.note_number),
             duration_seconds=duration,
@@ -243,7 +236,7 @@ class VirtualMidiInputAdapter:
     def _event_from_open_note(self, started: MidiMessage) -> NoteEvent:
         return NoteEvent(
             note=self._note_from_midi_number(started.note_number),
-            duration_seconds=self._settings.default_note_duration_seconds,
+            duration_seconds=self._default_note_duration_seconds,
             velocity=started.velocity / 127,
             start_seconds=started.time_seconds,
         )
@@ -253,6 +246,44 @@ class VirtualMidiInputAdapter:
         octave = (note_number // 12) - 1
         name = note_names[note_number % 12]
         return self._parser.parse(f"{name}{octave}")
+
+
+class VirtualMidiInputAdapter:
+    """Map virtual MIDI note messages to the internal note sequence model.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-020
+    - Backlog: Sprint 1 Kanban Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-020 Virtual MIDI Input Voor DAW
+    - Version: 0.1.0
+    """
+
+    def __init__(self, settings: VirtualMidiInputSettings | None = None) -> None:
+        self._settings = settings if settings is not None else VirtualMidiInputSettings()
+        self._mapper = MidiToNoteEventMapper(
+            default_note_duration_seconds=self._settings.default_note_duration_seconds
+        )
+
+    def diagnose(self, backend_available: bool) -> VirtualMidiInputDiagnostic:
+        if backend_available:
+            return VirtualMidiInputDiagnostic(
+                available=True,
+                message=(
+                    f"Virtual MIDI input backend is installed. Route a DAW track to '{self._settings.input_name}' "
+                    "when the live input story opens the port."
+                ),
+            )
+        return VirtualMidiInputDiagnostic(
+            available=False,
+            message=(
+                "Virtual MIDI input backend is not available. Install the MIDI extras and verify a virtual MIDI "
+                "route before DAW input."
+            ),
+        )
+
+    def messages_to_note_sequence(self, messages: tuple[MidiMessage, ...]) -> NoteSequence:
+        return self._mapper.messages_to_note_sequence(messages)
 
 
 class MidiDeviceScanner:

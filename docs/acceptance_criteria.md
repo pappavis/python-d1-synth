@@ -255,6 +255,19 @@ Acceptatie op 2026-07-10:
 - Given een MIDI note off bericht, when de mapper draait, then het corresponderende interne event wordt beeindigd of als note-off event geregistreerd.
 - Given toekomstige pitch bend en clock events, then het ontwerp uitbreidbaar blijft zonder de oscillator-engine te herschrijven.
 
+Acceptatie op 2026-07-10:
+
+- `MidiToNoteEventMapper` vertaalt `MidiMessage` note-on/off paren naar `NoteSequence`.
+- MIDI note number 60 wordt intern `C4`.
+- Velocity wordt genormaliseerd naar `0.0` tot en met `1.0`.
+- `note_on` met velocity `0` wordt als note-off behandeld.
+- Hetzelfde note number op verschillende channels wordt onafhankelijk gemapt.
+- Ontbrekende note-off gebruikt een configureerbare default duration.
+- `VirtualMidiInputAdapter` hergebruikt dezelfde mapper.
+- `docs/midi_to_note_event_mapping_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-024 MIDI Naar NoteEvent Mapping`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-024 MIDI Naar NoteEvent Mapping` en `Version: 0.1.0`.
+- Er zijn geen hardcoded MIDI device names toegevoegd.
+
 ## US-025: MIDI Device Discovery En Default Selection
 
 - Given USB, virtual of external MIDI devices beschikbaar zijn, when `python -m synth midi list-devices` draait, then de CLI een leesbare lijst met device naam, richting en stabiele selectie-identificatie toont.
