@@ -302,7 +302,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-028 External MIDI Audio Trigger Integratie",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-live",
             "MidiAudioTriggerSettings",
             "MidiAudioTriggerResult",
@@ -321,6 +321,13 @@ class TestDocumentationArtifacts:
             "Scarlett 8i6 USB",
             "SMK-37 Pro_BLE",
             "US-028-HARDWARE-TEST",
+            "US-028-IN-REVIEW-PUBLISHED",
+            "KodeklopperM4",
+            "Geslaagd voor US-028",
+            "Played 8 MIDI-triggered note events from SMK-37 Pro_BLE Bluetooth.",
+            "hoorbaar stereo geluid",
+            "Logic Pro externe MIDI zichtbaarheidobservatie",
+            "geen US-028 blocker",
         )
         for term in required_terms:
             assert term in content

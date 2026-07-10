@@ -357,4 +357,8 @@ Acceptatie op 2026-07-10:
 - US-028 bevat geen GUI, geen plugin, geen AU/VST3 en geen onbeperkte realtime performance-loop.
 - `docs/external_midi_audio_trigger_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-028 External MIDI Audio Trigger Integratie`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-028 External MIDI Audio Trigger Integratie` en `Version: 0.1.0`.
-- Story status blijft `In Review` totdat de hoorbare hardwaretest door de klant is bevestigd.
+- Hoorbare hardwaretest is geslaagd op KodeklopperM4 met `SMK-37 Pro_BLE Bluetooth` naar `Scarlett 8i6 USB`.
+- `midi play-live` rapporteerde `Played 8 MIDI-triggered note events from SMK-37 Pro_BLE Bluetooth.`
+- De klant hoorde stereo geluid.
+- De Logic Pro externe MIDI zichtbaarheidobservatie valt buiten US-028 en is geen blocker voor deze story.
+- Story status is `Done`.

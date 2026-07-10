@@ -257,4 +257,4 @@ Als gebruiker wil ik ontvangen MIDI note events hoorbaar via de Mac audio-output
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `MidiAudioTriggerSettings`, `MidiAudioTriggerResult`, `MidiAudioTrigger`, CLI command `midi play-live`, fake MIDI backend tests, fake audio player tests en `docs/external_midi_audio_trigger_v0.1.0.md`. De automatische tests openen geen echte MIDI of audio hardware. De hoorbare hardwaretest pauzeert bij klant.
+Notitie: Done met `MidiAudioTriggerSettings`, `MidiAudioTriggerResult`, `MidiAudioTrigger`, CLI command `midi play-live`, fake MIDI backend tests, fake audio player tests en `docs/external_midi_audio_trigger_v0.1.0.md`. De klanttest is geslaagd op KodeklopperM4: `SMK-37 Pro_BLE Bluetooth` triggerde hoorbaar stereo geluid via `Scarlett 8i6 USB`. De Logic Pro externe MIDI zichtbaarheidobservatie blijft buiten US-028.

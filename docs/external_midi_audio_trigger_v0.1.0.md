@@ -5,7 +5,7 @@ Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie
 User Story: US-028 External MIDI Audio Trigger Integratie
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -51,7 +51,7 @@ Groene fase:
 
 US-028-HARDWARE-TEST
 
-hardwaretest pauzeert bij klant: de automatische tests zijn groen, maar de story blijft `In Review` totdat de gebruiker hoorbaar resultaat bevestigt.
+hardwaretest pauzeert bij klant: de automatische tests waren groen, waarna de gebruiker hoorbaar resultaat heeft bevestigd.
 
 Voor de test:
 
@@ -83,6 +83,48 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi pl
 - Geen latency-optimalisatie buiten bounded commandline test.
 - Geen AU/VST3/Logic Component.
 
+## Klanttestresultaat
+
+CHATOD-20260709-D1PY-MVP-001 / US-028-IN-REVIEW-PUBLISHED
+Datum/tijd: 2026-07-10 19:25
+Host: KodeklopperM4
+Status: Geslaagd voor US-028
+
+MIDI scan bevatte onder meer:
+
+- `input:7 input   SMK-37 Pro_BLE Bluetooth`
+- `output:1        output  Scarlett 8i6 USB`
+- `input:9 input   Logic Pro Virtual Out`
+- `output:10       output  Logic Pro Virtual In`
+
+Uitgevoerde hoorbare test:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-live --unsafe-rtmidi-scan --midi-device "SMK-37 Pro_BLE" --audio-device "Scarlett 8i6 USB" --max-messages 10 --timeout 10 --debuglevel verbose
+```
+
+Terminalresultaat:
+
+```text
+Selected MIDI input device from cli: input:7 SMK-37 Pro_BLE Bluetooth
+Selected audio device from cli: Scarlett 8i6 USB
+MIDI audio trigger settings: waveform=sine, sample_rate=44100 Hz, channel=stereo
+Played 8 MIDI-triggered note events from SMK-37 Pro_BLE Bluetooth.
+Audio buffer: 44100 frames, 44100 Hz
+```
+
+Klantobservatie:
+
+- De gebruiker speelde op de SMK 37.
+- Er was hoorbaar stereo geluid.
+- `python-d1-synth` was niet meer als externe MIDI zichtbaar in Logic Pro tijdens deze observatie.
+
+Beoordeling:
+
+- US-028 is geslaagd: external MIDI input triggert hoorbare stereo audio via de bestaande synth-engine.
+- Logic Pro externe MIDI zichtbaarheidobservatie is geen US-028 blocker en wordt niet als side quest opgepakt binnen deze story.
+- Een toekomstige Logic-routing/regressiecheck kan als aparte story of defect worden ingepland als dit opnieuw reproduceerbaar is.
+
 ## Acceptatie
 
 - `midi play-live` bestaat.
@@ -91,4 +133,4 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi pl
 - `MidiAudioTrigger` rendert audio met `SynthEngine`.
 - Audio wordt via de gekozen output afgespeeld.
 - Tests gebruiken fake MIDI backend en fake audio player.
-- Story status blijft `In Review` tot de hardwaretest hoorbaar geslaagd is.
+- Story status is `Done`: de hardwaretest is hoorbaar geslaagd.
