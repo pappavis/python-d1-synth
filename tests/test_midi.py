@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-024 MIDI Naar NoteEvent Mapping
-# Actie: US-024-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-024
+# User-Story: US-025 MIDI Device Discovery En Default Selection
+# Actie: US-025-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
 
 import pytest
 
@@ -31,6 +31,63 @@ class TestMidiDeviceSelector:
 
         assert selection.selected_device == "Config Device"
         assert selection.source == "config"
+
+    def test_cli_device_id_wins_over_name_and_config_default(self) -> None:
+        devices = (
+            MidiDevice(identifier="input:0", name="Keyboard", direction="input"),
+            MidiDevice(identifier="input:1", name="Guitar MIDI", direction="input"),
+        )
+
+        selection = MidiDeviceSelector().select_input_device(
+            devices,
+            cli_device="Keyboard",
+            cli_device_id="input:1",
+            config_device="Config Default",
+        )
+
+        assert selection.selected_device == "input:1"
+        assert selection.source == "cli-id"
+        assert selection.matched_device == devices[1]
+        assert selection.message == "Selected MIDI input device from cli-id: input:1 Guitar MIDI"
+
+    def test_cli_device_name_wins_over_config_default(self) -> None:
+        devices = (
+            MidiDevice(identifier="input:0", name="Config Default", direction="input"),
+            MidiDevice(identifier="input:1", name="Keyboard", direction="input"),
+        )
+
+        selection = MidiDeviceSelector().select_input_device(
+            devices,
+            cli_device="Keyboard",
+            config_device="Config Default",
+        )
+
+        assert selection.selected_device == "Keyboard"
+        assert selection.source == "cli"
+        assert selection.matched_device == devices[1]
+
+    def test_config_default_selects_input_device_without_cli_override(self) -> None:
+        devices = (
+            MidiDevice(identifier="input:0", name="Config Default", direction="input"),
+            MidiDevice(identifier="output:0", name="Config Default Output", direction="output"),
+        )
+
+        selection = MidiDeviceSelector().select_input_device(devices, config_device="Config Default")
+
+        assert selection.selected_device == "Config Default"
+        assert selection.source == "config"
+        assert selection.matched_device == devices[0]
+
+    def test_missing_requested_input_device_returns_clear_message(self) -> None:
+        devices = (MidiDevice(identifier="input:0", name="Keyboard", direction="input"),)
+
+        selection = MidiDeviceSelector().select_input_device(devices, cli_device="Missing")
+
+        assert selection.matched_device is None
+        assert selection.source == "cli"
+        assert "Requested MIDI input device not found" in selection.message
+        assert "Keyboard" in selection.message
+        assert "midi list-devices" in selection.message
 
 
 class TestMidiDeviceScanner:

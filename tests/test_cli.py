@@ -1,3 +1,11 @@
+# Bestand: test_cli.py
+# Versienummer: 0.1.0
+# Doel: CLI tests voor audio, playback, MIDI diagnostics en device selectie.
+# Sprint: Future MIDI/DAW
+# User-Story: US-025 MIDI Device Discovery En Default Selection
+# Actie: US-025-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+
 import numpy as np
 
 from synth.audio import AudioDevice
@@ -283,3 +291,142 @@ class TestSynthCli:
         output = capsys.readouterr().out
         assert exit_code == 0
         assert "MIDI backend stderr: ModuleNotFoundError: No module named 'mido'" in output
+
+    def test_midi_list_devices_selects_device_by_identifier(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (
+                            MidiDevice(identifier="input:0", name="Generic Keyboard", direction="input"),
+                            MidiDevice(identifier="input:1", name="Generic Guitar MIDI", direction="input"),
+                            MidiDevice(identifier="output:0", name="Generic Synth", direction="output"),
+                        ),
+                        "error_message": None,
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(
+            ["midi", "list-devices", "--midi-device-id", "input:1", "--debuglevel", "light"]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "input:1\tinput\tGeneric Guitar MIDI" in output
+        assert "Selected MIDI input device from cli-id: input:1 Generic Guitar MIDI" in output
+
+    def test_midi_list_devices_uses_config_default_without_cli_override(self, monkeypatch, capsys, tmp_path) -> None:
+        config = tmp_path / "patch.yaml"
+        config.write_text(
+            "\n".join(
+                [
+                    "midi:",
+                    "  default_input_device: Generic Keyboard",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (
+                            MidiDevice(identifier="input:0", name="Generic Keyboard", direction="input"),
+                            MidiDevice(identifier="input:1", name="Generic Guitar MIDI", direction="input"),
+                        ),
+                        "error_message": None,
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(["midi", "list-devices", "--config", str(config), "--debuglevel", "light"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Selected MIDI input device from config: input:0 Generic Keyboard" in output
+
+    def test_midi_list_devices_cli_device_wins_over_config_default(self, monkeypatch, capsys, tmp_path) -> None:
+        config = tmp_path / "patch.yaml"
+        config.write_text(
+            "\n".join(
+                [
+                    "midi:",
+                    "  default_input_device: Generic Keyboard",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (
+                            MidiDevice(identifier="input:0", name="Generic Keyboard", direction="input"),
+                            MidiDevice(identifier="input:1", name="Generic Guitar MIDI", direction="input"),
+                        ),
+                        "error_message": None,
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "list-devices",
+                "--config",
+                str(config),
+                "--midi-device",
+                "Guitar",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Selected MIDI input device from cli: input:1 Generic Guitar MIDI" in output
+
+    def test_midi_list_devices_reports_missing_selected_input(self, monkeypatch, capsys) -> None:
+        class FakeScanner:
+            def __init__(self, allow_unsafe_native_scan=False):
+                self.allow_unsafe_native_scan = allow_unsafe_native_scan
+
+            def scan(self):
+                return type(
+                    "FakeMidiScanResult",
+                    (),
+                    {
+                        "devices": (MidiDevice(identifier="input:0", name="Generic Keyboard", direction="input"),),
+                        "error_message": None,
+                    },
+                )()
+
+        monkeypatch.setattr(synth.cli, "MidiDeviceScanner", FakeScanner)
+
+        exit_code = SynthCli().run(["midi", "list-devices", "--midi-device", "Missing", "--debuglevel", "light"])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Requested MIDI input device not found" in output
+        assert "Available input devices: input:0 Generic Keyboard" in output

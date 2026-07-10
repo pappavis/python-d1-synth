@@ -1,3 +1,11 @@
+# Bestand: cli.py
+# Versienummer: 0.1.0
+# Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI device workflows.
+# Sprint: Future MIDI/DAW
+# User-Story: US-025 MIDI Device Discovery En Default Selection
+# Actie: US-025-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
+
 import argparse
 import importlib.util
 import sys
@@ -26,6 +34,7 @@ class SynthCli:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-020 Virtual MIDI Input Voor DAW
     - User Story: US-022 USB MIDI Hardware Input
+    - User Story: US-025 MIDI Device Discovery En Default Selection
     - Version: 0.1.0
     """
 
@@ -69,6 +78,9 @@ class SynthCli:
         list_devices = midi_subparsers.add_parser("list-devices", help="List detected MIDI devices.")
         list_devices.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
         list_devices.add_argument("--unsafe-rtmidi-scan", action="store_true")
+        list_devices.add_argument("--midi-device")
+        list_devices.add_argument("--midi-device-id")
+        list_devices.add_argument("--config")
         list_devices.set_defaults(handler=self._handle_midi_list_devices)
         virtual_input = midi_subparsers.add_parser(
             "diagnose-virtual-input",
@@ -80,6 +92,8 @@ class SynthCli:
             help="Diagnose whether a generic USB MIDI input device is visible.",
         )
         usb_input.add_argument("--midi-device")
+        usb_input.add_argument("--midi-device-id")
+        usb_input.add_argument("--config")
         usb_input.add_argument("--unsafe-rtmidi-scan", action="store_true")
         usb_input.set_defaults(handler=self._handle_midi_diagnose_usb_input)
 
@@ -170,6 +184,15 @@ class SynthCli:
             return 0
         for device in devices:
             print(f"{device.identifier}\t{device.direction}\t{device.name}")
+        config_device = self._load_midi_default_device(args.config)
+        selection = MidiDeviceSelector().select_input_device(
+            devices,
+            cli_device=args.midi_device,
+            cli_device_id=args.midi_device_id,
+            config_device=config_device,
+        )
+        if selection.message and selection.source != "none":
+            reporter.light(selection.message)
         return 0
 
     def _handle_midi_diagnose_virtual_input(self, args: argparse.Namespace) -> int:
@@ -180,7 +203,19 @@ class SynthCli:
 
     def _handle_midi_diagnose_usb_input(self, args: argparse.Namespace) -> int:
         result = MidiDeviceScanner(allow_unsafe_native_scan=args.unsafe_rtmidi_scan).scan()
-        diagnostic = UsbMidiHardwareInputAdapter().diagnose(result.devices, requested_device=args.midi_device)
+        config_device = self._load_midi_default_device(args.config)
+        selection = MidiDeviceSelector().select_input_device(
+            result.devices,
+            cli_device=args.midi_device,
+            cli_device_id=args.midi_device_id,
+            config_device=config_device,
+        )
+        requested_device = None
+        if selection.matched_device is not None:
+            requested_device = selection.matched_device.identifier
+        elif selection.source != "none":
+            requested_device = selection.selected_device
+        diagnostic = UsbMidiHardwareInputAdapter().diagnose(result.devices, requested_device=requested_device)
         if result.error_message is not None:
             self._print_midi_scan_details(result)
             print(result.error_message)
@@ -190,6 +225,8 @@ class SynthCli:
                 "and choose a visible device for the manual test."
             )
             print("BLOCKER: Logic Pro shows MIDI devices but Python scan returned none.")
+        if selection.message and selection.source != "none":
+            print(selection.message)
         print(diagnostic.message)
         if diagnostic.compatible_devices:
             print("Compatible USB MIDI inputs:")
@@ -255,6 +292,12 @@ class SynthCli:
         if lines[0].startswith("Traceback") and len(lines) > 1:
             return lines[-1]
         return lines[0]
+
+    def _load_midi_default_device(self, config_path: str | None) -> str | None:
+        if config_path is None:
+            return None
+        config = PatchConfigLoader().load(Path(config_path))
+        return config.midi.default_input_device
 
 
 def main(argv: list[str] | None = None) -> int:

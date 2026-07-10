@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-024 MIDI Naar NoteEvent Mapping
-# Actie: US-024-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-024
+# User-Story: US-025 MIDI Device Discovery En Default Selection
+# Actie: US-025-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
 
 from pathlib import Path
 
@@ -178,6 +178,36 @@ class TestDocumentationArtifacts:
             "C4",
             "MIDI note number 60",
             "geen hardcoded MIDI device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us025_midi_device_discovery_default_selection_doc_contains_required_terms(self) -> None:
+        document = Path("docs/midi_device_discovery_default_selection_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-025 MIDI Device Discovery En Default Selection",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: Done",
+            "MidiDeviceScanner",
+            "MidiDeviceSelector",
+            "MidiDeviceSelection",
+            "--midi-device",
+            "--midi-device-id",
+            "--config",
+            "midi.default_input_device",
+            "CLI wint van YAML",
+            "--unsafe-rtmidi-scan",
+            "geen hardcoded MIDI device names",
+            "KodeklopperM4",
+            "MuziekM4",
+            "Spelen01",
+            "Raspberry Pi 2",
         )
         for term in required_terms:
             assert term in content

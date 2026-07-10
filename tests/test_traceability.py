@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-024 MIDI Naar NoteEvent Mapping
-# Actie: US-024-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-024
+# User-Story: US-025 MIDI Device Discovery En Default Selection
+# Actie: US-025-TRACEABILITY-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
 
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
@@ -12,6 +12,8 @@ from synth.debug import DebugLevel, DebugReporter
 from synth.midi import (
     MidiDeviceScanner,
     MidiDeviceScanResult,
+    MidiDeviceSelection,
+    MidiDeviceSelector,
     MidiMessage,
     MidiToNoteEventMapper,
     UsbMidiHardwareInputAdapter,
@@ -116,6 +118,21 @@ class TestCodeTraceability:
             "Version: 0.1.0",
         )
         traceable_objects = (MidiToNoteEventMapper,)
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us025_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-025 MIDI Device Discovery En Default Selection",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (MidiDeviceSelection, MidiDeviceSelector, SynthCli)
 
         for traceable_object in traceable_objects:
             doc = traceable_object.__doc__ or ""

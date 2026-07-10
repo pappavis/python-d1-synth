@@ -277,3 +277,17 @@ Acceptatie op 2026-07-10:
 - Given zowel CLI device als YAML default bestaan, then de CLI keuze voorrang krijgt.
 - Given een gekozen device niet gevonden wordt, then de CLI een duidelijke foutmelding toont met advies om opnieuw te scannen.
 - Given macOS RtMidi/CoreMIDI scanning een native abort kan veroorzaken, then de CLI voert die scan niet standaard uit en vereist een expliciete unsafe diagnostic flag.
+
+Acceptatie op 2026-07-10:
+
+- `midi list-devices` toont `identifier`, `direction` en `name`.
+- `--midi-device-id` selecteert exact op input identifier.
+- `--midi-device` selecteert op input name fragment of identifier.
+- `--config patch.yaml` leest `midi.default_input_device` wanneer geen CLI override is opgegeven.
+- CLI wint van YAML default.
+- Output devices worden niet als MIDI input geselecteerd.
+- Onbekende input geeft een duidelijke melding met beschikbare input devices en advies om opnieuw te scannen.
+- `--unsafe-rtmidi-scan` blijft vereist voor bewuste native RtMidi/CoreMIDI scanning op macOS.
+- `docs/midi_device_discovery_default_selection_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-025 MIDI Device Discovery En Default Selection`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-025 MIDI Device Discovery En Default Selection` en `Version: 0.1.0`.
+- Er zijn geen hardcoded MIDI device names toegevoegd.

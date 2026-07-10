@@ -229,3 +229,5 @@ Als gebruiker wil ik via de commandline beschikbare USB, virtual en external MID
 
 Prioriteit: Must
 Sprint: Future
+
+Notitie: US-025 is Done met `MidiDeviceSelector`, `MidiDeviceSelection`, CLI flags `--midi-device`, `--midi-device-id` en `--config`, plus `docs/midi_device_discovery_default_selection_v0.1.0.md`. CLI selectie wint van YAML default, output devices worden niet als input gekozen en er zijn geen hardcoded MIDI device names toegevoegd.

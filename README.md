@@ -89,6 +89,14 @@ Scan MIDI devices:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel light
 ```
 
+Selecteer een MIDI input uit de scan via naam of identifier:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --midi-device "deel van device naam" --debuglevel light
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --midi-device-id "input:0" --debuglevel light
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi list-devices --unsafe-rtmidi-scan --config examples/patch.yaml --debuglevel light
+```
+
 Diagnoseer virtual MIDI input voorbereiding:
 
 ```bash
@@ -180,6 +188,7 @@ MIDI leerpad:
 - [USB MIDI Hardware Input](docs/usb_midi_hardware_input_v0.1.0.md)
 - [Studio MIDI Routing Integratietest](docs/studio_midi_routing_integration_v0.1.0.md)
 - [MIDI Naar NoteEvent Mapping](docs/midi_to_note_event_mapping_v0.1.0.md)
+- [MIDI Device Discovery En Default Selection](docs/midi_device_discovery_default_selection_v0.1.0.md)
 
 Op macOS kan `python-rtmidi`/CoreMIDI hard aborten bij device discovery, bijvoorbeeld met `MidiInCore::initialize: error creating OS-X MIDI client object (-10833)`. De crashrapporten die tijdens US-011 zijn bekeken wijzen naar `_rtmidi` en CoreMIDI. Dat is de MIDI-scanroute, niet de audio-outputroute naar bijvoorbeeld `Scarlett 8i6 USB`.
 
@@ -192,6 +201,8 @@ Tijdens US-022 is een package-conflict opgelost: het verkeerde pakket `rtmidi 2.
 US-023 legt de studio MIDI routing testmatrix vast. Device-namen uit `KodeklopperM4`, `MuziekM4`, toekomstig Windows `Spelen01` of Raspberry Pi 2 zijn runtime snapshots en mogen niet als constants in applicatiecode worden vastgelegd.
 
 US-024 is afgerond: `MidiToNoteEventMapper` vertaalt device-onafhankelijke `MidiMessage` note-on/off berichten naar `NoteEvent` en `NoteSequence`. De mapper behandelt `note_on` met velocity `0` als note-off, houdt channels gescheiden en gebruikt een default duration wanneer een note-off ontbreekt.
+
+US-025 is afgerond: `midi list-devices` kan naast scannen ook een MIDI input selecteren via `--midi-device`, `--midi-device-id` of `midi.default_input_device` uit `--config`. CLI wint van YAML en runtime device-namen blijven scanresultaten, geen hardcoded constants.
 
 Vanaf US-011 is native RtMidi/CoreMIDI scanning op macOS standaard uitgeschakeld, omdat macOS alsnog crashrapporten toont wanneer alleen het scan-subprocess abort. De veilige default is:
 

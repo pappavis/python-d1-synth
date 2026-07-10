@@ -1,10 +1,10 @@
 # Bestand: midi.py
 # Versienummer: 0.1.0
-# Doel: MIDI device discovery, readiness diagnostics en MIDI-naar-NoteEvent mapping.
+# Doel: MIDI device discovery, device selectie, readiness diagnostics en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-024 MIDI Naar NoteEvent Mapping
-# Actie: US-024-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-024
+# User-Story: US-025 MIDI Device Discovery En Default Selection
+# Actie: US-025-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-025
 
 from dataclasses import dataclass
 import json
@@ -24,8 +24,21 @@ class MidiDevice:
 
 @dataclass(frozen=True)
 class MidiDeviceSelection:
+    """Selected MIDI input device request and optional resolved runtime device.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-025
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-025 MIDI Device Discovery En Default Selection
+    - Version: 0.1.0
+    """
+
     selected_device: str | None
     source: str
+    matched_device: MidiDevice | None = None
+    message: str = ""
+    available_input_devices: tuple[MidiDevice, ...] = tuple()
 
 
 @dataclass(frozen=True)
@@ -389,9 +402,92 @@ print(json.dumps(devices))
 
 
 class MidiDeviceSelector:
+    """Choose a MIDI input device from CLI args or YAML defaults.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-025
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-025 MIDI Device Discovery En Default Selection
+    - Version: 0.1.0
+    """
+
     def select(self, cli_device: str | None, config_device: str | None) -> MidiDeviceSelection:
         if cli_device:
             return MidiDeviceSelection(selected_device=cli_device, source="cli")
         if config_device:
             return MidiDeviceSelection(selected_device=config_device, source="config")
         return MidiDeviceSelection(selected_device=None, source="none")
+
+    def select_input_device(
+        self,
+        devices: tuple[MidiDevice, ...],
+        cli_device: str | None = None,
+        cli_device_id: str | None = None,
+        config_device: str | None = None,
+    ) -> MidiDeviceSelection:
+        input_devices = tuple(device for device in devices if device.direction == "input")
+        request, source = self._select_request(cli_device, cli_device_id, config_device)
+
+        if request is None:
+            return MidiDeviceSelection(
+                selected_device=None,
+                source="none",
+                matched_device=None,
+                message="No MIDI input device selected. Use --midi-device, --midi-device-id or midi.default_input_device.",
+                available_input_devices=input_devices,
+            )
+
+        if not input_devices:
+            return MidiDeviceSelection(
+                selected_device=request,
+                source=source,
+                matched_device=None,
+                message="No MIDI input devices available. Run python -m synth midi list-devices first.",
+                available_input_devices=input_devices,
+            )
+
+        matched = self._match_input_device(input_devices, request, source)
+        if matched is None:
+            available = ", ".join(f"{device.identifier} {device.name}" for device in input_devices)
+            return MidiDeviceSelection(
+                selected_device=request,
+                source=source,
+                matched_device=None,
+                message=(
+                    "Requested MIDI input device not found. "
+                    f"Available input devices: {available}. "
+                    "Run python -m synth midi list-devices and choose an input identifier or name."
+                ),
+                available_input_devices=input_devices,
+            )
+
+        return MidiDeviceSelection(
+            selected_device=request,
+            source=source,
+            matched_device=matched,
+            message=f"Selected MIDI input device from {source}: {matched.identifier} {matched.name}",
+            available_input_devices=input_devices,
+        )
+
+    def _select_request(
+        self, cli_device: str | None, cli_device_id: str | None, config_device: str | None
+    ) -> tuple[str | None, str]:
+        if cli_device_id:
+            return cli_device_id, "cli-id"
+        if cli_device:
+            return cli_device, "cli"
+        if config_device:
+            return config_device, "config"
+        return None, "none"
+
+    def _match_input_device(
+        self, input_devices: tuple[MidiDevice, ...], request: str, source: str
+    ) -> MidiDevice | None:
+        normalized = request.casefold()
+        for device in input_devices:
+            if source == "cli-id" and normalized == device.identifier.casefold():
+                return device
+            if normalized == device.identifier.casefold() or normalized in device.name.casefold():
+                return device
+        return None
