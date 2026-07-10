@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-030 Logic MIDI Region Multi-Note Playback
-# Actie: US-030-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
+# User-Story: US-031 Live/Streaming MIDI Playback Loop
+# Actie: US-031-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
 
 import numpy as np
 
@@ -16,6 +16,7 @@ from synth.midi import (
     MidiDevice,
     MidiInputReceiveResult,
     MidiMessage,
+    StreamingMidiAudioTriggerResult,
     VirtualMidiAudioTriggerResult,
     VirtualMidiPortResult,
 )
@@ -835,3 +836,100 @@ class TestSynthCli:
         assert exit_code == 130
         assert "Opening virtual MIDI input port: python-d1-synth" in captured.out
         assert "Virtual MIDI audio trigger interrupted by user." in captured.err
+
+    def test_midi_play_stream_triggers_near_realtime_audio_from_virtual_port(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                assert cli_device == "Scarlett 8i6 USB"
+                return AudioDeviceSelection(sounddevice_value="Scarlett 8i6 USB", source="cli")
+
+        class FakeStreamingMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.port_name == "python-d1-synth"
+                assert settings.max_messages == 4
+                assert settings.timeout_seconds == 5.0
+                assert settings.poll_interval_seconds == 0.002
+                assert settings.note_duration_seconds == 0.2
+                assert settings.audio_device == "Scarlett 8i6 USB"
+                parser = NoteParser()
+                return StreamingMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=4,
+                    played_event_count=2,
+                    audio_frame_count=17640,
+                    sample_rate=44100,
+                    message="Streamed 2 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+                    received_messages=(
+                        MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                        MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
+                        MidiMessage(message_type="note_on", note_number=62, velocity=90, channel=1, time_seconds=0.2),
+                        MidiMessage(message_type="note_off", note_number=62, velocity=0, channel=1, time_seconds=0.3),
+                    ),
+                    played_events=(
+                        NoteEvent(note=parser.parse("C4"), duration_seconds=0.2, velocity=100 / 127, start_seconds=0.0),
+                        NoteEvent(note=parser.parse("D4"), duration_seconds=0.2, velocity=90 / 127, start_seconds=0.2),
+                    ),
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "StreamingMidiAudioTrigger", FakeStreamingMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-stream",
+                "--port-name",
+                "python-d1-synth",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+                "--max-messages",
+                "4",
+                "--timeout",
+                "5",
+                "--poll-interval",
+                "0.002",
+                "--note-duration",
+                "0.2",
+                "--debuglevel",
+                "verbose",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Opening streaming virtual MIDI input port: python-d1-synth" in output
+        assert "note_on events are played as short fixed-duration audio buffers" in output
+        assert "Streaming MIDI audio trigger settings: port=python-d1-synth" in output
+        assert "Streamed 2 MIDI-triggered note events from virtual MIDI port python-d1-synth." in output
+        assert "Received MIDI messages: note_on:60:velocity=100:channel=1" in output
+        assert "Streamed sequence events: C4@0.000s, D4@0.200s" in output
+
+    def test_midi_play_stream_handles_keyboard_interrupt(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                return AudioDeviceSelection(sounddevice_value=None, source="none")
+
+        class FakeStreamingMidiAudioTrigger:
+            def trigger(self, settings):
+                raise KeyboardInterrupt
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "StreamingMidiAudioTrigger", FakeStreamingMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-stream",
+                "--port-name",
+                "python-d1-synth",
+                "--timeout",
+                "10",
+                "--debuglevel",
+                "light",
+            ]
+        )
+
+        captured = capsys.readouterr()
+        assert exit_code == 130
+        assert "Opening streaming virtual MIDI input port: python-d1-synth" in captured.out
+        assert "Streaming MIDI audio trigger interrupted by user." in captured.err

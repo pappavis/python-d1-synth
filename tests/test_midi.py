@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-030 Logic MIDI Region Multi-Note Playback
-# Actie: US-030-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
+# User-Story: US-031 Live/Streaming MIDI Playback Loop
+# Actie: US-031-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
 
 import pytest
 
@@ -21,6 +21,9 @@ from synth.midi import (
     MidiMessage,
     MidiMessageNormalizer,
     MidiToNoteEventMapper,
+    StreamingMidiAudioTrigger,
+    StreamingMidiAudioTriggerResult,
+    StreamingMidiAudioTriggerSettings,
     UsbMidiHardwareInputAdapter,
     VirtualMidiAudioTrigger,
     VirtualMidiAudioTriggerResult,
@@ -578,6 +581,90 @@ class TestVirtualMidiAudioTrigger:
     def test_virtual_trigger_settings_require_non_empty_port_name(self) -> None:
         with pytest.raises(ValueError, match="port_name"):
             VirtualMidiAudioTriggerSettings(port_name="")
+
+
+class TestStreamingMidiAudioTrigger:
+    def test_streaming_trigger_plays_each_note_on_without_waiting_for_batch_end(self) -> None:
+        class FakeStreamingBackend:
+            def __init__(self):
+                self.calls = []
+
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                self.calls.append((input_name, max_messages, timeout_seconds, poll_interval_seconds))
+                yield MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.01)
+                yield MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.08)
+                yield MidiMessage(message_type="note_on", note_number=62, velocity=90, channel=1, time_seconds=0.12)
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        backend = FakeStreamingBackend()
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=3,
+            timeout_seconds=1.0,
+            poll_interval_seconds=0.002,
+            note_duration_seconds=0.25,
+            sample_rate=44100,
+            channel=OutputChannel.STEREO,
+            audio_device="Scarlett 8i6 USB",
+        )
+
+        result = StreamingMidiAudioTrigger(backend=backend, audio_player=audio_player).trigger(settings)
+        expected_events = (
+            NoteEvent(note=NoteParser().parse("C4"), duration_seconds=0.25, velocity=100 / 127, start_seconds=0.01),
+            NoteEvent(note=NoteParser().parse("D4"), duration_seconds=0.25, velocity=90 / 127, start_seconds=0.12),
+        )
+
+        assert backend.calls == [("python-d1-synth", 3, 1.0, 0.002)]
+        assert result == StreamingMidiAudioTriggerResult(
+            port_name="python-d1-synth",
+            received_message_count=3,
+            played_event_count=2,
+            audio_frame_count=22050,
+            sample_rate=44100,
+            message="Streamed 2 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+            received_messages=(
+                MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.01),
+                MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.08),
+                MidiMessage(message_type="note_on", note_number=62, velocity=90, channel=1, time_seconds=0.12),
+            ),
+            played_events=expected_events,
+        )
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "D4"]
+        assert [event.start_seconds for event in result.played_events] == [0.01, 0.12]
+        assert audio_player.calls == [
+            ((11025, 2), 44100, "Scarlett 8i6 USB"),
+            ((11025, 2), 44100, "Scarlett 8i6 USB"),
+        ]
+
+    def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
+        class FakeStreamingBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1)
+
+        class FakeAudioPlayer:
+            def play(self, buffer, device=None):
+                raise AssertionError("note_off should not trigger audio in US-031")
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBackend(), audio_player=FakeAudioPlayer()).trigger(
+            StreamingMidiAudioTriggerSettings(port_name="python-d1-synth", max_messages=1, timeout_seconds=0.1)
+        )
+
+        assert result.received_message_count == 1
+        assert result.played_event_count == 0
+        assert result.message == (
+            "Received 1 MIDI note messages from streaming virtual MIDI port python-d1-synth; no audio played."
+        )
+
+    def test_streaming_settings_require_positive_note_duration(self) -> None:
+        with pytest.raises(ValueError, match="note_duration_seconds"):
+            StreamingMidiAudioTriggerSettings(note_duration_seconds=0)
 
 
 class TestUsbMidiHardwareInputAdapter:

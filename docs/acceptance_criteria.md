@@ -416,3 +416,22 @@ Acceptatie op 2026-07-11:
 - CLI output bevatte `Rendered sequence events: C4@0.945s, F4@1.062s, F4@1.560s, C4@1.960s, F4@2.200s`.
 - De waargenomen vertraging van ongeveer 2 seconden is verwacht binnen de batch-scope van US-030 en wordt niet als blocker behandeld.
 - Story status is `Done`.
+
+## US-031: Live/Streaming MIDI Playback Loop
+
+- Given Logic Pro 12.3 of een andere DAW MIDI naar `python-d1-synth` stuurt, when `midi play-stream` draait, then ontvangen `note_on` events direct als korte audio buffers worden afgespeeld.
+- Given `note_off` events ontvangen worden, then US-031 ze diagnostisch telt maar nog niet gebruikt voor sustain, release of nootlengte.
+- Given verbose logging actief is, then CLI output `Received MIDI messages` en `Streamed sequence events` toont.
+- Given de test in Logic wordt uitgevoerd, then de waargenomen latency merkbaar lager moet zijn dan de US-030 batchroute.
+- Given de gebruiker `Ctrl-C` indrukt, then de CLI netjes stopt met exit code `130`.
+
+Acceptatie op 2026-07-11:
+
+- `StreamingMidiAudioTriggerSettings`, `StreamingMidiAudioTriggerResult`, `MidoStreamingVirtualMidiInputBackend` en `StreamingMidiAudioTrigger` zijn class-based en traceerbaar.
+- Unit tests gebruiken een fake streaming MIDI backend en fake audio player.
+- Tests verifieren dat twee `note_on` messages twee losse audio-player calls maken zonder te wachten op batch-rendering.
+- CLI tests verifieren `midi play-stream`, verbose output en `KeyboardInterrupt` handling.
+- `docs/live_streaming_midi_playback_loop_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-031 Live/Streaming MIDI Playback Loop`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-031 Live/Streaming MIDI Playback Loop` en `Version: 0.1.0`.
+- Geen pitch bend, modulation, sustain, polyfonie, GUI, plugin, AU/VST3 en geen hardcoded MIDI hardware device names.
+- Story status is `In Review` tot de Product Owner de Logic Pro streaming latency test bevestigt.

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-030 Logic MIDI Region Multi-Note Playback
-# Actie: US-030-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
+# User-Story: US-031 Live/Streaming MIDI Playback Loop
+# Actie: US-031-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
 
 import argparse
 import importlib.util
@@ -23,6 +23,8 @@ from synth.midi import (
     MidiDeviceScanner,
     MidiDeviceSelector,
     MidiInputReceiveSettings,
+    StreamingMidiAudioTrigger,
+    StreamingMidiAudioTriggerSettings,
     UsbMidiHardwareInputAdapter,
     VirtualMidiAudioTrigger,
     VirtualMidiAudioTriggerSettings,
@@ -54,6 +56,7 @@ class SynthCli:
     - User Story: US-028 External MIDI Audio Trigger Integratie
     - User Story: US-029 Logic/DAW Virtual MIDI Naar Audio Trigger
     - User Story: US-030 Logic MIDI Region Multi-Note Playback
+    - User Story: US-031 Live/Streaming MIDI Playback Loop
     - Version: 0.1.0
     """
 
@@ -164,6 +167,21 @@ class SynthCli:
         play_virtual.add_argument("--audio-device")
         play_virtual.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
         play_virtual.set_defaults(handler=self._handle_midi_play_virtual)
+        play_stream = midi_subparsers.add_parser(
+            "play-stream",
+            help="Open a virtual MIDI input port and stream note_on events through short audio buffers.",
+        )
+        play_stream.add_argument("--port-name", "--name", dest="port_name", default="python-d1-synth")
+        play_stream.add_argument("--max-messages", type=int, default=32)
+        play_stream.add_argument("--timeout", type=float, default=30.0)
+        play_stream.add_argument("--poll-interval", type=float, default=0.005)
+        play_stream.add_argument("--note-duration", type=float, default=0.25)
+        play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
+        play_stream.add_argument("--sample-rate", type=int, default=44100)
+        play_stream.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
+        play_stream.add_argument("--audio-device")
+        play_stream.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        play_stream.set_defaults(handler=self._handle_midi_play_stream)
 
         return parser
 
@@ -466,6 +484,64 @@ class SynthCli:
         if result.played_events:
             reporter.verbose(f"Rendered sequence events: {self._format_sequence_events(NoteSequence(result.played_events))}")
         reporter.verbose(f"Audio buffer: {result.audio_frame_count} frames, {result.sample_rate} Hz")
+        return 0
+
+    def _handle_midi_play_stream(self, args: argparse.Namespace) -> int:
+        reporter = DebugReporter(DebugLevel(args.debuglevel))
+        audio_selection = AudioDeviceSelector().select(args.audio_device)
+        if audio_selection.sounddevice_value is not None:
+            reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
+        try:
+            settings = StreamingMidiAudioTriggerSettings(
+                port_name=args.port_name,
+                max_messages=args.max_messages,
+                timeout_seconds=args.timeout,
+                poll_interval_seconds=args.poll_interval,
+                note_duration_seconds=args.note_duration,
+                sample_rate=args.sample_rate,
+                waveform=Waveform(args.waveform),
+                channel=OutputChannel(args.channel),
+                audio_device=audio_selection.sounddevice_value,
+            )
+        except ValueError as exc:
+            print(f"Streaming MIDI audio trigger error: {exc}", file=sys.stderr)
+            return 2
+
+        reporter.light(f"Opening streaming virtual MIDI input port: {settings.port_name}")
+        reporter.light(
+            "Near-realtime MVP note: note_on events are played as short fixed-duration audio buffers; "
+            "note_off, pitch bend and modulation are later stories."
+        )
+        reporter.verbose(
+            "Streaming MIDI audio trigger settings: "
+            f"port={settings.port_name}, max_messages={settings.max_messages}, "
+            f"timeout={settings.timeout_seconds:g}s, poll_interval={settings.poll_interval_seconds:g}s, "
+            f"note_duration={settings.note_duration_seconds:g}s, waveform={args.waveform}, "
+            f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
+        )
+        original_sigint_handler = signal.getsignal(signal.SIGINT)
+
+        def _raise_keyboard_interrupt(signum, frame) -> None:
+            raise KeyboardInterrupt
+
+        try:
+            signal.signal(signal.SIGINT, _raise_keyboard_interrupt)
+            result = StreamingMidiAudioTrigger().trigger(settings)
+        except KeyboardInterrupt:
+            print("Streaming MIDI audio trigger interrupted by user.", file=sys.stderr)
+            return 130
+        except RuntimeError as exc:
+            print(f"Streaming MIDI audio trigger error: {exc}", file=sys.stderr)
+            return 2
+        finally:
+            signal.signal(signal.SIGINT, original_sigint_handler)
+
+        print(result.message)
+        if result.received_messages:
+            reporter.verbose(f"Received MIDI messages: {self._format_midi_messages(result.received_messages)}")
+        if result.played_events:
+            reporter.verbose(f"Streamed sequence events: {self._format_sequence_events(NoteSequence(result.played_events))}")
+        reporter.verbose(f"Total streamed audio frames: {result.audio_frame_count}, sample_rate={result.sample_rate} Hz")
         return 0
 
     def _handle_audio_list_devices(self, args: argparse.Namespace) -> int:

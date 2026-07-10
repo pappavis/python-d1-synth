@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-030
+Betrokken stories: US-001 t/m US-031
 
 ## Doel
 
@@ -81,6 +81,12 @@ US-030 past direct de US-029 les toe: niet alleen "er is audio" meten, maar ook 
 Product Owner bevestigde dat de Logic MIDI region meerdere hoorbare noten afspeelde. De waargenomen vertraging van ongeveer 2 seconden is geen defect binnen US-030, omdat de story bewust batch playback test. Realtime latency wordt apart behandeld in US-031.
 
 Statuslabel: US-030 `Done`.
+
+## US-031 Review Voorbereiding
+
+US-031 volgt direct uit de US-030 observatie dat batch playback hoorbaar werkt maar vertraagd aanvoelt. De review moet daarom niet alleen "maakt geluid" toetsen, maar specifiek vergelijken of `midi play-stream` merkbaar sneller reageert dan `midi play-virtual`.
+
+Statuslabel: US-031 `In Review`.
 
 ## Aanbevolen Volgende Stap
 

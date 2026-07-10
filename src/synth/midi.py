@@ -2,12 +2,13 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-030 Logic MIDI Region Multi-Note Playback
-# Actie: US-030-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
+# User-Story: US-031 Live/Streaming MIDI Playback Loop
+# Actie: US-031-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 import json
 import platform
@@ -348,6 +349,68 @@ class VirtualMidiAudioTriggerResult:
     played_events: tuple[NoteEvent, ...] = tuple()
 
 
+@dataclass(frozen=True)
+class StreamingMidiAudioTriggerSettings:
+    """Settings for near-realtime virtual MIDI streaming playback.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-031
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - Version: 0.1.0
+    """
+
+    port_name: str = "python-d1-synth"
+    max_messages: int = 32
+    timeout_seconds: float = 30.0
+    poll_interval_seconds: float = 0.005
+    note_duration_seconds: float = 0.25
+    sample_rate: int = 44100
+    waveform: Waveform = Waveform.SINE
+    amplitude: float = 0.2
+    channel: OutputChannel = OutputChannel.STEREO
+    audio_device: int | str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.port_name.strip():
+            raise ValueError("port_name must not be empty")
+        if self.max_messages <= 0:
+            raise ValueError("max_messages must be positive")
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        if self.poll_interval_seconds <= 0:
+            raise ValueError("poll_interval_seconds must be positive")
+        if self.note_duration_seconds <= 0:
+            raise ValueError("note_duration_seconds must be positive")
+        if self.sample_rate <= 0:
+            raise ValueError("sample_rate must be positive")
+        if not 0 < self.amplitude <= 1.0:
+            raise ValueError("amplitude must be between 0 and 1")
+
+
+@dataclass(frozen=True)
+class StreamingMidiAudioTriggerResult:
+    """Result from near-realtime virtual MIDI streaming playback.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-031
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - Version: 0.1.0
+    """
+
+    port_name: str
+    received_message_count: int
+    played_event_count: int
+    audio_frame_count: int
+    sample_rate: int
+    message: str
+    received_messages: tuple[MidiMessage, ...] = tuple()
+    played_events: tuple[NoteEvent, ...] = tuple()
+
+
 class MidiInputBackend(Protocol):
     def receive_messages(
         self, input_name: str, max_messages: int, timeout_seconds: float
@@ -362,6 +425,17 @@ class VirtualMidiPortBackend(Protocol):
 
 class AudioPlayer(Protocol):
     def play(self, buffer: AudioBuffer, device: int | str | None = None) -> None:
+        ...
+
+
+class StreamingMidiInputBackend(Protocol):
+    def iter_messages(
+        self,
+        input_name: str,
+        max_messages: int,
+        timeout_seconds: float,
+        poll_interval_seconds: float,
+    ) -> Iterable[MidiMessage]:
         ...
 
 
@@ -479,6 +553,59 @@ class MidoVirtualMidiInputBackend:
                 "CoreMIDI permissions."
             ) from exc
         return tuple(received)
+
+
+class MidoStreamingVirtualMidiInputBackend:
+    """Stream note messages from a mido virtual input port as they arrive.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-031
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - Version: 0.1.0
+    """
+
+    def __init__(self, normalizer: MidiMessageNormalizer | None = None) -> None:
+        self._normalizer = normalizer if normalizer is not None else MidiMessageNormalizer()
+
+    def iter_messages(
+        self,
+        input_name: str,
+        max_messages: int,
+        timeout_seconds: float,
+        poll_interval_seconds: float,
+    ) -> Iterable[MidiMessage]:
+        try:
+            import mido
+        except ImportError as exc:
+            raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
+
+        yielded = 0
+        start_time = time.monotonic()
+        deadline = start_time + timeout_seconds
+        try:
+            with mido.open_input(input_name, virtual=True) as port:
+                while yielded < max_messages and time.monotonic() < deadline:
+                    elapsed_seconds = time.monotonic() - start_time
+                    for raw_message in port.iter_pending():
+                        message = self._normalizer.normalize(raw_message, fallback_time_seconds=elapsed_seconds)
+                        if message is not None:
+                            yielded += 1
+                            yield message
+                        if yielded >= max_messages:
+                            break
+                    time.sleep(poll_interval_seconds)
+        except TypeError as exc:
+            raise RuntimeError(
+                "Streaming virtual MIDI input could not be opened because the active mido backend does not support "
+                "virtual=True for input ports."
+            ) from exc
+        except Exception as exc:
+            raise RuntimeError(
+                "Streaming virtual MIDI input could not be opened. Check the mido/python-rtmidi backend and macOS "
+                "CoreMIDI permissions."
+            ) from exc
 
 
 class MidoVirtualMidiPortBackend:
@@ -695,6 +822,85 @@ class VirtualMidiAudioTrigger:
             message=f"Played {event_count} MIDI-triggered note events from virtual MIDI port {settings.port_name}.",
             received_messages=receive_result.received_messages,
             played_events=played_events,
+        )
+
+
+class StreamingMidiAudioTrigger:
+    """Play each received virtual MIDI note_on as a short audio buffer.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-031
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - Version: 0.1.0
+    """
+
+    def __init__(
+        self,
+        backend: StreamingMidiInputBackend | None = None,
+        audio_player: AudioPlayer | None = None,
+    ) -> None:
+        self._backend = backend if backend is not None else MidoStreamingVirtualMidiInputBackend()
+        self._audio_player = audio_player if audio_player is not None else SoundDeviceAudioPlayer()
+
+    def trigger(self, settings: StreamingMidiAudioTriggerSettings) -> StreamingMidiAudioTriggerResult:
+        engine = SynthEngine(
+            SynthEngineSettings(
+                sample_rate=settings.sample_rate,
+                waveform=settings.waveform,
+                amplitude=settings.amplitude,
+                channel=settings.channel,
+            )
+        )
+        mapper = MidiToNoteEventMapper(default_note_duration_seconds=settings.note_duration_seconds)
+        received_messages: list[MidiMessage] = []
+        played_events: list[NoteEvent] = []
+        audio_frame_count = 0
+
+        for message in self._backend.iter_messages(
+            settings.port_name,
+            settings.max_messages,
+            settings.timeout_seconds,
+            settings.poll_interval_seconds,
+        ):
+            received_messages.append(message)
+            if message.message_type != "note_on" or message.velocity == 0:
+                continue
+
+            sequence = mapper.messages_to_note_sequence((message,))
+            if not sequence.events:
+                continue
+            event = sequence.events[0]
+            buffer = engine.render_note(event)
+            self._audio_player.play(buffer, device=settings.audio_device)
+            played_events.append(event)
+            audio_frame_count += buffer.samples.shape[0]
+
+        if not played_events:
+            return StreamingMidiAudioTriggerResult(
+                port_name=settings.port_name,
+                received_message_count=len(received_messages),
+                played_event_count=0,
+                audio_frame_count=0,
+                sample_rate=settings.sample_rate,
+                message=(
+                    f"Received {len(received_messages)} MIDI note messages from streaming virtual MIDI port "
+                    f"{settings.port_name}; no audio played."
+                ),
+                received_messages=tuple(received_messages),
+                played_events=tuple(),
+            )
+
+        return StreamingMidiAudioTriggerResult(
+            port_name=settings.port_name,
+            received_message_count=len(received_messages),
+            played_event_count=len(played_events),
+            audio_frame_count=audio_frame_count,
+            sample_rate=settings.sample_rate,
+            message=f"Streamed {len(played_events)} MIDI-triggered note events from virtual MIDI port {settings.port_name}.",
+            received_messages=tuple(received_messages),
+            played_events=tuple(played_events),
         )
 
 

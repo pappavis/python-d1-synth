@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-030 Logic MIDI Region Multi-Note Playback
-# Actie: US-030-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
+# User-Story: US-031 Live/Streaming MIDI Playback Loop
+# Actie: US-031-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
 
 from pathlib import Path
 
@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-030",
+            "US-001 t/m US-031",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -406,6 +406,38 @@ class TestDocumentationArtifacts:
             "Product Owner bevestigde",
             "US-029 `Done`",
             "US-030 `Done`",
+            "US-031 `In Review`",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us031_live_streaming_midi_playback_loop_doc_contains_required_terms(self) -> None:
+        document = Path("docs/live_streaming_midi_playback_loop_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-031 Live/Streaming MIDI Playback Loop",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "python-d1-synth",
+            "midi play-stream",
+            "MIDI Destination: python-d1-synth",
+            "--note-duration 0.25",
+            "note_on events are played as short fixed-duration audio buffers",
+            "Received MIDI messages",
+            "Streamed sequence events",
+            "MidoStreamingVirtualMidiInputBackend",
+            "StreamingMidiAudioTriggerResult",
+            "StreamingMidiAudioTrigger",
+            "note_off",
+            "pitch bend",
+            "modulation",
+            "latency is merkbaar lager dan US-030",
+            "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:
             assert term in content

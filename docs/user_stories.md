@@ -276,3 +276,12 @@ Prioriteit: Must
 Sprint: Future
 
 Notitie: Done met multi-note MIDI mapping tests, `VirtualMidiAudioTriggerResult.played_events`, verbose CLI output voor `Rendered sequence events`, en `docs/logic_midi_region_multi_note_playback_v0.1.0.md`. Product Owner test bevestigde hoorbare multi-note Logic playback: `Played 5 MIDI-triggered note events` en `Rendered sequence events: C4@0.945s, F4@1.062s, F4@1.560s, C4@1.960s, F4@2.200s`. Scope blijft batchgewijs: audio speelt nadat `--max-messages` bereikt is of `--timeout` afloopt. Realtime streaming, pitch bend en modulation blijven buiten US-030.
+
+### US-031: Live/Streaming MIDI Playback Loop
+
+Als Logic Pro of DAW gebruiker wil ik dat ontvangen MIDI `note_on` events direct hoorbaar worden afgespeeld, zodat de vertraging uit de US-030 batchroute merkbaar lager wordt.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: In Review met `StreamingMidiAudioTriggerSettings`, `StreamingMidiAudioTriggerResult`, `MidoStreamingVirtualMidiInputBackend`, `StreamingMidiAudioTrigger`, CLI command `midi play-stream`, fake streaming-backend tests en `docs/live_streaming_midi_playback_loop_v0.1.0.md`. Scope: near-realtime fixed-duration note playback. Geen pitch bend, modulation, sustain, polyfonie, GUI, AU/VST3 of professionele low-latency audio engine.

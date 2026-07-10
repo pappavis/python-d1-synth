@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-030 Logic MIDI Region Multi-Note Playback
-# Actie: US-030-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-030
+# User-Story: US-031 Live/Streaming MIDI Playback Loop
+# Actie: US-031-TRACEABILITY-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
 
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
@@ -24,8 +24,12 @@ from synth.midi import (
     MidiMessage,
     MidiToNoteEventMapper,
     MidoMidiInputBackend,
+    MidoStreamingVirtualMidiInputBackend,
     MidoVirtualMidiInputBackend,
     MidoVirtualMidiPortBackend,
+    StreamingMidiAudioTrigger,
+    StreamingMidiAudioTriggerResult,
+    StreamingMidiAudioTriggerSettings,
     UsbMidiHardwareInputAdapter,
     UsbMidiInputDiagnostic,
     VirtualMidiAudioTrigger,
@@ -252,6 +256,27 @@ class TestCodeTraceability:
             MidoVirtualMidiInputBackend,
             VirtualMidiAudioTriggerResult,
             VirtualMidiAudioTrigger,
+            SynthCli,
+        )
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us031_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-031 Live/Streaming MIDI Playback Loop",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            StreamingMidiAudioTriggerSettings,
+            StreamingMidiAudioTriggerResult,
+            MidoStreamingVirtualMidiInputBackend,
+            StreamingMidiAudioTrigger,
             SynthCli,
         )
 
