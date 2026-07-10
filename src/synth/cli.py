@@ -438,7 +438,9 @@ class SynthCli:
         )
         reporter.verbose(
             "Virtual MIDI audio trigger settings: "
-            f"waveform={args.waveform}, sample_rate={args.sample_rate} Hz, channel={args.channel}"
+            f"port={settings.port_name}, max_messages={settings.max_messages}, "
+            f"timeout={settings.timeout_seconds:g}s, waveform={args.waveform}, "
+            f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
         )
         original_sigint_handler = signal.getsignal(signal.SIGINT)
 
@@ -458,6 +460,8 @@ class SynthCli:
             signal.signal(signal.SIGINT, original_sigint_handler)
 
         print(result.message)
+        if result.received_messages:
+            reporter.verbose(f"Received MIDI messages: {self._format_midi_messages(result.received_messages)}")
         reporter.verbose(f"Audio buffer: {result.audio_frame_count} frames, {result.sample_rate} Hz")
         return 0
 
@@ -482,6 +486,12 @@ class SynthCli:
     def _format_sequence_events(self, sequence: NoteSequence) -> str:
         return ", ".join(
             f"{event.note.name}{event.note.octave}@{event.start_seconds:.3f}s" for event in sequence.events
+        )
+
+    def _format_midi_messages(self, messages) -> str:
+        return ", ".join(
+            f"{message.message_type}:{message.note_number}:velocity={message.velocity}:channel={message.channel}"
+            for message in messages
         )
 
     def _report_midi_scan_details(self, reporter: DebugReporter, result) -> None:

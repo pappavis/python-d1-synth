@@ -445,8 +445,44 @@ class TestVirtualMidiAudioTrigger:
             audio_frame_count=4410,
             sample_rate=44100,
             message="Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+            received_messages=(
+                MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.1),
+            ),
         )
         assert audio_player.calls == [((4410, 2), 44100, "Scarlett 8i6 USB")]
+
+    def test_virtual_trigger_reports_zero_midi_messages_without_audio(self) -> None:
+        class FakeReceiver:
+            def receive(self, settings):
+                return type(
+                    "FakeReceiveResult",
+                    (),
+                    {
+                        "input_name": settings.input_name,
+                        "received_messages": tuple(),
+                        "note_sequence": MidiToNoteEventMapper().messages_to_note_sequence(tuple()),
+                        "message": "Received 0 MIDI note messages from python-d1-synth.",
+                    },
+                )()
+
+        class FakeAudioPlayer:
+            def play(self, buffer, device=None):
+                raise AssertionError("audio should not play when the virtual port receives no MIDI")
+
+        settings = VirtualMidiAudioTriggerSettings(port_name="python-d1-synth", max_messages=1, timeout_seconds=0.1)
+
+        result = VirtualMidiAudioTrigger(receiver=FakeReceiver(), audio_player=FakeAudioPlayer()).trigger(settings)
+
+        assert result == VirtualMidiAudioTriggerResult(
+            port_name="python-d1-synth",
+            received_message_count=0,
+            played_event_count=0,
+            audio_frame_count=0,
+            sample_rate=44100,
+            message="Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.",
+            received_messages=tuple(),
+        )
 
     def test_virtual_trigger_settings_require_non_empty_port_name(self) -> None:
         with pytest.raises(ValueError, match="port_name"):

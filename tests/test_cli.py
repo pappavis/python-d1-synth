@@ -632,6 +632,9 @@ class TestSynthCli:
                     audio_frame_count=4410,
                     sample_rate=44100,
                     message="Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+                    received_messages=(
+                        MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                    ),
                 )
 
         monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
@@ -660,6 +663,86 @@ class TestSynthCli:
         assert "audio is rendered after --max-messages is reached or --timeout expires" in output
         assert "Selected audio device from cli: Scarlett 8i6 USB" in output
         assert "Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth." in output
+
+    def test_midi_play_virtual_verbose_prints_received_midi_messages(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                return AudioDeviceSelection(sounddevice_value=None, source="none")
+
+        class FakeVirtualMidiAudioTrigger:
+            def trigger(self, settings):
+                return VirtualMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=1,
+                    played_event_count=1,
+                    audio_frame_count=44100,
+                    sample_rate=44100,
+                    message="Played 1 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+                    received_messages=(
+                        MidiMessage(message_type="note_on", note_number=60, velocity=96, channel=1, time_seconds=0.0),
+                    ),
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "VirtualMidiAudioTrigger", FakeVirtualMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-virtual",
+                "--port-name",
+                "python-d1-synth",
+                "--max-messages",
+                "1",
+                "--timeout",
+                "10",
+                "--debuglevel",
+                "verbose",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "port=python-d1-synth, max_messages=1, timeout=10s" in output
+        assert "Received MIDI messages: note_on:60:velocity=96:channel=1" in output
+
+    def test_midi_play_virtual_reports_zero_received_messages(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                return AudioDeviceSelection(sounddevice_value=None, source="none")
+
+        class FakeVirtualMidiAudioTrigger:
+            def trigger(self, settings):
+                return VirtualMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=0,
+                    played_event_count=0,
+                    audio_frame_count=0,
+                    sample_rate=44100,
+                    message="Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.",
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "VirtualMidiAudioTrigger", FakeVirtualMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-virtual",
+                "--port-name",
+                "python-d1-synth",
+                "--max-messages",
+                "1",
+                "--timeout",
+                "10",
+                "--debuglevel",
+                "verbose",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played." in output
 
     def test_midi_play_virtual_handles_keyboard_interrupt(self, monkeypatch, capsys) -> None:
         class FakeAudioSelector:

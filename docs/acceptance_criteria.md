@@ -371,6 +371,7 @@ Acceptatie op 2026-07-10:
 - Given ontvangen note messages, then de bestaande US-024/US-026 mapping en US-028 audio-trigger route worden hergebruikt.
 - Given Logic de destination niet ziet, then dit als virtual-port/DAW zichtbaarheidstest wordt behandeld en niet als plugin-issue.
 - Given de gebruiker `Ctrl-C` indrukt, then de CLI netjes stopt met exit code `130` en een duidelijke onderbrekingsmelding.
+- Given Logic de destination wel ziet maar geen geluid hoorbaar is, then `--debuglevel verbose` ontvangen MIDI note messages toont of expliciet nul ontvangen MIDI messages meldt.
 
 Acceptatie op 2026-07-11:
 
@@ -381,6 +382,9 @@ Acceptatie op 2026-07-11:
 - CLI tests gebruiken een fake virtual trigger en fake audio selector.
 - CLI tests verifieren `KeyboardInterrupt` handling voor `midi play-virtual`.
 - De aanbevolen Logic test gebruikt `--max-messages 2 --timeout 10`, omdat de MVP audio rendert nadat max-messages bereikt is of timeout afloopt.
+- De aanbevolen Logic diagnose gebruikt `--max-messages 1 --timeout 10 --debuglevel verbose`.
+- Bij geen Logic-to-Python events toont de CLI `Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.`
+- Bij ontvangen events toont verbose output regels zoals `Received MIDI messages: note_on:60:velocity=96:channel=1`.
 - `docs/virtual_midi_audio_trigger_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-029 Logic/DAW Virtual MIDI Naar Audio Trigger`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-029 Logic/DAW Virtual MIDI Naar Audio Trigger` en `Version: 0.1.0`.
 - Geen GUI, geen plugin, geen AU/VST3, geen Logic Component en geen onbeperkte realtime performance-loop.

@@ -139,6 +139,14 @@ Laat dit command draaien en configureer Logic Pro 12.3 als volgt:
 
 Deze MVP-route rendert audio nadat `--max-messages` bereikt is of `--timeout` afloopt. Gebruik daarom voor de eerste test `--max-messages 2 --timeout 10`. Stoppen met `Ctrl-C` hoort netjes te melden dat de virtual MIDI audio trigger door de gebruiker is onderbroken. Dit is nog geen Software Instrument, AU, VST3 of Logic Component.
 
+Als Logic `python-d1-synth` wel toont maar je geen geluid hoort, test dan eerst of Python MIDI ontvangt:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 1 --timeout 10 --debuglevel verbose
+```
+
+Speel daarna exact één noot vanuit Logic. Bij succes zie je iets zoals `Received MIDI messages: note_on:60:velocity=96:channel=1`. Bij geen MIDI-route zie je `Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.`
+
 Diagnoseer generieke USB MIDI input voorbereiding:
 
 ```bash

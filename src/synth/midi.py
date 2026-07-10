@@ -343,6 +343,7 @@ class VirtualMidiAudioTriggerResult:
     audio_frame_count: int
     sample_rate: int
     message: str
+    received_messages: tuple[MidiMessage, ...] = tuple()
 
 
 class MidiInputBackend(Protocol):
@@ -640,28 +641,46 @@ class VirtualMidiAudioTrigger:
         self._audio_player = audio_player if audio_player is not None else SoundDeviceAudioPlayer()
 
     def trigger(self, settings: VirtualMidiAudioTriggerSettings) -> VirtualMidiAudioTriggerResult:
-        trigger_result = MidiAudioTrigger(
-            receiver=self._receiver,
-            audio_player=self._audio_player,
-        ).trigger(
-            MidiAudioTriggerSettings(
+        receive_result = self._receiver.receive(
+            MidiInputReceiveSettings(
                 input_name=settings.port_name,
                 max_messages=settings.max_messages,
                 timeout_seconds=settings.timeout_seconds,
+            )
+        )
+        event_count = len(receive_result.note_sequence.events)
+        if event_count == 0:
+            return VirtualMidiAudioTriggerResult(
+                port_name=settings.port_name,
+                received_message_count=len(receive_result.received_messages),
+                played_event_count=0,
+                audio_frame_count=0,
+                sample_rate=settings.sample_rate,
+                message=(
+                    f"Received {len(receive_result.received_messages)} MIDI note messages from virtual MIDI port "
+                    f"{settings.port_name}; no audio played."
+                ),
+                received_messages=receive_result.received_messages,
+            )
+
+        engine = SynthEngine(
+            SynthEngineSettings(
                 sample_rate=settings.sample_rate,
                 waveform=settings.waveform,
                 amplitude=settings.amplitude,
                 channel=settings.channel,
-                audio_device=settings.audio_device,
             )
         )
+        buffer = engine.render_sequence(receive_result.note_sequence)
+        self._audio_player.play(buffer, device=settings.audio_device)
         return VirtualMidiAudioTriggerResult(
             port_name=settings.port_name,
-            received_message_count=trigger_result.received_message_count,
-            played_event_count=trigger_result.played_event_count,
-            audio_frame_count=trigger_result.audio_frame_count,
-            sample_rate=trigger_result.sample_rate,
-            message=trigger_result.message.replace(settings.port_name, f"virtual MIDI port {settings.port_name}"),
+            received_message_count=len(receive_result.received_messages),
+            played_event_count=event_count,
+            audio_frame_count=buffer.samples.shape[0],
+            sample_rate=buffer.sample_rate,
+            message=f"Played {event_count} MIDI-triggered note events from virtual MIDI port {settings.port_name}.",
+            received_messages=receive_result.received_messages,
         )
 
 

@@ -29,6 +29,14 @@ Opties:
 
 Belangrijk MVP-gedrag: audio wordt in US-029 nog batchgewijs gerenderd nadat `--max-messages` bereikt is of `--timeout` afloopt. Voor de eerste Logic-test is `--max-messages 2 --timeout 10` daarom praktischer dan een langere batch.
 
+Diagnosecommand wanneer Logic de destination wel toont maar er geen geluid komt:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-virtual --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 1 --timeout 10 --debuglevel verbose
+```
+
+Speel daarna precies één noot vanuit Logic. Bij ontvangst toont de CLI `Received MIDI messages: note_on:60:velocity=96:channel=1` of vergelijkbare waarden. Als Logic geen MIDI naar Python stuurt, toont de CLI `Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.`
+
 ## Implementatie
 
 - `MidoVirtualMidiInputBackend` opent `mido.open_input(port_name, virtual=True)` en leest bounded note messages.
@@ -92,6 +100,22 @@ Oplossing in deze impediment-fix:
 - De CLI legt uit dat audio in deze MVP pas speelt na max-messages of timeout.
 - De CLI handelt `Ctrl-C` af met `Virtual MIDI audio trigger interrupted by user.` en exit code `130`.
 
+## Impediment US-029-IMPEDIMENT-002
+
+Testresultaat:
+
+- Logic Pro toont `python-d1-synth` als External MIDI destination.
+- Er is een MIDI region opgenomen via `SMK 37 Pro`.
+- De External Instrument track gebruikt `MIDI Destination: python-d1-synth` en `MIDI Channel: All`.
+- Bij afspelen kwam geen hoorbaar geluid uit de Python synth.
+
+Diagnosewijziging:
+
+- `VirtualMidiAudioTriggerResult` bevat nu de ontvangen `MidiMessage` items.
+- `midi play-virtual --debuglevel verbose` toont ontvangen note messages met type, note number, velocity en channel.
+- Bij timeout zonder MIDI wordt expliciet `Received 0 MIDI note messages from virtual MIDI port python-d1-synth; no audio played.` getoond.
+- De aanbevolen diagnose gebruikt `--max-messages 1 --timeout 10 --debuglevel verbose`, zodat één note-on genoeg is om de Logic-to-Python route te bewijzen.
+
 ## Acceptatiecriteria
 
 - `midi play-virtual` opent een virtual MIDI input port en ontvangt bounded MIDI note messages.
@@ -100,6 +124,7 @@ Oplossing in deze impediment-fix:
 - De bestaande US-028 audio-trigger route maakt hoorbaar audio via `SoundDeviceAudioPlayer`.
 - CLI ondersteunt `--port-name`, `--audio-device`, `--max-messages`, `--timeout`, `--waveform`, `--sample-rate`, `--channel` en `--debuglevel`.
 - CLI geeft bij `Ctrl-C` een duidelijke onderbrekingsmelding en exit code `130`.
+- CLI toont bij `--debuglevel verbose` ontvangen MIDI note messages of expliciet nul ontvangen MIDI messages.
 - Unit tests gebruiken fake receiver en fake audio player.
 - Geen GUI, geen plugin, geen AU/VST3, geen Logic Component en geen onbeperkte realtime performance-loop.
 - Er zijn geen hardcoded MIDI hardware device names toegevoegd.
