@@ -6,7 +6,7 @@ Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie  
 Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog  
 User Story: US-031 Live/Streaming MIDI Playback Loop  
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -68,4 +68,15 @@ Verwacht CLI-gedrag:
 
 ## Status
 
-US-031 staat op `In Review`. De Product Owner moet nog bevestigen dat Logic Pro streaming playback hoorbaar werkt en merkbaar minder vertraging heeft dan US-030.
+US-031 staat op `Done`. De Product Owner bevestigde dat Logic Pro streaming playback hoorbaar werkt.
+
+Handmatige test op 2026-07-11:
+
+```text
+Streamed 18 MIDI-triggered note events from virtual MIDI port python-d1-synth.
+Received MIDI messages: note_on:53:velocity=54:channel=1, note_on:53:velocity=54:channel=1, note_off:53:velocity=64:channel=1, note_off:53:velocity=64:channel=1, note_on:60:velocity=91:channel=1, note_on:60:velocity=91:channel=1
+Streamed sequence events: F3@1.153s, F3@1.153s, C4@2.099s, C4@2.099s, A3@3.098s, A3@3.098s
+Total streamed audio frames: 198450, sample_rate=44100 Hz
+```
+
+Product Owner opmerking: realtime noten spelen hoorbaar af. De MIDI-route levert sommige events dubbel aan, waardoor een noot twee keer hoorbaar kan zijn. Dit hoort bij US-032 Duplicate MIDI Event Guard, niet bij US-031.

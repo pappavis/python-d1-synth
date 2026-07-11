@@ -84,9 +84,9 @@ Statuslabel: US-030 `Done`.
 
 ## US-031 Review Voorbereiding
 
-US-031 volgt direct uit de US-030 observatie dat batch playback hoorbaar werkt maar vertraagd aanvoelt. De review moet daarom niet alleen "maakt geluid" toetsen, maar specifiek vergelijken of `midi play-stream` merkbaar sneller reageert dan `midi play-virtual`.
+US-031 volgt direct uit de US-030 observatie dat batch playback hoorbaar werkt maar vertraagd aanvoelt. De review bevestigde dat `midi play-stream` realtime hoorbaar werkt. De test bracht een nieuwe, logische vervolgstap naar boven: dubbele MIDI events moeten worden gefilterd of gediagnosticeerd voordat voice-lifecycle, polyfonie, pitch bend en modulation betrouwbaar worden.
 
-Statuslabel: US-031 `In Review`.
+Statuslabel: US-031 `Done`.
 
 ## Aanbevolen Volgende Stap
 

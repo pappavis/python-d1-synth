@@ -406,7 +406,7 @@ class TestDocumentationArtifacts:
             "Product Owner bevestigde",
             "US-029 `Done`",
             "US-030 `Done`",
-            "US-031 `In Review`",
+            "US-031 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -422,9 +422,11 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-031 Live/Streaming MIDI Playback Loop",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "python-d1-synth",
             "midi play-stream",
+            "Streamed 18 MIDI-triggered note events",
+            "US-032 Duplicate MIDI Event Guard",
             "MIDI Destination: python-d1-synth",
             "--note-duration 0.25",
             "note_on events are played as short fixed-duration audio buffers",

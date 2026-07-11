@@ -268,13 +268,13 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi pl
 
 Bevestigd gedrag: Logic stuurde meerdere MIDI events naar `python-d1-synth`, verbose output toonde `Received MIDI messages` en `Rendered sequence events: C4@0.945s, F4@1.062s, F4@1.560s, C4@1.960s, F4@2.200s`, en de batch speelde hoorbaar af. Dit is nog steeds batch-rendering na `--max-messages` of `--timeout`; de waargenomen vertraging van ongeveer 2 seconden is verwacht binnen US-030. Continue realtime streaming, pitch bend en modulation volgen in latere stories.
 
-US-031 is in review: `midi play-stream` opent een virtual MIDI input port en speelt `note_on` events direct als korte fixed-duration buffers. Dit is bedoeld om de US-030 batchvertraging merkbaar te verlagen:
+US-031 is afgerond: `midi play-stream` opent een virtual MIDI input port en speelt `note_on` events direct als korte fixed-duration buffers. Dit verlaagt de US-030 batchvertraging merkbaar:
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --debuglevel verbose
 ```
 
-Verwacht gedrag: elke ontvangen `note_on` triggert meteen een korte hoorbare noot. `note_off`, sustain, overlap/polyfonie, pitch bend en modulation worden nog niet muzikaal toegepast; die volgen in latere stories.
+Bevestigd gedrag: Logic stuurde 32 MIDI messages, `play-stream` speelde 18 hoorbare note events en de realtime playback was geslaagd. De test toonde ook dubbele note events vanuit de MIDI-route; dat wordt US-032. `note_off`, sustain, overlap/polyfonie, pitch bend en modulation worden nog niet muzikaal toegepast; die volgen in latere stories.
 
 Lessons learned en sprint review:
 

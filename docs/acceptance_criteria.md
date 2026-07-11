@@ -434,4 +434,32 @@ Acceptatie op 2026-07-11:
 - `docs/live_streaming_midi_playback_loop_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-031 Live/Streaming MIDI Playback Loop`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-031 Live/Streaming MIDI Playback Loop` en `Version: 0.1.0`.
 - Geen pitch bend, modulation, sustain, polyfonie, GUI, plugin, AU/VST3 en geen hardcoded MIDI hardware device names.
-- Story status is `In Review` tot de Product Owner de Logic Pro streaming latency test bevestigt.
+- Product Owner test bevestigde realtime hoorbare playback met `Streamed 18 MIDI-triggered note events`.
+- CLI output bevatte dubbele note events, bijvoorbeeld herhaalde `note_on:53` en `note_on:60`; dit is geen blocker voor US-031 maar input voor US-032.
+- Story status is `Done`.
+
+## US-032: Duplicate MIDI Event Guard
+
+- Given Logic/DAW of routing dubbele note events aanlevert, when `midi play-stream` draait, then de synth dubbele events binnen een korte window kan onderdrukken of diagnosticeren.
+- Given een enkele noot binnenkomt, then die niet dubbel hoorbaar mag afspelen.
+- Story status is `Planned`.
+
+## US-033: Note Off Gated Voice Duration
+
+- Given een note-on en note-off paar, then de hoorbare nootlengte door de note-off wordt bepaald in plaats van alleen door `--note-duration`.
+- Story status is `Planned`.
+
+## US-034: Polyphonic Voice Mixer En Triads
+
+- Given drie gelijktijdige note-on events, then de synth drie hoorbare voices mixt zodat triads mogelijk zijn.
+- Story status is `Planned`.
+
+## US-035: MIDI Pitch Bend Mapping En DSP
+
+- Given MIDI pitch bend events, then de synth oscillatorfrequentie hoorbaar kan buigen.
+- Story status is `Planned`.
+
+## US-036: MIDI Modulation CC1 Mapping En DSP
+
+- Given MIDI CC1 modulation events, then de synth die naar een hoorbare modulatieparameter kan mappen.
+- Story status is `Planned`.

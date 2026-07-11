@@ -284,4 +284,49 @@ Als Logic Pro of DAW gebruiker wil ik dat ontvangen MIDI `note_on` events direct
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `StreamingMidiAudioTriggerSettings`, `StreamingMidiAudioTriggerResult`, `MidoStreamingVirtualMidiInputBackend`, `StreamingMidiAudioTrigger`, CLI command `midi play-stream`, fake streaming-backend tests en `docs/live_streaming_midi_playback_loop_v0.1.0.md`. Scope: near-realtime fixed-duration note playback. Geen pitch bend, modulation, sustain, polyfonie, GUI, AU/VST3 of professionele low-latency audio engine.
+Notitie: Done met `StreamingMidiAudioTriggerSettings`, `StreamingMidiAudioTriggerResult`, `MidoStreamingVirtualMidiInputBackend`, `StreamingMidiAudioTrigger`, CLI command `midi play-stream`, fake streaming-backend tests en `docs/live_streaming_midi_playback_loop_v0.1.0.md`. Product Owner test bevestigde realtime playback: `Streamed 18 MIDI-triggered note events`. De test toonde ook dubbele MIDI events; dat is US-032. Scope: near-realtime fixed-duration note playback. Geen pitch bend, modulation, sustain, polyfonie, GUI, AU/VST3 of professionele low-latency audio engine.
+
+### US-032: Duplicate MIDI Event Guard
+
+Als gebruiker wil ik dat dubbele MIDI note events uit Logic/routing niet dubbel hoorbaar worden afgespeeld, zodat een enkele noot niet als twee kort na elkaar komende noten klinkt.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: Planned. Deze story komt logisch direct na US-031, omdat pitch bend, modulation en polyfonie onbetrouwbaar worden als de inputstream dubbele note events bevat.
+
+### US-033: Note Off Gated Voice Duration
+
+Als speler wil ik dat note-on en note-off samen de hoorbare nootlengte bepalen, zodat korte en lange gespeelde noten muzikaal correcter reageren dan fixed-duration playback.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: Planned. Dit is de brug tussen fixed-duration streaming en echte voice-lifecycle.
+
+### US-034: Polyphonic Voice Mixer En Triads
+
+Als speler wil ik meerdere gelijktijdige noten kunnen horen, zodat triads en akkoorden mogelijk worden.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: Planned. Dit introduceert meerdere actieve voices en een mixer voor bijvoorbeeld drie of meer noten tegelijk.
+
+### US-035: MIDI Pitch Bend Mapping En DSP
+
+Als speler wil ik MIDI pitch bend kunnen gebruiken, zodat gespeelde noten vloeiend omhoog of omlaag kunnen buigen.
+
+Prioriteit: Should
+Sprint: Future
+
+Notitie: Planned. Pitch bend volgt na voice-lifecycle/polyfonie, omdat bend per channel of per voice correct toegepast moet worden.
+
+### US-036: MIDI Modulation CC1 Mapping En DSP
+
+Als speler wil ik MIDI modulation kunnen gebruiken, zodat CC1 later vibrato, filter of andere modulatie kan aansturen.
+
+Prioriteit: Should
+Sprint: Future
+
+Notitie: Planned. Eerste implementatie wordt waarschijnlijk CC1 mapping plus een eenvoudige hoorbare parameter, niet meteen een volledige modulation matrix.
