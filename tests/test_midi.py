@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-032 Duplicate MIDI Event Guard
-# Actie: US-032-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
+# User-Story: US-033 Note Off Gated Voice Duration
+# Actie: US-033-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
 
 import pytest
 
@@ -26,6 +26,7 @@ from synth.midi import (
     StreamingMidiAudioTrigger,
     StreamingMidiAudioTriggerResult,
     StreamingMidiAudioTriggerSettings,
+    StreamingVoiceMode,
     UsbMidiHardwareInputAdapter,
     VirtualMidiAudioTrigger,
     VirtualMidiAudioTriggerResult,
@@ -717,6 +718,71 @@ class TestStreamingMidiAudioTrigger:
             "suppressed 2 duplicate MIDI messages."
         )
 
+    def test_streaming_trigger_gated_mode_uses_note_off_duration(self) -> None:
+        class FakeStreamingBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.10)
+                yield MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.60)
+                yield MidiMessage(message_type="note_on", note_number=62, velocity=80, channel=1, time_seconds=0.80)
+                yield MidiMessage(message_type="note_on", note_number=62, velocity=0, channel=1, time_seconds=1.05)
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=4,
+            timeout_seconds=1.0,
+            note_duration_seconds=0.25,
+            voice_mode=StreamingVoiceMode.GATED,
+            audio_device="Scarlett 8i6 USB",
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBackend(), audio_player=audio_player).trigger(settings)
+
+        assert result.received_message_count == 4
+        assert result.played_event_count == 2
+        assert result.suppressed_duplicate_count == 0
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "D4"]
+        assert [event.duration_seconds for event in result.played_events] == pytest.approx([0.5, 0.25])
+        assert audio_player.calls == [
+            ((22050, 2), 44100, "Scarlett 8i6 USB"),
+            ((11025, 2), 44100, "Scarlett 8i6 USB"),
+        ]
+
+    def test_streaming_trigger_gated_mode_uses_fallback_duration_when_note_off_is_missing(self) -> None:
+        class FakeStreamingBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield MidiMessage(message_type="note_on", note_number=64, velocity=90, channel=1, time_seconds=1.0)
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=1,
+            timeout_seconds=0.1,
+            note_duration_seconds=0.4,
+            voice_mode=StreamingVoiceMode.GATED,
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBackend(), audio_player=audio_player).trigger(settings)
+
+        assert result.played_event_count == 1
+        assert result.played_events[0].note.name == "E"
+        assert result.played_events[0].duration_seconds == pytest.approx(0.4)
+        assert audio_player.calls == [((17640, 2), 44100, None)]
+
     def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
         class FakeStreamingBackend:
             def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
@@ -743,6 +809,10 @@ class TestStreamingMidiAudioTrigger:
     def test_streaming_settings_require_positive_dedupe_window(self) -> None:
         with pytest.raises(ValueError, match="dedupe_window_seconds"):
             StreamingMidiAudioTriggerSettings(dedupe_window_seconds=0)
+
+    def test_streaming_settings_require_supported_voice_mode(self) -> None:
+        with pytest.raises(ValueError, match="voice_mode"):
+            StreamingMidiAudioTriggerSettings(voice_mode="gated")
 
 
 class TestUsbMidiHardwareInputAdapter:

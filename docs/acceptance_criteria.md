@@ -452,8 +452,14 @@ Acceptatie op 2026-07-11:
 
 ## US-033: Note Off Gated Voice Duration
 
-- Given een note-on en note-off paar, then de hoorbare nootlengte door de note-off wordt bepaald in plaats van alleen door `--note-duration`.
-- Story status is `Planned`.
+- Given `midi play-stream --voice-mode gated` draait, when een `note_on` en bijbehorende `note_off` ontvangen worden, then de gerenderde `NoteEvent.duration_seconds` wordt door het tijdverschil bepaald.
+- Given een `note_on` velocity `0` ontvangen wordt, then die als note-off sluiter geldt voor de actieve noot.
+- Given `--voice-mode fixed` gebruikt wordt of geen `--voice-mode` wordt opgegeven, then US-031/US-032 fixed-duration gedrag behouden blijft.
+- Given een `note_on` geen note-off krijgt binnen de bounded run, then `--note-duration` als fallback duration gebruikt wordt.
+- Given `--debuglevel verbose` actief is, then de CLI toont `voice_mode=gated` en `Streamed note durations`.
+- `docs/note_off_gated_voice_duration_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-033 Note Off Gated Voice Duration`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-033 Note Off Gated Voice Duration` en `Version: 0.1.0`.
+- Story status is `In Review`.
 
 ## US-034: Polyphonic Voice Mixer En Triads
 

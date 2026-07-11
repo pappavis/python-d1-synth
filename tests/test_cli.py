@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-032 Duplicate MIDI Event Guard
-# Actie: US-032-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
+# User-Story: US-033 Note Off Gated Voice Duration
+# Actie: US-033-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
 
 import numpy as np
 
@@ -17,6 +17,7 @@ from synth.midi import (
     MidiInputReceiveResult,
     MidiMessage,
     StreamingMidiAudioTriggerResult,
+    StreamingVoiceMode,
     VirtualMidiAudioTriggerResult,
     VirtualMidiPortResult,
 )
@@ -850,6 +851,7 @@ class TestSynthCli:
                 assert settings.timeout_seconds == 5.0
                 assert settings.poll_interval_seconds == 0.002
                 assert settings.note_duration_seconds == 0.2
+                assert settings.voice_mode is StreamingVoiceMode.FIXED
                 assert settings.dedupe_window_seconds == 0.04
                 assert settings.audio_device == "Scarlett 8i6 USB"
                 parser = NoteParser()
@@ -907,11 +909,72 @@ class TestSynthCli:
         assert "Opening streaming virtual MIDI input port: python-d1-synth" in output
         assert "note_on events are played as short fixed-duration audio buffers" in output
         assert "Streaming MIDI audio trigger settings: port=python-d1-synth" in output
+        assert "voice_mode=fixed" in output
         assert "dedupe_window=0.04s" in output
         assert "suppressed 2 duplicate MIDI messages" in output
         assert "Received MIDI messages: note_on:60:velocity=100:channel=1" in output
         assert "Streamed sequence events: C4@0.000s, D4@0.200s" in output
+        assert "Streamed note durations: C4@0.000s/0.200s, D4@0.200s/0.200s" in output
         assert "Suppressed duplicate MIDI messages: 2" in output
+
+    def test_midi_play_stream_gated_mode_passes_voice_mode_and_reports_durations(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                assert cli_device == "Scarlett 8i6 USB"
+                return AudioDeviceSelection(sounddevice_value="Scarlett 8i6 USB", source="cli")
+
+        class FakeStreamingMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.voice_mode is StreamingVoiceMode.GATED
+                assert settings.note_duration_seconds == 0.3
+                assert settings.audio_device == "Scarlett 8i6 USB"
+                parser = NoteParser()
+                return StreamingMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=4,
+                    played_event_count=2,
+                    audio_frame_count=35280,
+                    sample_rate=44100,
+                    message=(
+                        "Streamed 2 MIDI-triggered note events from virtual MIDI port python-d1-synth; "
+                        "suppressed 0 duplicate MIDI messages."
+                    ),
+                    received_messages=(
+                        MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                        MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.5),
+                    ),
+                    played_events=(
+                        NoteEvent(note=parser.parse("C4"), duration_seconds=0.5, velocity=100 / 127, start_seconds=0.0),
+                        NoteEvent(note=parser.parse("D4"), duration_seconds=0.3, velocity=90 / 127, start_seconds=0.7),
+                    ),
+                    suppressed_duplicate_count=0,
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "StreamingMidiAudioTrigger", FakeStreamingMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-stream",
+                "--port-name",
+                "python-d1-synth",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+                "--voice-mode",
+                "gated",
+                "--note-duration",
+                "0.3",
+                "--debuglevel",
+                "verbose",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Gated MVP note: note_on starts a voice and note_off determines rendered duration" in output
+        assert "voice_mode=gated" in output
+        assert "Streamed note durations: C4@0.000s/0.500s, D4@0.700s/0.300s" in output
 
     def test_midi_play_stream_handles_keyboard_interrupt(self, monkeypatch, capsys) -> None:
         class FakeAudioSelector:

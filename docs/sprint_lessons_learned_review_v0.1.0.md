@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-032
+Betrokken stories: US-001 t/m US-033
 
 ## Doel
 
@@ -97,6 +97,14 @@ De story is bewust beperkt tot streaming duplicate suppression en diagnostics. N
 Product Owner bevestigde de hardware/Logic test als geslaagd: Logic en live note playback waren hoorbaar, met `Streamed 6 MIDI-triggered note events` en `suppressed 23 duplicate MIDI messages`. De kleine resterende vertraging is vastgelegd als latere latency/voice-lifecycle verbetering en geen blocker voor US-032.
 
 Statuslabel: US-032 `Done`.
+
+## US-033 Review Voorbereiding
+
+US-033 volgt bewust na duplicate filtering: pas nadat de inputstream niet meer dubbel speelt, kan note-on/note-off duurmeting betrouwbaar worden getest. De story voegt `--voice-mode gated` toe naast de bestaande fixed mode, zodat US-031/US-032 niet breken terwijl de volgende stap richting echte voice-lifecycle wordt gezet.
+
+Belangrijke scopegrens: deze story meet nootduur, maar implementeert nog geen sustain pedal, envelope release, polyfonie mixer, pitch bend of modulation.
+
+Statuslabel: US-033 `In Review`.
 
 ## Aanbevolen Volgende Stap
 

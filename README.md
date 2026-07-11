@@ -291,6 +291,20 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Logic en live note playback waren hoorbaar. De US-032 test speelde 6 MIDI-triggered note events en onderdrukte 23 duplicate MIDI messages. Een kleine resterende latency is bekend en hoort bij latere stories rond note-off gated voice duration, polyfonie en low-latency audio.
 
+US-033 is in review: `midi play-stream` ondersteunt nu optioneel `--voice-mode gated`. In deze mode start `note_on` een actieve voice en bepaalt `note_off` de gerenderde nootduur. Default blijft `--voice-mode fixed`, zodat US-031/US-032 gedrag niet verandert.
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode gated --dedupe-window 0.03 --debuglevel verbose
+```
+
+Controleer in verbose output:
+
+- `voice_mode=gated`
+- `Streamed note durations: ...`
+- Korte en lange Logic-noten krijgen verschillende durations.
+
+Scope: geen sustain pedal, envelope release, polyfonie mixer, pitch bend, modulation, GUI of plugin.
+
 Lessons learned en sprint review:
 
 - [Sprint Lessons Learned En Review](docs/sprint_lessons_learned_review_v0.1.0.md)

@@ -302,7 +302,7 @@ Als speler wil ik dat note-on en note-off samen de hoorbare nootlengte bepalen, 
 Prioriteit: Must
 Sprint: Future
 
-Notitie: Planned. Dit is de brug tussen fixed-duration streaming en echte voice-lifecycle.
+Notitie: In Review met `StreamingVoiceMode`, `StreamingMidiAudioTriggerSettings.voice_mode`, CLI optie `--voice-mode gated`, gated note-on/note-off duration tests en `docs/note_off_gated_voice_duration_v0.1.0.md`. Default blijft `--voice-mode fixed` zodat US-031/US-032 niet breken. Scope: monofone/parallel note-on/off duurmeting per MIDI key binnen bounded CLI playback. Geen sustain pedal, envelope release, polyfonie mixer, pitch bend, modulation, GUI of plugin.
 
 ### US-034: Polyphonic Voice Mixer En Triads
 

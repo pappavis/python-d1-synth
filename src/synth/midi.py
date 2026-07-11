@@ -2,14 +2,15 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-032 Duplicate MIDI Event Guard
-# Actie: US-032-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
+# User-Story: US-033 Note Off Gated Voice Duration
+# Actie: US-033-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from enum import Enum
 import json
 import platform
 import subprocess
@@ -349,6 +350,21 @@ class VirtualMidiAudioTriggerResult:
     played_events: tuple[NoteEvent, ...] = tuple()
 
 
+class StreamingVoiceMode(str, Enum):
+    """Voice duration mode for streaming MIDI playback.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-033
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-033 Note Off Gated Voice Duration
+    - Version: 0.1.0
+    """
+
+    FIXED = "fixed"
+    GATED = "gated"
+
+
 @dataclass(frozen=True)
 class StreamingMidiAudioTriggerSettings:
     """Settings for near-realtime virtual MIDI streaming playback.
@@ -359,6 +375,7 @@ class StreamingMidiAudioTriggerSettings:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
+    - User Story: US-033 Note Off Gated Voice Duration
     - Version: 0.1.0
     """
 
@@ -367,6 +384,7 @@ class StreamingMidiAudioTriggerSettings:
     timeout_seconds: float = 30.0
     poll_interval_seconds: float = 0.005
     note_duration_seconds: float = 0.25
+    voice_mode: StreamingVoiceMode = StreamingVoiceMode.FIXED
     dedupe_window_seconds: float = 0.03
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
@@ -385,6 +403,8 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("poll_interval_seconds must be positive")
         if self.note_duration_seconds <= 0:
             raise ValueError("note_duration_seconds must be positive")
+        if not isinstance(self.voice_mode, StreamingVoiceMode):
+            raise ValueError("voice_mode must be a StreamingVoiceMode")
         if self.dedupe_window_seconds <= 0:
             raise ValueError("dedupe_window_seconds must be positive")
         if self.sample_rate <= 0:
@@ -403,6 +423,7 @@ class StreamingMidiAudioTriggerResult:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
+    - User Story: US-033 Note Off Gated Voice Duration
     - Version: 0.1.0
     """
 
@@ -884,6 +905,7 @@ class StreamingMidiAudioTrigger:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
+    - User Story: US-033 Note Off Gated Voice Duration
     - Version: 0.1.0
     """
 
@@ -907,15 +929,27 @@ class StreamingMidiAudioTrigger:
             )
         )
         mapper = MidiToNoteEventMapper(default_note_duration_seconds=settings.note_duration_seconds)
-        received_messages: list[MidiMessage] = []
-        played_events: list[NoteEvent] = []
-        audio_frame_count = 0
-        suppressed_duplicate_count = 0
         duplicate_guard = self._duplicate_guard
         if duplicate_guard is None:
             duplicate_guard = DuplicateMidiEventGuard(
                 DuplicateMidiEventGuardSettings(window_seconds=settings.dedupe_window_seconds)
             )
+
+        if settings.voice_mode is StreamingVoiceMode.GATED:
+            return self._trigger_gated(settings, engine, mapper, duplicate_guard)
+        return self._trigger_fixed(settings, engine, mapper, duplicate_guard)
+
+    def _trigger_fixed(
+        self,
+        settings: StreamingMidiAudioTriggerSettings,
+        engine: SynthEngine,
+        mapper: MidiToNoteEventMapper,
+        duplicate_guard: DuplicateMidiEventGuard,
+    ) -> StreamingMidiAudioTriggerResult:
+        received_messages: list[MidiMessage] = []
+        played_events: list[NoteEvent] = []
+        audio_frame_count = 0
+        suppressed_duplicate_count = 0
 
         for message in self._backend.iter_messages(
             settings.port_name,
@@ -939,6 +973,108 @@ class StreamingMidiAudioTrigger:
             played_events.append(event)
             audio_frame_count += buffer.samples.shape[0]
 
+        return self._streaming_result(
+            settings=settings,
+            received_messages=received_messages,
+            played_events=played_events,
+            audio_frame_count=audio_frame_count,
+            suppressed_duplicate_count=suppressed_duplicate_count,
+        )
+
+    def _trigger_gated(
+        self,
+        settings: StreamingMidiAudioTriggerSettings,
+        engine: SynthEngine,
+        mapper: MidiToNoteEventMapper,
+        duplicate_guard: DuplicateMidiEventGuard,
+    ) -> StreamingMidiAudioTriggerResult:
+        received_messages: list[MidiMessage] = []
+        played_events: list[NoteEvent] = []
+        active_note_on_by_key: dict[tuple[int, int], MidiMessage] = {}
+        audio_frame_count = 0
+        suppressed_duplicate_count = 0
+
+        for message in self._backend.iter_messages(
+            settings.port_name,
+            settings.max_messages,
+            settings.timeout_seconds,
+            settings.poll_interval_seconds,
+        ):
+            received_messages.append(message)
+            if duplicate_guard.is_duplicate(message):
+                suppressed_duplicate_count += 1
+                continue
+
+            key = (message.channel, message.note_number)
+            if message.message_type == "note_on" and message.velocity > 0:
+                previous_note_on = active_note_on_by_key.get(key)
+                if previous_note_on is not None:
+                    event = self._gated_event_from_messages(mapper, previous_note_on, message, settings)
+                    audio_frame_count += self._play_event(engine, event, settings.audio_device)
+                    played_events.append(event)
+                active_note_on_by_key[key] = message
+                continue
+
+            note_on = active_note_on_by_key.pop(key, None)
+            if note_on is None:
+                continue
+            event = self._gated_event_from_messages(mapper, note_on, message, settings)
+            audio_frame_count += self._play_event(engine, event, settings.audio_device)
+            played_events.append(event)
+
+        for note_on in active_note_on_by_key.values():
+            fallback_note_off = MidiMessage(
+                message_type="note_off",
+                note_number=note_on.note_number,
+                velocity=0,
+                channel=note_on.channel,
+                time_seconds=note_on.time_seconds + settings.note_duration_seconds,
+            )
+            event = self._gated_event_from_messages(mapper, note_on, fallback_note_off, settings)
+            audio_frame_count += self._play_event(engine, event, settings.audio_device)
+            played_events.append(event)
+
+        return self._streaming_result(
+            settings=settings,
+            received_messages=received_messages,
+            played_events=played_events,
+            audio_frame_count=audio_frame_count,
+            suppressed_duplicate_count=suppressed_duplicate_count,
+        )
+
+    def _gated_event_from_messages(
+        self,
+        mapper: MidiToNoteEventMapper,
+        note_on: MidiMessage,
+        closing_message: MidiMessage,
+        settings: StreamingMidiAudioTriggerSettings,
+    ) -> NoteEvent:
+        note_off_time = closing_message.time_seconds
+        if note_off_time <= note_on.time_seconds:
+            note_off_time = note_on.time_seconds + settings.note_duration_seconds
+        note_off = MidiMessage(
+            message_type="note_off",
+            note_number=note_on.note_number,
+            velocity=closing_message.velocity,
+            channel=note_on.channel,
+            time_seconds=note_off_time,
+        )
+        sequence = mapper.messages_to_note_sequence((note_on, note_off))
+        return sequence.events[0]
+
+    def _play_event(self, engine: SynthEngine, event: NoteEvent, audio_device: int | str | None) -> int:
+        buffer = engine.render_note(event)
+        self._audio_player.play(buffer, device=audio_device)
+        return int(buffer.samples.shape[0])
+
+    def _streaming_result(
+        self,
+        settings: StreamingMidiAudioTriggerSettings,
+        received_messages: list[MidiMessage],
+        played_events: list[NoteEvent],
+        audio_frame_count: int,
+        suppressed_duplicate_count: int,
+    ) -> StreamingMidiAudioTriggerResult:
         if not played_events:
             return StreamingMidiAudioTriggerResult(
                 port_name=settings.port_name,

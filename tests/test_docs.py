@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-032 Duplicate MIDI Event Guard
-# Actie: US-032-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
+# User-Story: US-033 Note Off Gated Voice Duration
+# Actie: US-033-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
 
 from pathlib import Path
 
@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-032",
+            "US-001 t/m US-033",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -408,6 +408,7 @@ class TestDocumentationArtifacts:
             "US-030 `Done`",
             "US-031 `Done`",
             "US-032 `Done`",
+            "US-033 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -446,6 +447,38 @@ class TestDocumentationArtifacts:
             "US-036",
             "geen GUI",
             "geen hardcoded MIDI hardware device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us033_note_off_gated_voice_duration_doc_contains_required_terms(self) -> None:
+        document = Path("docs/note_off_gated_voice_duration_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-033 Note Off Gated Voice Duration",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--voice-mode gated",
+            "StreamingVoiceMode",
+            "StreamingMidiAudioTriggerSettings.voice_mode",
+            "note_on",
+            "note_off",
+            "velocity `0`",
+            "Streamed note durations",
+            "voice_mode=gated",
+            "C4 kort, D4 lang, E4 kort",
+            "Scarlett 8i6 USB",
+            "Geen sustain pedal",
+            "US-034",
+            "US-035",
+            "US-036",
+            "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:
             assert term in content

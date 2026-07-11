@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-032 Duplicate MIDI Event Guard
-# Actie: US-032-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
+# User-Story: US-033 Note Off Gated Voice Duration
+# Actie: US-033-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
 
 import argparse
 import importlib.util
@@ -25,6 +25,7 @@ from synth.midi import (
     MidiInputReceiveSettings,
     StreamingMidiAudioTrigger,
     StreamingMidiAudioTriggerSettings,
+    StreamingVoiceMode,
     UsbMidiHardwareInputAdapter,
     VirtualMidiAudioTrigger,
     VirtualMidiAudioTriggerSettings,
@@ -58,6 +59,7 @@ class SynthCli:
     - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
+    - User Story: US-033 Note Off Gated Voice Duration
     - Version: 0.1.0
     """
 
@@ -177,6 +179,11 @@ class SynthCli:
         play_stream.add_argument("--timeout", type=float, default=30.0)
         play_stream.add_argument("--poll-interval", type=float, default=0.005)
         play_stream.add_argument("--note-duration", type=float, default=0.25)
+        play_stream.add_argument(
+            "--voice-mode",
+            choices=[item.value for item in StreamingVoiceMode],
+            default=StreamingVoiceMode.FIXED.value,
+        )
         play_stream.add_argument("--dedupe-window", type=float, default=0.03)
         play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
         play_stream.add_argument("--sample-rate", type=int, default=44100)
@@ -500,6 +507,7 @@ class SynthCli:
                 timeout_seconds=args.timeout,
                 poll_interval_seconds=args.poll_interval,
                 note_duration_seconds=args.note_duration,
+                voice_mode=StreamingVoiceMode(args.voice_mode),
                 dedupe_window_seconds=args.dedupe_window,
                 sample_rate=args.sample_rate,
                 waveform=Waveform(args.waveform),
@@ -511,15 +519,21 @@ class SynthCli:
             return 2
 
         reporter.light(f"Opening streaming virtual MIDI input port: {settings.port_name}")
-        reporter.light(
-            "Near-realtime MVP note: note_on events are played as short fixed-duration audio buffers; "
-            "note_off, pitch bend and modulation are later stories."
-        )
+        if settings.voice_mode is StreamingVoiceMode.GATED:
+            reporter.light(
+                "Gated MVP note: note_on starts a voice and note_off determines rendered duration; "
+                "pitch bend, modulation and polyphony are later stories."
+            )
+        else:
+            reporter.light(
+                "Near-realtime MVP note: note_on events are played as short fixed-duration audio buffers; "
+                "note_off, pitch bend and modulation are later stories."
+            )
         reporter.verbose(
             "Streaming MIDI audio trigger settings: "
             f"port={settings.port_name}, max_messages={settings.max_messages}, "
             f"timeout={settings.timeout_seconds:g}s, poll_interval={settings.poll_interval_seconds:g}s, "
-            f"note_duration={settings.note_duration_seconds:g}s, "
+            f"note_duration={settings.note_duration_seconds:g}s, voice_mode={settings.voice_mode.value}, "
             f"dedupe_window={settings.dedupe_window_seconds:g}s, waveform={args.waveform}, "
             f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
         )
@@ -545,6 +559,7 @@ class SynthCli:
             reporter.verbose(f"Received MIDI messages: {self._format_midi_messages(result.received_messages)}")
         if result.played_events:
             reporter.verbose(f"Streamed sequence events: {self._format_sequence_events(NoteSequence(result.played_events))}")
+            reporter.verbose(f"Streamed note durations: {self._format_note_event_durations(result.played_events)}")
         reporter.verbose(f"Suppressed duplicate MIDI messages: {result.suppressed_duplicate_count}")
         reporter.verbose(f"Total streamed audio frames: {result.audio_frame_count}, sample_rate={result.sample_rate} Hz")
         return 0
@@ -576,6 +591,12 @@ class SynthCli:
         return ", ".join(
             f"{message.message_type}:{message.note_number}:velocity={message.velocity}:channel={message.channel}"
             for message in messages
+        )
+
+    def _format_note_event_durations(self, events) -> str:
+        return ", ".join(
+            f"{event.note.name}{event.note.octave}@{event.start_seconds:.3f}s/{event.duration_seconds:.3f}s"
+            for event in events
         )
 
     def _report_midi_scan_details(self, reporter: DebugReporter, result) -> None:
