@@ -293,7 +293,7 @@ Als gebruiker wil ik dat dubbele MIDI note events uit Logic/routing niet dubbel 
 Prioriteit: Must
 Sprint: Future
 
-Notitie: Planned. Deze story komt logisch direct na US-031, omdat pitch bend, modulation en polyfonie onbetrouwbaar worden als de inputstream dubbele note events bevat.
+Notitie: In Review met `DuplicateMidiEventGuardSettings`, `DuplicateMidiEventGuard`, `StreamingMidiAudioTriggerSettings.dedupe_window_seconds`, CLI optie `--dedupe-window`, verbose duplicate diagnostics en `docs/duplicate_midi_event_guard_v0.1.0.md`. Identieke `note_on`/`note_off` echo-events binnen de window worden onderdrukt; verschillende noten op dezelfde timestamp blijven behouden als voorbereiding op US-034 polyfonie/triads. Geen note-off gated duration, sustain, pitch bend, modulation of volledige polyfonie binnen US-032.
 
 ### US-033: Note Off Gated Voice Duration
 

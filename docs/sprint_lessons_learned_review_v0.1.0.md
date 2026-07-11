@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-031
+Betrokken stories: US-001 t/m US-032
 
 ## Doel
 
@@ -87,6 +87,14 @@ Statuslabel: US-030 `Done`.
 US-031 volgt direct uit de US-030 observatie dat batch playback hoorbaar werkt maar vertraagd aanvoelt. De review bevestigde dat `midi play-stream` realtime hoorbaar werkt. De test bracht een nieuwe, logische vervolgstap naar boven: dubbele MIDI events moeten worden gefilterd of gediagnosticeerd voordat voice-lifecycle, polyfonie, pitch bend en modulation betrouwbaar worden.
 
 Statuslabel: US-031 `Done`.
+
+## US-032 Review Voorbereiding
+
+US-032 behandelt de dubbele Logic/CoreMIDI echo-events uit de US-031 klanttest. De belangrijkste les is dat duplicate filtering de inputstream moet saneren zonder toekomstige muzikale informatie te verliezen: identieke messages binnen een korte window mogen worden onderdrukt, maar verschillende note numbers op dezelfde timestamp moeten blijven bestaan voor latere polyfonie en triads.
+
+De story is bewust beperkt tot streaming duplicate suppression en diagnostics. Note-off gated duration, sustain, polyfonie, pitch bend en modulation blijven aparte user stories.
+
+Statuslabel: US-032 `In Review`.
 
 ## Aanbevolen Volgende Stap
 

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-031 Live/Streaming MIDI Playback Loop
-# Actie: US-031-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
+# User-Story: US-032 Duplicate MIDI Event Guard
+# Actie: US-032-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
 
 from __future__ import annotations
 
@@ -358,6 +358,7 @@ class StreamingMidiAudioTriggerSettings:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - User Story: US-032 Duplicate MIDI Event Guard
     - Version: 0.1.0
     """
 
@@ -366,6 +367,7 @@ class StreamingMidiAudioTriggerSettings:
     timeout_seconds: float = 30.0
     poll_interval_seconds: float = 0.005
     note_duration_seconds: float = 0.25
+    dedupe_window_seconds: float = 0.03
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
     amplitude: float = 0.2
@@ -383,6 +385,8 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("poll_interval_seconds must be positive")
         if self.note_duration_seconds <= 0:
             raise ValueError("note_duration_seconds must be positive")
+        if self.dedupe_window_seconds <= 0:
+            raise ValueError("dedupe_window_seconds must be positive")
         if self.sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
@@ -398,6 +402,7 @@ class StreamingMidiAudioTriggerResult:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - User Story: US-032 Duplicate MIDI Event Guard
     - Version: 0.1.0
     """
 
@@ -409,6 +414,51 @@ class StreamingMidiAudioTriggerResult:
     message: str
     received_messages: tuple[MidiMessage, ...] = tuple()
     played_events: tuple[NoteEvent, ...] = tuple()
+    suppressed_duplicate_count: int = 0
+
+
+@dataclass(frozen=True)
+class DuplicateMidiEventGuardSettings:
+    """Settings for suppressing duplicate MIDI echoes in a short time window.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-032
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-032 Duplicate MIDI Event Guard
+    - Version: 0.1.0
+    """
+
+    window_seconds: float = 0.03
+
+    def __post_init__(self) -> None:
+        if self.window_seconds <= 0:
+            raise ValueError("window_seconds must be positive")
+
+
+class DuplicateMidiEventGuard:
+    """Suppress identical MIDI messages repeated by DAW/CoreMIDI echo routes.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-032
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-032 Duplicate MIDI Event Guard
+    - Version: 0.1.0
+    """
+
+    def __init__(self, settings: DuplicateMidiEventGuardSettings | None = None) -> None:
+        self._settings = settings if settings is not None else DuplicateMidiEventGuardSettings()
+        self._last_seen_time_by_key: dict[tuple[str, int, int, int], float] = {}
+
+    def is_duplicate(self, message: MidiMessage) -> bool:
+        key = (message.message_type, message.note_number, message.velocity, message.channel)
+        previous_time = self._last_seen_time_by_key.get(key)
+        self._last_seen_time_by_key[key] = message.time_seconds
+        if previous_time is None:
+            return False
+        delta_seconds = message.time_seconds - previous_time
+        return 0 <= delta_seconds <= self._settings.window_seconds
 
 
 class MidiInputBackend(Protocol):
@@ -833,6 +883,7 @@ class StreamingMidiAudioTrigger:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - User Story: US-032 Duplicate MIDI Event Guard
     - Version: 0.1.0
     """
 
@@ -840,9 +891,11 @@ class StreamingMidiAudioTrigger:
         self,
         backend: StreamingMidiInputBackend | None = None,
         audio_player: AudioPlayer | None = None,
+        duplicate_guard: DuplicateMidiEventGuard | None = None,
     ) -> None:
         self._backend = backend if backend is not None else MidoStreamingVirtualMidiInputBackend()
         self._audio_player = audio_player if audio_player is not None else SoundDeviceAudioPlayer()
+        self._duplicate_guard = duplicate_guard
 
     def trigger(self, settings: StreamingMidiAudioTriggerSettings) -> StreamingMidiAudioTriggerResult:
         engine = SynthEngine(
@@ -857,6 +910,12 @@ class StreamingMidiAudioTrigger:
         received_messages: list[MidiMessage] = []
         played_events: list[NoteEvent] = []
         audio_frame_count = 0
+        suppressed_duplicate_count = 0
+        duplicate_guard = self._duplicate_guard
+        if duplicate_guard is None:
+            duplicate_guard = DuplicateMidiEventGuard(
+                DuplicateMidiEventGuardSettings(window_seconds=settings.dedupe_window_seconds)
+            )
 
         for message in self._backend.iter_messages(
             settings.port_name,
@@ -865,6 +924,9 @@ class StreamingMidiAudioTrigger:
             settings.poll_interval_seconds,
         ):
             received_messages.append(message)
+            if duplicate_guard.is_duplicate(message):
+                suppressed_duplicate_count += 1
+                continue
             if message.message_type != "note_on" or message.velocity == 0:
                 continue
 
@@ -890,6 +952,7 @@ class StreamingMidiAudioTrigger:
                 ),
                 received_messages=tuple(received_messages),
                 played_events=tuple(),
+                suppressed_duplicate_count=suppressed_duplicate_count,
             )
 
         return StreamingMidiAudioTriggerResult(
@@ -898,9 +961,13 @@ class StreamingMidiAudioTrigger:
             played_event_count=len(played_events),
             audio_frame_count=audio_frame_count,
             sample_rate=settings.sample_rate,
-            message=f"Streamed {len(played_events)} MIDI-triggered note events from virtual MIDI port {settings.port_name}.",
+            message=(
+                f"Streamed {len(played_events)} MIDI-triggered note events from virtual MIDI port "
+                f"{settings.port_name}; suppressed {suppressed_duplicate_count} duplicate MIDI messages."
+            ),
             received_messages=tuple(received_messages),
             played_events=tuple(played_events),
+            suppressed_duplicate_count=suppressed_duplicate_count,
         )
 
 

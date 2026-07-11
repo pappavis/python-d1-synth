@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-031 Live/Streaming MIDI Playback Loop
-# Actie: US-031-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
+# User-Story: US-032 Duplicate MIDI Event Guard
+# Actie: US-032-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
 
 from pathlib import Path
 
@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-031",
+            "US-001 t/m US-032",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -407,6 +407,40 @@ class TestDocumentationArtifacts:
             "US-029 `Done`",
             "US-030 `Done`",
             "US-031 `Done`",
+            "US-032 `In Review`",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us032_duplicate_midi_event_guard_doc_contains_required_terms(self) -> None:
+        document = Path("docs/duplicate_midi_event_guard_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-032 Duplicate MIDI Event Guard",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--dedupe-window",
+            "dedupe_window=0.03s",
+            "suppressed ... duplicate MIDI messages",
+            "Suppressed duplicate MIDI messages",
+            "DuplicateMidiEventGuardSettings",
+            "DuplicateMidiEventGuard",
+            "StreamingMidiAudioTriggerSettings",
+            "StreamingMidiAudioTriggerResult",
+            "verschillende note numbers op dezelfde timestamp",
+            "polyfonie/triads",
+            "US-033",
+            "US-034",
+            "US-035",
+            "US-036",
+            "geen GUI",
+            "geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:
             assert term in content

@@ -2,14 +2,16 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-031 Live/Streaming MIDI Playback Loop
-# Actie: US-031-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
+# User-Story: US-032 Duplicate MIDI Event Guard
+# Actie: US-032-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
 
 import pytest
 
 from synth.audio import OutputChannel
 from synth.midi import (
+    DuplicateMidiEventGuard,
+    DuplicateMidiEventGuardSettings,
     MidiAudioTrigger,
     MidiAudioTriggerResult,
     MidiAudioTriggerSettings,
@@ -266,6 +268,36 @@ class TestMidiMessageNormalizer:
             channel=1,
             time_seconds=0.375,
         )
+
+
+class TestDuplicateMidiEventGuard:
+    def test_identical_message_inside_window_is_suppressed(self) -> None:
+        guard = DuplicateMidiEventGuard(DuplicateMidiEventGuardSettings(window_seconds=0.03))
+        first = MidiMessage(message_type="note_on", note_number=65, velocity=83, channel=1, time_seconds=5.299)
+        duplicate = MidiMessage(message_type="note_on", note_number=65, velocity=83, channel=1, time_seconds=5.299)
+
+        assert guard.is_duplicate(first) is False
+        assert guard.is_duplicate(duplicate) is True
+
+    def test_different_notes_at_same_time_are_not_suppressed_for_future_chords(self) -> None:
+        guard = DuplicateMidiEventGuard(DuplicateMidiEventGuardSettings(window_seconds=0.03))
+        first = MidiMessage(message_type="note_on", note_number=60, velocity=80, channel=1, time_seconds=1.0)
+        chord_tone = MidiMessage(message_type="note_on", note_number=64, velocity=80, channel=1, time_seconds=1.0)
+
+        assert guard.is_duplicate(first) is False
+        assert guard.is_duplicate(chord_tone) is False
+
+    def test_same_message_after_window_is_not_suppressed(self) -> None:
+        guard = DuplicateMidiEventGuard(DuplicateMidiEventGuardSettings(window_seconds=0.03))
+        first = MidiMessage(message_type="note_on", note_number=60, velocity=80, channel=1, time_seconds=1.0)
+        repeated_note = MidiMessage(message_type="note_on", note_number=60, velocity=80, channel=1, time_seconds=1.05)
+
+        assert guard.is_duplicate(first) is False
+        assert guard.is_duplicate(repeated_note) is False
+
+    def test_settings_require_positive_window(self) -> None:
+        with pytest.raises(ValueError, match="window_seconds"):
+            DuplicateMidiEventGuardSettings(window_seconds=0)
 
 
 class TestLiveMidiInputReceiver:
@@ -628,13 +660,17 @@ class TestStreamingMidiAudioTrigger:
             played_event_count=2,
             audio_frame_count=22050,
             sample_rate=44100,
-            message="Streamed 2 MIDI-triggered note events from virtual MIDI port python-d1-synth.",
+            message=(
+                "Streamed 2 MIDI-triggered note events from virtual MIDI port python-d1-synth; "
+                "suppressed 0 duplicate MIDI messages."
+            ),
             received_messages=(
                 MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.01),
                 MidiMessage(message_type="note_off", note_number=60, velocity=0, channel=1, time_seconds=0.08),
                 MidiMessage(message_type="note_on", note_number=62, velocity=90, channel=1, time_seconds=0.12),
             ),
             played_events=expected_events,
+            suppressed_duplicate_count=0,
         )
         assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "D4"]
         assert [event.start_seconds for event in result.played_events] == [0.01, 0.12]
@@ -642,6 +678,44 @@ class TestStreamingMidiAudioTrigger:
             ((11025, 2), 44100, "Scarlett 8i6 USB"),
             ((11025, 2), 44100, "Scarlett 8i6 USB"),
         ]
+
+    def test_streaming_trigger_suppresses_duplicate_logic_echoes_without_dropping_chord_tones(self) -> None:
+        class FakeStreamingBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield MidiMessage(message_type="note_on", note_number=65, velocity=83, channel=1, time_seconds=5.299)
+                yield MidiMessage(message_type="note_on", note_number=65, velocity=83, channel=1, time_seconds=5.299)
+                yield MidiMessage(message_type="note_on", note_number=64, velocity=77, channel=1, time_seconds=5.299)
+                yield MidiMessage(message_type="note_on", note_number=64, velocity=77, channel=1, time_seconds=5.299)
+                yield MidiMessage(message_type="note_on", note_number=60, velocity=61, channel=1, time_seconds=5.299)
+                yield MidiMessage(message_type="note_on", note_number=57, velocity=65, channel=1, time_seconds=5.299)
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=6,
+            timeout_seconds=1.0,
+            note_duration_seconds=0.25,
+            dedupe_window_seconds=0.03,
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBackend(), audio_player=audio_player).trigger(settings)
+
+        assert result.received_message_count == 6
+        assert result.played_event_count == 4
+        assert result.suppressed_duplicate_count == 2
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["F4", "E4", "C4", "A3"]
+        assert len(audio_player.calls) == 4
+        assert result.message == (
+            "Streamed 4 MIDI-triggered note events from virtual MIDI port python-d1-synth; "
+            "suppressed 2 duplicate MIDI messages."
+        )
 
     def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
         class FakeStreamingBackend:
@@ -665,6 +739,10 @@ class TestStreamingMidiAudioTrigger:
     def test_streaming_settings_require_positive_note_duration(self) -> None:
         with pytest.raises(ValueError, match="note_duration_seconds"):
             StreamingMidiAudioTriggerSettings(note_duration_seconds=0)
+
+    def test_streaming_settings_require_positive_dedupe_window(self) -> None:
+        with pytest.raises(ValueError, match="dedupe_window_seconds"):
+            StreamingMidiAudioTriggerSettings(dedupe_window_seconds=0)
 
 
 class TestUsbMidiHardwareInputAdapter:

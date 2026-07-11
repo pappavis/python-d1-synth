@@ -440,9 +440,13 @@ Acceptatie op 2026-07-11:
 
 ## US-032: Duplicate MIDI Event Guard
 
-- Given Logic/DAW of routing dubbele note events aanlevert, when `midi play-stream` draait, then de synth dubbele events binnen een korte window kan onderdrukken of diagnosticeren.
-- Given een enkele noot binnenkomt, then die niet dubbel hoorbaar mag afspelen.
-- Story status is `Planned`.
+- Given Logic/DAW of routing dubbele note events aanlevert, when `midi play-stream` draait met `--dedupe-window 0.03`, then identieke MIDI messages binnen die korte window worden onderdrukt.
+- Given een enkele noot binnenkomt als twee identieke echo-events, then die niet dubbel hoorbaar mag afspelen.
+- Given verschillende note numbers op dezelfde timestamp binnenkomen, then de duplicate guard onderdrukt ze niet; dit bewaart de route naar US-034 polyfonie/triads.
+- Given `--debuglevel verbose` actief is, then de CLI toont `dedupe_window=...s`, de result message bevat `suppressed ... duplicate MIDI messages`, en de verbose output toont `Suppressed duplicate MIDI messages: ...`.
+- `docs/duplicate_midi_event_guard_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-032 Duplicate MIDI Event Guard`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-032 Duplicate MIDI Event Guard` en `Version: 0.1.0`.
+- Story status is `In Review`.
 
 ## US-033: Note Off Gated Voice Duration
 

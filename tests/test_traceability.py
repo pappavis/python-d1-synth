@@ -2,14 +2,16 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-031 Live/Streaming MIDI Playback Loop
-# Actie: US-031-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-031
+# User-Story: US-032 Duplicate MIDI Event Guard
+# Actie: US-032-TRACEABILITY-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-032
 
 from synth.audio import ChannelRouter, OutputChannel
 from synth.cli import SynthCli
 from synth.debug import DebugLevel, DebugReporter
 from synth.midi import (
+    DuplicateMidiEventGuard,
+    DuplicateMidiEventGuardSettings,
     LiveMidiInputReceiver,
     MidiAudioTrigger,
     MidiAudioTriggerResult,
@@ -276,6 +278,28 @@ class TestCodeTraceability:
             StreamingMidiAudioTriggerSettings,
             StreamingMidiAudioTriggerResult,
             MidoStreamingVirtualMidiInputBackend,
+            StreamingMidiAudioTrigger,
+            SynthCli,
+        )
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us032_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-032 Duplicate MIDI Event Guard",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            DuplicateMidiEventGuardSettings,
+            DuplicateMidiEventGuard,
+            StreamingMidiAudioTriggerSettings,
+            StreamingMidiAudioTriggerResult,
             StreamingMidiAudioTrigger,
             SynthCli,
         )
