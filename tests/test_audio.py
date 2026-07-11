@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Tests voor audio routing, device selectie en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-035 Sustained Note Audio Engine
-# Actie: US-035-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
+# Actie: US-036-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
 
 import numpy as np
 
@@ -133,6 +133,17 @@ class TestSoundDeviceSustainedAudioPlayer:
 
         assert np.allclose(silent_outdata, 0.0)
         assert player.active_voice_count() == 0
+
+    def test_pitch_bend_updates_only_matching_channel_voice_frequency(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        player.note_on((1, 60), frequency_hz=100.0, velocity=1.0)
+        player.note_on((2, 60), frequency_hz=200.0, velocity=1.0)
+
+        player.pitch_bend(channel=1, semitones=12.0)
+
+        assert player._voice_by_id[(1, 60)].base_frequency_hz == 100.0
+        assert player._voice_by_id[(1, 60)].frequency_hz == 200.0
+        assert player._voice_by_id[(2, 60)].frequency_hz == 200.0
 
     def test_start_and_stop_manage_sounddevice_stream(self, monkeypatch) -> None:
         calls = []

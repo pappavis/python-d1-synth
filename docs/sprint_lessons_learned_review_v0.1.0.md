@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-035
+Betrokken stories: US-001 t/m US-036
 
 ## Doel
 
@@ -124,11 +124,21 @@ US-035 volgt direct uit de Product Owner observatie dat een 2 seconden vastgehou
 
 Belangrijke scopegrens: US-035 behandelt de note-on/note-off voice lifecycle. Sustain pedal, envelope release, pitch bend, modulation, GUI en plugin packaging blijven aparte stories.
 
-Statuslabel: US-035 `In Review`.
+Product Owner bevestigde de sustained playback test als geslaagd: noten bleven hoorbaar tot note-off en de CLI rapporteerde `Total streamed audio frames: 575172`.
+
+Statuslabel: US-035 `Done`.
+
+## US-036 Review Voorbereiding
+
+US-036 volgt logisch na sustained playback, omdat pitch bend alleen zinvol hoorbaar is wanneer een voice actief blijft klinken. De story voegt mido `pitchwheel` normalisatie, `MidiPitchBendMapper`, `--pitch-bend-range` en `SoundDeviceSustainedAudioPlayer.pitch_bend(...)` toe.
+
+Belangrijke scopegrens: US-036 behandelt alleen pitch bend per MIDI channel op actieve sustained voices. Modulation/CC1, sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-036 `In Review`.
 
 ## Aanbevolen Volgende Stap
 
 De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of we:
 
-- US-035 accepteren na Logic/keyboard sustained-note test, of
-- een US-035 impediment oplossen als een vastgehouden noot nog steeds als korte pulse klinkt.
+- US-036 accepteren na Logic/keyboard pitch bend test, of
+- een US-036 impediment oplossen als pitch bend messages niet zichtbaar zijn of niet hoorbaar buigen.

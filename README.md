@@ -320,7 +320,7 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Product Owner hoorde akkoordachtige groepen met `--chord-window 0.08`; verschillende chord tones bleven behouden en er waren geen duplicate suppressions nodig.
 
-US-035 is in review: `midi play-stream` ondersteunt nu `--voice-mode sustained`. In deze mode start `note_on` een actieve streaming voice en stopt `note_off` die voice, zodat een langer vastgehouden toets niet meer alleen als kort pulse-nootje speelt.
+US-035 is afgerond: `midi play-stream` ondersteunt nu `--voice-mode sustained`. In deze mode start `note_on` een actieve streaming voice en stopt `note_off` die voice, zodat een langer vastgehouden toets niet meer alleen als kort pulse-nootje speelt.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --debuglevel verbose
@@ -332,7 +332,21 @@ Controleer in verbose output:
 - `Sustained MVP note: note_on starts a streaming voice and note_off stops it`
 - Een 2 seconden vastgehouden C3 klinkt ongeveer 2 seconden door.
 
-Scope: geen sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
+Bevestigd gedrag: Product Owner testte `--voice-mode sustained`; noten bleven hoorbaar tot note-off en `Total streamed audio frames: 575172` bevestigde streaming audio.
+
+US-036 is in review: sustained playback verwerkt nu MIDI pitch bend messages. Pitch bend wordt per MIDI channel gemapt naar actieve sustained voices. Default bereik is `--pitch-bend-range 2`, dus volledige pitch bend is ongeveer twee semitones omhoog of omlaag.
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --debuglevel verbose
+```
+
+Controleer in verbose output:
+
+- `voice_mode=sustained`
+- `pitch_bend_range=2st`
+- `Received MIDI messages` bevat `pitch_bend:<waarde>:channel=<n>`.
+
+Scope: geen sustain pedal, envelope release, modulation, GUI of plugin.
 
 Lessons learned en sprint review:
 

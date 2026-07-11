@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-035 Sustained Note Audio Engine
-# Actie: US-035-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
+# Actie: US-036-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
 
 import argparse
 import importlib.util
@@ -62,6 +62,7 @@ class SynthCli:
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -188,6 +189,7 @@ class SynthCli:
         )
         play_stream.add_argument("--dedupe-window", type=float, default=0.03)
         play_stream.add_argument("--chord-window", type=float, default=0.02)
+        play_stream.add_argument("--pitch-bend-range", type=float, default=2.0)
         play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
         play_stream.add_argument("--sample-rate", type=int, default=44100)
         play_stream.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
@@ -513,6 +515,7 @@ class SynthCli:
                 voice_mode=StreamingVoiceMode(args.voice_mode),
                 dedupe_window_seconds=args.dedupe_window,
                 chord_window_seconds=args.chord_window,
+                pitch_bend_range_semitones=args.pitch_bend_range,
                 sample_rate=args.sample_rate,
                 waveform=Waveform(args.waveform),
                 channel=OutputChannel(args.channel),
@@ -526,7 +529,7 @@ class SynthCli:
         if settings.voice_mode is StreamingVoiceMode.SUSTAINED:
             reporter.light(
                 "Sustained MVP note: note_on starts a streaming voice and note_off stops it; "
-                "pitch bend and modulation are later stories."
+                "pitch bend bends active sustained voices, modulation is a later story."
             )
         elif settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(
@@ -544,6 +547,7 @@ class SynthCli:
             f"timeout={settings.timeout_seconds:g}s, poll_interval={settings.poll_interval_seconds:g}s, "
             f"note_duration={settings.note_duration_seconds:g}s, voice_mode={settings.voice_mode.value}, "
             f"dedupe_window={settings.dedupe_window_seconds:g}s, chord_window={settings.chord_window_seconds:g}s, "
+            f"pitch_bend_range={settings.pitch_bend_range_semitones:g}st, "
             f"waveform={args.waveform}, "
             f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
         )
@@ -599,10 +603,17 @@ class SynthCli:
         )
 
     def _format_midi_messages(self, messages) -> str:
-        return ", ".join(
-            f"{message.message_type}:{message.note_number}:velocity={message.velocity}:channel={message.channel}"
-            for message in messages
-        )
+        formatted_messages = []
+        for message in messages:
+            if message.message_type == "pitch_bend":
+                formatted_messages.append(
+                    f"pitch_bend:{message.pitch_bend_value}:channel={message.channel}"
+                )
+                continue
+            formatted_messages.append(
+                f"{message.message_type}:{message.note_number}:velocity={message.velocity}:channel={message.channel}"
+            )
+        return ", ".join(formatted_messages)
 
     def _format_note_event_durations(self, events) -> str:
         return ", ".join(

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-035 Sustained Note Audio Engine
-# Actie: US-035-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
+# Actie: US-036-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
 
 import numpy as np
 
@@ -991,10 +991,11 @@ class TestSynthCli:
             def trigger(self, settings):
                 assert settings.voice_mode is StreamingVoiceMode.SUSTAINED
                 assert settings.audio_device == "Scarlett 8i6 USB"
+                assert settings.pitch_bend_range_semitones == 12.0
                 parser = NoteParser()
                 return StreamingMidiAudioTriggerResult(
                     port_name=settings.port_name,
-                    received_message_count=2,
+                    received_message_count=3,
                     played_event_count=1,
                     audio_frame_count=88200,
                     sample_rate=44100,
@@ -1004,6 +1005,14 @@ class TestSynthCli:
                     ),
                     received_messages=(
                         MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.0),
+                        MidiMessage(
+                            message_type="pitch_bend",
+                            note_number=0,
+                            velocity=0,
+                            channel=1,
+                            time_seconds=1.0,
+                            pitch_bend_value=4096,
+                        ),
                         MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=2.0),
                     ),
                     played_events=(
@@ -1025,6 +1034,8 @@ class TestSynthCli:
                 "Scarlett 8i6 USB",
                 "--voice-mode",
                 "sustained",
+                "--pitch-bend-range",
+                "12",
                 "--debuglevel",
                 "verbose",
             ]
@@ -1034,6 +1045,8 @@ class TestSynthCli:
         assert exit_code == 0
         assert "Sustained MVP note: note_on starts a streaming voice and note_off stops it" in output
         assert "voice_mode=sustained" in output
+        assert "pitch_bend_range=12st" in output
+        assert "pitch_bend:4096:channel=1" in output
         assert "Streamed note durations: C4@0.000s/2.000s" in output
         assert "Total streamed audio frames: 88200, sample_rate=44100 Hz" in output
 

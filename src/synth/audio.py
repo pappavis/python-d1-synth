@@ -2,12 +2,13 @@
 # Versienummer: 0.1.0
 # Doel: Audio buffers, device selectie, routing en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-035 Sustained Note Audio Engine
-# Actie: US-035-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
+# Actie: US-036-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
 
 from dataclasses import dataclass
 from enum import Enum
+import math
 import threading
 from typing import Any
 
@@ -176,9 +177,11 @@ class SustainedVoiceState:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
+    base_frequency_hz: float
     frequency_hz: float
     velocity: float
     phase_cycles: float = 0.0
@@ -192,6 +195,7 @@ class SoundDeviceSustainedAudioPlayer:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -227,11 +231,29 @@ class SoundDeviceSustainedAudioPlayer:
 
     def note_on(self, voice_id: tuple[int, int], frequency_hz: float, velocity: float) -> None:
         with self._lock:
-            self._voice_by_id[voice_id] = SustainedVoiceState(frequency_hz=frequency_hz, velocity=velocity)
+            self._voice_by_id[voice_id] = SustainedVoiceState(
+                base_frequency_hz=frequency_hz,
+                frequency_hz=frequency_hz,
+                velocity=velocity,
+            )
 
     def note_off(self, voice_id: tuple[int, int]) -> None:
         with self._lock:
             self._voice_by_id.pop(voice_id, None)
+
+    def pitch_bend(self, channel: int, semitones: float) -> None:
+        bend_ratio = math.pow(2.0, semitones / 12.0)
+        with self._lock:
+            for voice_id, voice in tuple(self._voice_by_id.items()):
+                voice_channel, _note_number = voice_id
+                if voice_channel != channel:
+                    continue
+                self._voice_by_id[voice_id] = SustainedVoiceState(
+                    base_frequency_hz=voice.base_frequency_hz,
+                    frequency_hz=voice.base_frequency_hz * bend_ratio,
+                    velocity=voice.velocity,
+                    phase_cycles=voice.phase_cycles,
+                )
 
     def stop(self) -> int:
         with self._lock:
@@ -265,6 +287,7 @@ class SoundDeviceSustainedAudioPlayer:
             mono += self._waveform_samples(settings.waveform, phase) * settings.amplitude * voice.velocity
             updated_phase = float((voice.phase_cycles + frames * voice.frequency_hz / settings.sample_rate) % 1.0)
             updated_voices[voice_id] = SustainedVoiceState(
+                base_frequency_hz=voice.base_frequency_hz,
                 frequency_hz=voice.frequency_hz,
                 velocity=voice.velocity,
                 phase_cycles=updated_phase,

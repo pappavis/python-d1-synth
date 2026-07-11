@@ -320,7 +320,7 @@ Als speler wil ik dat note-on een hoorbare voice start en note-off die voice sto
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `SoundDeviceSustainedAudioPlayer`, `SustainedAudioPlayerSettings`, `SustainedVoiceState`, `StreamingVoiceMode.SUSTAINED`, CLI optie `--voice-mode sustained` en `docs/sustained_note_audio_engine_v0.1.0.md`. Scope: sustained note-on/note-off voice lifecycle; geen sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
+Notitie: Done met `SoundDeviceSustainedAudioPlayer`, `SustainedAudioPlayerSettings`, `SustainedVoiceState`, `StreamingVoiceMode.SUSTAINED`, CLI optie `--voice-mode sustained` en `docs/sustained_note_audio_engine_v0.1.0.md`. Product Owner test bevestigde sustained playback met `Total streamed audio frames: 575172`. Scope: sustained note-on/note-off voice lifecycle; geen sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
 
 ### US-036: MIDI Pitch Bend Mapping En DSP
 
@@ -329,7 +329,7 @@ Als speler wil ik MIDI pitch bend kunnen gebruiken, zodat gespeelde noten vloeie
 Prioriteit: Should
 Sprint: Future
 
-Notitie: Planned. Pitch bend volgt na voice-lifecycle/polyfonie, omdat bend per channel of per voice correct toegepast moet worden.
+Notitie: In Review met `MidiPitchBendMapper`, `MidiMessage(message_type="pitch_bend")`, mido `pitchwheel` normalisatie, `SoundDeviceSustainedAudioPlayer.pitch_bend(...)`, CLI optie `--pitch-bend-range` en `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md`. Scope: pitch bend per MIDI channel op actieve sustained voices; geen modulation/CC1, sustain pedal, envelope release, GUI of plugin.
 
 ### US-037: MIDI Modulation CC1 Mapping En DSP
 

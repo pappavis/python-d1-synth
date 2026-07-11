@@ -3,7 +3,7 @@
 Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -59,6 +59,12 @@ Acceptatie:
 - Ctrl-C blijft de commandline afbreken via bestaande streaming interrupt handling.
 - Eventuele kleine latency is toegestaan binnen US-035; professionele low-latency audio optimalisatie blijft later werk.
 
+Product Owner acceptatie op 2026-07-11:
+
+- Test met `--voice-mode sustained` was hoorbaar geslaagd.
+- CLI toonde `Streamed 17 MIDI-triggered note events` en `Total streamed audio frames: 575172`.
+- US-035 status: `Done`.
+
 ## Traceability
 
 - ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
@@ -66,4 +72,3 @@ Acceptatie:
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-035 Sustained Note Audio Engine
 - Version: 0.1.0
-

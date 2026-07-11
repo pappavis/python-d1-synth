@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-035 Sustained Note Audio Engine
-# Actie: US-035-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
+# Actie: US-036-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 import json
+import math
 import platform
 import subprocess
 import sys
@@ -85,6 +86,7 @@ class MidiMessage:
     - Backlog: Sprint 1 Kanban Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-020 Virtual MIDI Input Voor DAW
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -93,18 +95,23 @@ class MidiMessage:
     velocity: int
     channel: int
     time_seconds: float = 0.0
+    pitch_bend_value: int = 0
 
     def __post_init__(self) -> None:
-        if self.message_type not in {"note_on", "note_off"}:
-            raise ValueError("message_type must be note_on or note_off")
-        if not 0 <= self.note_number <= 127:
-            raise ValueError("note_number must be between 0 and 127")
-        if not 0 <= self.velocity <= 127:
-            raise ValueError("velocity must be between 0 and 127")
+        if self.message_type not in {"note_on", "note_off", "pitch_bend"}:
+            raise ValueError("message_type must be note_on, note_off or pitch_bend")
         if not 1 <= self.channel <= 16:
             raise ValueError("channel must be between 1 and 16")
         if self.time_seconds < 0:
             raise ValueError("time_seconds must not be negative")
+        if self.message_type == "pitch_bend":
+            if not -8192 <= self.pitch_bend_value <= 8191:
+                raise ValueError("pitch_bend_value must be between -8192 and 8191")
+            return
+        if not 0 <= self.note_number <= 127:
+            raise ValueError("note_number must be between 0 and 127")
+        if not 0 <= self.velocity <= 127:
+            raise ValueError("velocity must be between 0 and 127")
 
 
 @dataclass(frozen=True)
@@ -365,6 +372,7 @@ class StreamingVoiceMode(str, Enum):
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -386,6 +394,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -397,6 +406,7 @@ class StreamingMidiAudioTriggerSettings:
     voice_mode: StreamingVoiceMode = StreamingVoiceMode.FIXED
     dedupe_window_seconds: float = 0.03
     chord_window_seconds: float = 0.02
+    pitch_bend_range_semitones: float = 2.0
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
     amplitude: float = 0.2
@@ -420,6 +430,8 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("dedupe_window_seconds must be positive")
         if self.chord_window_seconds <= 0:
             raise ValueError("chord_window_seconds must be positive")
+        if self.pitch_bend_range_semitones <= 0:
+            raise ValueError("pitch_bend_range_semitones must be positive")
         if self.sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
@@ -439,6 +451,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -485,16 +498,51 @@ class DuplicateMidiEventGuard:
 
     def __init__(self, settings: DuplicateMidiEventGuardSettings | None = None) -> None:
         self._settings = settings if settings is not None else DuplicateMidiEventGuardSettings()
-        self._last_seen_time_by_key: dict[tuple[str, int, int, int], float] = {}
+        self._last_seen_time_by_key: dict[tuple[str, int, int, int, int], float] = {}
 
     def is_duplicate(self, message: MidiMessage) -> bool:
-        key = (message.message_type, message.note_number, message.velocity, message.channel)
+        key = (
+            message.message_type,
+            message.note_number,
+            message.velocity,
+            message.channel,
+            message.pitch_bend_value,
+        )
         previous_time = self._last_seen_time_by_key.get(key)
         self._last_seen_time_by_key[key] = message.time_seconds
         if previous_time is None:
             return False
         delta_seconds = message.time_seconds - previous_time
         return 0 <= delta_seconds <= self._settings.window_seconds
+
+
+@dataclass(frozen=True)
+class MidiPitchBendMapper:
+    """Map raw MIDI pitch bend values to semitone offsets and frequency ratios.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-036
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - Version: 0.1.0
+    """
+
+    bend_range_semitones: float = 2.0
+
+    def __post_init__(self) -> None:
+        if self.bend_range_semitones <= 0:
+            raise ValueError("bend_range_semitones must be positive")
+
+    def semitones_for(self, pitch_bend_value: int) -> float:
+        if not -8192 <= pitch_bend_value <= 8191:
+            raise ValueError("pitch_bend_value must be between -8192 and 8191")
+        if pitch_bend_value < 0:
+            return self.bend_range_semitones * (pitch_bend_value / 8192.0)
+        return self.bend_range_semitones * (pitch_bend_value / 8191.0)
+
+    def frequency_ratio_for(self, pitch_bend_value: int) -> float:
+        return math.pow(2.0, self.semitones_for(pitch_bend_value) / 12.0)
 
 
 class MidiInputBackend(Protocol):
@@ -524,6 +572,9 @@ class SustainedAudioPlayer(Protocol):
     def note_off(self, voice_id: tuple[int, int]) -> None:
         ...
 
+    def pitch_bend(self, channel: int, semitones: float) -> None:
+        ...
+
     def stop(self) -> int:
         ...
 
@@ -548,16 +599,26 @@ class MidiMessageNormalizer:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-026 Live MIDI Input Receive Loop
     - User Story: US-030 Logic MIDI Region Multi-Note Playback
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
     def normalize(self, raw_message, fallback_time_seconds: float | None = None) -> MidiMessage | None:
         message_type = getattr(raw_message, "type", "")
-        if message_type not in {"note_on", "note_off"}:
+        if message_type not in {"note_on", "note_off", "pitchwheel"}:
             return None
         raw_time = float(getattr(raw_message, "time", 0.0))
         time_seconds = fallback_time_seconds if raw_time == 0.0 and fallback_time_seconds is not None else raw_time
         channel = int(getattr(raw_message, "channel", 0)) + 1
+        if message_type == "pitchwheel":
+            return MidiMessage(
+                message_type="pitch_bend",
+                note_number=0,
+                velocity=0,
+                channel=channel,
+                time_seconds=time_seconds,
+                pitch_bend_value=int(getattr(raw_message, "pitch")),
+            )
         return MidiMessage(
             message_type=message_type,
             note_number=int(getattr(raw_message, "note")),
@@ -979,6 +1040,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -1110,6 +1172,8 @@ class StreamingMidiAudioTrigger:
         active_note_on_by_key: dict[tuple[int, int], tuple[MidiMessage, int]] = {}
         suppressed_duplicate_count = 0
         sustained_player = self._sustained_audio_player
+        pitch_bend_mapper = MidiPitchBendMapper(settings.pitch_bend_range_semitones)
+        pitch_bend_by_channel: dict[int, float] = {}
 
         sustained_player.start(
             SustainedAudioPlayerSettings(
@@ -1128,6 +1192,11 @@ class StreamingMidiAudioTrigger:
 
                 for message in batch_messages:
                     key = (message.channel, message.note_number)
+                    if message.message_type == "pitch_bend":
+                        semitones = pitch_bend_mapper.semitones_for(message.pitch_bend_value)
+                        pitch_bend_by_channel[message.channel] = semitones
+                        sustained_player.pitch_bend(message.channel, semitones)
+                        continue
                     if message.message_type == "note_on" and message.velocity > 0:
                         previous_active_note = active_note_on_by_key.get(key)
                         if previous_active_note is not None:
@@ -1137,6 +1206,8 @@ class StreamingMidiAudioTrigger:
                             )
                         event = self._fallback_event_from_note_on(mapper, message, settings)
                         sustained_player.note_on(key, event.note.frequency_hz, event.velocity)
+                        if message.channel in pitch_bend_by_channel:
+                            sustained_player.pitch_bend(message.channel, pitch_bend_by_channel[message.channel])
                         played_events.append(event)
                         active_note_on_by_key[key] = (message, len(played_events) - 1)
                         continue

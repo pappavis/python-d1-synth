@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-035",
+            "US-001 t/m US-036",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -410,7 +410,8 @@ class TestDocumentationArtifacts:
             "US-032 `Done`",
             "US-033 `Done`",
             "US-034 `Done`",
-            "US-035 `In Review`",
+            "US-035 `Done`",
+            "US-036 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -535,7 +536,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-035 Sustained Note Audio Engine",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--voice-mode sustained",
             "SoundDeviceSustainedAudioPlayer",
@@ -552,6 +553,36 @@ class TestDocumentationArtifacts:
             "Geen MIDI modulation/CC1",
             "Geen hardcoded MIDI hardware device names",
             "US-036",
+            "US-037",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us036_midi_pitch_bend_mapping_dsp_doc_contains_required_terms(self) -> None:
+        document = Path("docs/midi_pitch_bend_mapping_dsp_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-036 MIDI Pitch Bend Mapping En DSP",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--pitch-bend-range",
+            "pitch_bend_range=2st",
+            "pitch_bend:4096:channel=1",
+            "MidiPitchBendMapper",
+            "message_type=\"pitch_bend\"",
+            "pitchwheel",
+            "pitch_bend_value",
+            "SoundDeviceSustainedAudioPlayer.pitch_bend",
+            "8191",
+            "-8192",
+            "Geen MIDI modulation/CC1",
+            "Geen hardcoded MIDI hardware device names",
             "US-037",
         )
         for term in required_terms:
