@@ -9,7 +9,7 @@ Status: In Review
 
 ## Doel
 
-US-033 voegt een gated voice duration mode toe aan `midi play-stream`, zodat `note_on` en `note_off` samen de hoorbare nootlengte bepalen. Hiermee verlaten we de pure fixed-duration playback uit US-031/US-032 zonder meteen polyfonie, pitch bend of modulation te implementeren.
+US-033 voegt een gated voice duration mode toe aan `midi play-stream`, zodat `note_on` direct hoorbaar blijft en `note_off` de gerapporteerde nootlengte bepaalt. Hiermee verlaten we de pure fixed-duration diagnostics uit US-031/US-032 zonder meteen polyfonie, pitch bend, modulation of een echte low-latency sustain-engine te implementeren.
 
 ## Implementatie
 
@@ -17,14 +17,16 @@ US-033 voegt een gated voice duration mode toe aan `midi play-stream`, zodat `no
 - `StreamingMidiAudioTriggerSettings.voice_mode` kiest de streaming voice-mode.
 - `--voice-mode fixed` blijft de default en behoudt US-031/US-032 gedrag.
 - `--voice-mode gated` bewaart actieve note-on messages per MIDI key: channel en note number.
-- Een `note_off` of `note_on` met velocity `0` sluit de actieve noot en bepaalt `NoteEvent.duration_seconds`.
-- Als een note-off ontbreekt binnen de bounded run, gebruikt de synth `--note-duration` als fallback.
+- Bij `note_on` speelt de synth direct een korte hoorbare fallback-buffer, zodat live spelen niet stil lijkt.
+- Een `note_off` of `note_on` met velocity `0` sluit de actieve noot en werkt `NoteEvent.duration_seconds` bij voor verbose diagnostics.
+- Als een note-off ontbreekt binnen de bounded run, blijft `--note-duration` als fallback duration gebruikt.
 - Duplicate MIDI events blijven via US-032 `--dedupe-window` gefilterd.
 
 Scopegrenzen:
 
 - Geen sustain pedal.
 - Geen envelope release.
+- Geen echte held/sustained audio tussen note-on en note-off; dat vereist een latere low-latency voice engine.
 - Geen polyphonic voice mixer of triads; dat is US-034.
 - Geen MIDI pitch bend; dat is US-035.
 - Geen MIDI modulation/CC1; dat is US-036.
@@ -51,7 +53,7 @@ Logic Pro test:
 Verwachte CLI-indicaties:
 
 ```text
-Gated MVP note: note_on starts a voice and note_off determines rendered duration
+Gated MVP note: note_on plays an audible fallback buffer and note_off reports duration
 Streaming MIDI audio trigger settings: ... voice_mode=gated ...
 Streamed note durations: C4@.../...s, D4@.../...s
 ```
@@ -61,6 +63,7 @@ Acceptatie:
 - Korte en lange noten tonen verschillende durations in `Streamed note durations`.
 - Er is hoorbaar geluid via `Scarlett 8i6 USB`.
 - Duplicate MIDI messages worden nog steeds onderdrukt.
+- Ctrl-C stopt de commandline met een interruptmelding.
 - Eventuele kleine latency is toegestaan binnen US-033; low-latency voice mixing blijft later werk.
 
 ## Traceability

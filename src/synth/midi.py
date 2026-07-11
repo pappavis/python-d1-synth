@@ -990,7 +990,7 @@ class StreamingMidiAudioTrigger:
     ) -> StreamingMidiAudioTriggerResult:
         received_messages: list[MidiMessage] = []
         played_events: list[NoteEvent] = []
-        active_note_on_by_key: dict[tuple[int, int], MidiMessage] = {}
+        active_note_on_by_key: dict[tuple[int, int], tuple[MidiMessage, int]] = {}
         audio_frame_count = 0
         suppressed_duplicate_count = 0
 
@@ -1007,32 +1007,23 @@ class StreamingMidiAudioTrigger:
 
             key = (message.channel, message.note_number)
             if message.message_type == "note_on" and message.velocity > 0:
-                previous_note_on = active_note_on_by_key.get(key)
-                if previous_note_on is not None:
-                    event = self._gated_event_from_messages(mapper, previous_note_on, message, settings)
-                    audio_frame_count += self._play_event(engine, event, settings.audio_device)
-                    played_events.append(event)
-                active_note_on_by_key[key] = message
+                previous_active_note = active_note_on_by_key.get(key)
+                if previous_active_note is not None:
+                    previous_note_on, previous_event_index = previous_active_note
+                    played_events[previous_event_index] = self._gated_event_from_messages(
+                        mapper, previous_note_on, message, settings
+                    )
+                event = self._fallback_event_from_note_on(mapper, message, settings)
+                audio_frame_count += self._play_event(engine, event, settings.audio_device)
+                played_events.append(event)
+                active_note_on_by_key[key] = (message, len(played_events) - 1)
                 continue
 
-            note_on = active_note_on_by_key.pop(key, None)
-            if note_on is None:
+            active_note = active_note_on_by_key.pop(key, None)
+            if active_note is None:
                 continue
-            event = self._gated_event_from_messages(mapper, note_on, message, settings)
-            audio_frame_count += self._play_event(engine, event, settings.audio_device)
-            played_events.append(event)
-
-        for note_on in active_note_on_by_key.values():
-            fallback_note_off = MidiMessage(
-                message_type="note_off",
-                note_number=note_on.note_number,
-                velocity=0,
-                channel=note_on.channel,
-                time_seconds=note_on.time_seconds + settings.note_duration_seconds,
-            )
-            event = self._gated_event_from_messages(mapper, note_on, fallback_note_off, settings)
-            audio_frame_count += self._play_event(engine, event, settings.audio_device)
-            played_events.append(event)
+            note_on, event_index = active_note
+            played_events[event_index] = self._gated_event_from_messages(mapper, note_on, message, settings)
 
         return self._streaming_result(
             settings=settings,
@@ -1061,6 +1052,21 @@ class StreamingMidiAudioTrigger:
         )
         sequence = mapper.messages_to_note_sequence((note_on, note_off))
         return sequence.events[0]
+
+    def _fallback_event_from_note_on(
+        self,
+        mapper: MidiToNoteEventMapper,
+        note_on: MidiMessage,
+        settings: StreamingMidiAudioTriggerSettings,
+    ) -> NoteEvent:
+        fallback_note_off = MidiMessage(
+            message_type="note_off",
+            note_number=note_on.note_number,
+            velocity=0,
+            channel=note_on.channel,
+            time_seconds=note_on.time_seconds + settings.note_duration_seconds,
+        )
+        return self._gated_event_from_messages(mapper, note_on, fallback_note_off, settings)
 
     def _play_event(self, engine: SynthEngine, event: NoteEvent, audio_device: int | str | None) -> int:
         buffer = engine.render_note(event)

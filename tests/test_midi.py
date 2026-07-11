@@ -751,11 +751,11 @@ class TestStreamingMidiAudioTrigger:
         assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "D4"]
         assert [event.duration_seconds for event in result.played_events] == pytest.approx([0.5, 0.25])
         assert audio_player.calls == [
-            ((22050, 2), 44100, "Scarlett 8i6 USB"),
+            ((11025, 2), 44100, "Scarlett 8i6 USB"),
             ((11025, 2), 44100, "Scarlett 8i6 USB"),
         ]
 
-    def test_streaming_trigger_gated_mode_uses_fallback_duration_when_note_off_is_missing(self) -> None:
+    def test_streaming_trigger_gated_mode_plays_audible_fallback_immediately_when_note_off_is_missing(self) -> None:
         class FakeStreamingBackend:
             def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
                 yield MidiMessage(message_type="note_on", note_number=64, velocity=90, channel=1, time_seconds=1.0)

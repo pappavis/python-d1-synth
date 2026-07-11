@@ -972,7 +972,7 @@ class TestSynthCli:
 
         output = capsys.readouterr().out
         assert exit_code == 0
-        assert "Gated MVP note: note_on starts a voice and note_off determines rendered duration" in output
+        assert "Gated MVP note: note_on plays an audible fallback buffer and note_off reports duration" in output
         assert "voice_mode=gated" in output
         assert "Streamed note durations: C4@0.000s/0.500s, D4@0.700s/0.300s" in output
 

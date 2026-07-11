@@ -521,7 +521,7 @@ class SynthCli:
         reporter.light(f"Opening streaming virtual MIDI input port: {settings.port_name}")
         if settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(
-                "Gated MVP note: note_on starts a voice and note_off determines rendered duration; "
+                "Gated MVP note: note_on plays an audible fallback buffer and note_off reports duration; "
                 "pitch bend, modulation and polyphony are later stories."
             )
         else:
@@ -544,6 +544,7 @@ class SynthCli:
 
         try:
             signal.signal(signal.SIGINT, _raise_keyboard_interrupt)
+            signal.siginterrupt(signal.SIGINT, True)
             result = StreamingMidiAudioTrigger().trigger(settings)
         except KeyboardInterrupt:
             print("Streaming MIDI audio trigger interrupted by user.", file=sys.stderr)
