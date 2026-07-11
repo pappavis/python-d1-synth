@@ -407,7 +407,7 @@ class TestDocumentationArtifacts:
             "US-029 `Done`",
             "US-030 `Done`",
             "US-031 `Done`",
-            "US-032 `In Review`",
+            "US-032 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -423,12 +423,17 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-032 Duplicate MIDI Event Guard",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--dedupe-window",
             "dedupe_window=0.03s",
             "suppressed ... duplicate MIDI messages",
             "Suppressed duplicate MIDI messages",
+            "Product Owner Testresultaat",
+            "Beoordeling: geslaagd",
+            "Streamed 6 MIDI-triggered note events",
+            "suppressed 23 duplicate MIDI messages",
+            "US-032 status: `Done`",
             "DuplicateMidiEventGuardSettings",
             "DuplicateMidiEventGuard",
             "StreamingMidiAudioTriggerSettings",

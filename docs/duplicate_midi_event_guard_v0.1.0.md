@@ -5,7 +5,7 @@ Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0  
 Epic: EPIC-007 Future MIDI En DAW Integratie  
 Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog  
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -60,6 +60,26 @@ Suppressed duplicate MIDI messages: ...
 - Verschillende simultane noten worden niet onderdrukt.
 - Verbose output toont ontvangen MIDI messages, streamed sequence events en het aantal onderdrukte duplicates.
 - Tests draaien groen met `pytest`.
+
+## Product Owner Testresultaat
+
+Datum: 2026-07-11
+Host: KodeklopperM4
+Audio device: Scarlett 8i6 USB
+DAW: Logic Pro 12.3
+Beoordeling: geslaagd
+
+De Product Owner bevestigde hoorbaar geluid vanuit Logic en live note playback. Er bleef een kleine vertraging merkbaar; dat is geen US-032 blocker en hoort bij latere latency/voice-lifecycle stories.
+
+Belangrijkste CLI-resultaten:
+
+```text
+Streamed 6 MIDI-triggered note events from virtual MIDI port python-d1-synth; suppressed 23 duplicate MIDI messages.
+Suppressed duplicate MIDI messages: 23
+Streamed sequence events: A4@0.721s, F4@0.721s, G4@0.721s, A4@0.721s, G4@0.721s, F4@0.721s
+```
+
+US-032 status: `Done`.
 
 ## Traceability
 

@@ -446,7 +446,9 @@ Acceptatie op 2026-07-11:
 - Given `--debuglevel verbose` actief is, then de CLI toont `dedupe_window=...s`, de result message bevat `suppressed ... duplicate MIDI messages`, en de verbose output toont `Suppressed duplicate MIDI messages: ...`.
 - `docs/duplicate_midi_event_guard_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-032 Duplicate MIDI Event Guard`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-032 Duplicate MIDI Event Guard` en `Version: 0.1.0`.
-- Story status is `In Review`.
+- Acceptatie op 2026-07-11: Product Owner hoorde noten vanuit Logic en live note playback; CLI rapporteerde `Streamed 6 MIDI-triggered note events` en `suppressed 23 duplicate MIDI messages`.
+- Kleine latency blijft zichtbaar maar valt buiten US-032 en wordt later behandeld.
+- Story status is `Done`.
 
 ## US-033: Note Off Gated Voice Duration
 

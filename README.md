@@ -276,7 +276,7 @@ PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi pl
 
 Bevestigd gedrag: Logic stuurde 32 MIDI messages, `play-stream` speelde 18 hoorbare note events en de realtime playback was geslaagd. De test toonde ook dubbele note events vanuit de MIDI-route; dat wordt in US-032 opgelost. `note_off`, sustain, overlap/polyfonie, pitch bend en modulation worden nog niet muzikaal toegepast; die volgen in latere stories.
 
-US-032 is in review: `midi play-stream` onderdrukt identieke duplicate MIDI messages binnen een korte dedupe-window, zodat Logic/CoreMIDI echo-paren niet dubbel hoorbaar spelen. Verschillende noten op dezelfde timestamp blijven behouden, zodat latere polyfonie/triads niet door de duplicate guard worden geblokkeerd.
+US-032 is afgerond: `midi play-stream` onderdrukt identieke duplicate MIDI messages binnen een korte dedupe-window, zodat Logic/CoreMIDI echo-paren niet dubbel hoorbaar spelen. Verschillende noten op dezelfde timestamp blijven behouden, zodat latere polyfonie/triads niet door de duplicate guard worden geblokkeerd.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --dedupe-window 0.03 --debuglevel verbose
@@ -288,6 +288,8 @@ Controleer in verbose output:
 - `suppressed ... duplicate MIDI messages`
 - `Suppressed duplicate MIDI messages: ...`
 - De `Streamed sequence events` bevat niet meer elk identiek Logic echo-event dubbel.
+
+Bevestigd gedrag: Logic en live note playback waren hoorbaar. De US-032 test speelde 6 MIDI-triggered note events en onderdrukte 23 duplicate MIDI messages. Een kleine resterende latency is bekend en hoort bij latere stories rond note-off gated voice duration, polyfonie en low-latency audio.
 
 Lessons learned en sprint review:
 

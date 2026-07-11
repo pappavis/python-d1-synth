@@ -94,7 +94,9 @@ US-032 behandelt de dubbele Logic/CoreMIDI echo-events uit de US-031 klanttest. 
 
 De story is bewust beperkt tot streaming duplicate suppression en diagnostics. Note-off gated duration, sustain, polyfonie, pitch bend en modulation blijven aparte user stories.
 
-Statuslabel: US-032 `In Review`.
+Product Owner bevestigde de hardware/Logic test als geslaagd: Logic en live note playback waren hoorbaar, met `Streamed 6 MIDI-triggered note events` en `suppressed 23 duplicate MIDI messages`. De kleine resterende vertraging is vastgelegd als latere latency/voice-lifecycle verbetering en geen blocker voor US-032.
+
+Statuslabel: US-032 `Done`.
 
 ## Aanbevolen Volgende Stap
 
