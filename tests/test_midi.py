@@ -718,6 +718,114 @@ class TestStreamingMidiAudioTrigger:
             "suppressed 2 duplicate MIDI messages."
         )
 
+    def test_streaming_trigger_mixes_simultaneous_note_on_batch_as_one_triad_buffer(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-034 should prefer batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=1.0),
+                    MidiMessage(message_type="note_on", note_number=64, velocity=96, channel=1, time_seconds=1.0),
+                    MidiMessage(message_type="note_on", note_number=67, velocity=90, channel=1, time_seconds=1.0),
+                )
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=3,
+            timeout_seconds=1.0,
+            note_duration_seconds=0.25,
+            chord_window_seconds=0.02,
+            audio_device="Scarlett 8i6 USB",
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBatchBackend(), audio_player=audio_player).trigger(
+            settings
+        )
+
+        assert result.received_message_count == 3
+        assert result.played_event_count == 3
+        assert result.suppressed_duplicate_count == 0
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "E4", "G4"]
+        assert audio_player.calls == [((11025, 2), 44100, "Scarlett 8i6 USB")]
+
+    def test_streaming_trigger_keeps_separate_buffers_when_notes_exceed_chord_window(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-034 should prefer batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=1.0),
+                    MidiMessage(message_type="note_on", note_number=64, velocity=96, channel=1, time_seconds=1.1),
+                )
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=2,
+            timeout_seconds=1.0,
+            note_duration_seconds=0.25,
+            chord_window_seconds=0.02,
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBatchBackend(), audio_player=audio_player).trigger(
+            settings
+        )
+
+        assert result.played_event_count == 2
+        assert len(audio_player.calls) == 2
+
+    def test_streaming_trigger_groups_chord_events_even_when_batch_order_is_not_sorted(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-034 should prefer batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=67, velocity=90, channel=1, time_seconds=1.01),
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=1.00),
+                    MidiMessage(message_type="note_on", note_number=64, velocity=96, channel=1, time_seconds=1.005),
+                )
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=3,
+            timeout_seconds=1.0,
+            note_duration_seconds=0.25,
+            chord_window_seconds=0.02,
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBatchBackend(), audio_player=audio_player).trigger(
+            settings
+        )
+
+        assert result.played_event_count == 3
+        assert len(audio_player.calls) == 1
+
     def test_streaming_trigger_gated_mode_uses_note_off_duration(self) -> None:
         class FakeStreamingBackend:
             def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
@@ -783,6 +891,50 @@ class TestStreamingMidiAudioTrigger:
         assert result.played_events[0].duration_seconds == pytest.approx(0.4)
         assert audio_player.calls == [((17640, 2), 44100, None)]
 
+    def test_streaming_trigger_gated_mode_mixes_simultaneous_fallback_triads(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-034 should prefer batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=2.0),
+                    MidiMessage(message_type="note_on", note_number=64, velocity=96, channel=1, time_seconds=2.0),
+                    MidiMessage(message_type="note_on", note_number=67, velocity=90, channel=1, time_seconds=2.0),
+                )
+                yield (
+                    MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=2.5),
+                    MidiMessage(message_type="note_off", note_number=64, velocity=64, channel=1, time_seconds=2.5),
+                    MidiMessage(message_type="note_off", note_number=67, velocity=64, channel=1, time_seconds=2.5),
+                )
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def play(self, buffer, device=None):
+                self.calls.append((buffer.samples.shape, buffer.sample_rate, device))
+
+        audio_player = FakeAudioPlayer()
+        settings = StreamingMidiAudioTriggerSettings(
+            port_name="python-d1-synth",
+            max_messages=6,
+            timeout_seconds=1.0,
+            note_duration_seconds=0.25,
+            voice_mode=StreamingVoiceMode.GATED,
+            chord_window_seconds=0.02,
+        )
+
+        result = StreamingMidiAudioTrigger(backend=FakeStreamingBatchBackend(), audio_player=audio_player).trigger(
+            settings
+        )
+
+        assert result.received_message_count == 6
+        assert result.played_event_count == 3
+        assert [f"{event.note.name}{event.note.octave}" for event in result.played_events] == ["C4", "E4", "G4"]
+        assert [event.duration_seconds for event in result.played_events] == pytest.approx([0.5, 0.5, 0.5])
+        assert audio_player.calls == [((11025, 2), 44100, None)]
+
     def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
         class FakeStreamingBackend:
             def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
@@ -809,6 +961,10 @@ class TestStreamingMidiAudioTrigger:
     def test_streaming_settings_require_positive_dedupe_window(self) -> None:
         with pytest.raises(ValueError, match="dedupe_window_seconds"):
             StreamingMidiAudioTriggerSettings(dedupe_window_seconds=0)
+
+    def test_streaming_settings_require_positive_chord_window(self) -> None:
+        with pytest.raises(ValueError, match="chord_window_seconds"):
+            StreamingMidiAudioTriggerSettings(chord_window_seconds=0)
 
     def test_streaming_settings_require_supported_voice_mode(self) -> None:
         with pytest.raises(ValueError, match="voice_mode"):

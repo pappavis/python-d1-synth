@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-033",
+            "US-001 t/m US-034",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -408,7 +408,8 @@ class TestDocumentationArtifacts:
             "US-030 `Done`",
             "US-031 `Done`",
             "US-032 `Done`",
-            "US-033 `In Review`",
+            "US-033 `Done`",
+            "US-034 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -483,6 +484,39 @@ class TestDocumentationArtifacts:
             "US-035",
             "US-036",
             "Geen hardcoded MIDI hardware device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us034_polyphonic_voice_mixer_triads_doc_contains_required_terms(self) -> None:
+        document = Path("docs/polyphonic_voice_mixer_triads_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-034 Polyphonic Voice Mixer En Triads",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--chord-window",
+            "chord_window=0.02s",
+            "polyphonic chord batches are mixed",
+            "PolyphonicVoiceMixer",
+            "MidoStreamingVirtualMidiInputBackend.iter_message_batches",
+            "StreamingMidiAudioTriggerSettings.chord_window_seconds",
+            "Duplicate filtering",
+            "triad",
+            "C-E-G",
+            "Geen echte held/sustained audio tussen note-on en note-off",
+            "Geen MIDI pitch bend",
+            "Geen MIDI modulation/CC1",
+            "Geen hardcoded MIDI hardware device names",
+            "US-035",
+            "US-036",
+            "US-037",
         )
         for term in required_terms:
             assert term in content

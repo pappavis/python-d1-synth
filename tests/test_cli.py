@@ -907,10 +907,11 @@ class TestSynthCli:
         output = capsys.readouterr().out
         assert exit_code == 0
         assert "Opening streaming virtual MIDI input port: python-d1-synth" in output
-        assert "note_on events are played as short fixed-duration audio buffers" in output
+        assert "polyphonic chord batches are mixed" in output
         assert "Streaming MIDI audio trigger settings: port=python-d1-synth" in output
         assert "voice_mode=fixed" in output
         assert "dedupe_window=0.04s" in output
+        assert "chord_window=0.02s" in output
         assert "suppressed 2 duplicate MIDI messages" in output
         assert "Received MIDI messages: note_on:60:velocity=100:channel=1" in output
         assert "Streamed sequence events: C4@0.000s, D4@0.200s" in output
@@ -927,6 +928,7 @@ class TestSynthCli:
             def trigger(self, settings):
                 assert settings.voice_mode is StreamingVoiceMode.GATED
                 assert settings.note_duration_seconds == 0.3
+                assert settings.chord_window_seconds == 0.04
                 assert settings.audio_device == "Scarlett 8i6 USB"
                 parser = NoteParser()
                 return StreamingMidiAudioTriggerResult(
@@ -965,6 +967,8 @@ class TestSynthCli:
                 "gated",
                 "--note-duration",
                 "0.3",
+                "--chord-window",
+                "0.04",
                 "--debuglevel",
                 "verbose",
             ]
@@ -972,8 +976,9 @@ class TestSynthCli:
 
         output = capsys.readouterr().out
         assert exit_code == 0
-        assert "Gated MVP note: note_on plays an audible fallback buffer and note_off reports duration" in output
+        assert "polyphonic chord batches are mixed" in output
         assert "voice_mode=gated" in output
+        assert "chord_window=0.04s" in output
         assert "Streamed note durations: C4@0.000s/0.500s, D4@0.700s/0.300s" in output
 
     def test_midi_play_stream_handles_keyboard_interrupt(self, monkeypatch, capsys) -> None:

@@ -291,7 +291,7 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Logic en live note playback waren hoorbaar. De US-032 test speelde 6 MIDI-triggered note events en onderdrukte 23 duplicate MIDI messages. Een kleine resterende latency is bekend en hoort bij latere stories rond note-off gated voice duration, polyfonie en low-latency audio.
 
-US-033 is in review: `midi play-stream` ondersteunt nu optioneel `--voice-mode gated`. In deze mode speelt `note_on` direct een hoorbare fallback-buffer en rapporteert `note_off` de gemeten nootduur. Default blijft `--voice-mode fixed`, zodat US-031/US-032 gedrag niet verandert.
+US-033 is afgerond: `midi play-stream` ondersteunt nu optioneel `--voice-mode gated`. In deze mode speelt `note_on` direct een hoorbare fallback-buffer en rapporteert `note_off` de gemeten nootduur. Default blijft `--voice-mode fixed`, zodat US-031/US-032 gedrag niet verandert.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode gated --dedupe-window 0.03 --debuglevel verbose
@@ -304,7 +304,21 @@ Controleer in verbose output:
 - Korte en lange Logic-noten krijgen verschillende durations.
 - Ctrl-C geeft `Streaming MIDI audio trigger interrupted by user.`
 
-Scope: geen echte held/sustained audio tussen note-on en note-off, sustain pedal, envelope release, polyfonie mixer, pitch bend, modulation, GUI of plugin.
+Bevestigd gedrag: Product Owner hoorde geluid via Logic/MIDI keyboard. Bij een 2 seconden vastgehouden C3 speelde US-033 bewust nog een kort pulse-nootje, terwijl verbose output de nootduur al rapporteerde. Echte held/sustained audio blijft US-035.
+
+US-034 is in review: `midi play-stream` kan note-on events die in dezelfde streaming poll-batch binnenkomen als polyphonic chord buffer mixen. Dit maakt triads/akkoorden hoorbaar zonder de US-033 scope naar sustained voices, pitch bend of modulation uit te breiden.
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 10 --note-duration 0.25 --voice-mode gated --dedupe-window 0.03 --chord-window 0.02 --debuglevel verbose
+```
+
+Controleer in verbose output:
+
+- `chord_window=0.02s`
+- `polyphonic chord batches are mixed`
+- Triads zoals C-E-G klinken als één akkoordbuffer in plaats van losse na elkaar gespeelde noten.
+
+Scope: geen echte held/sustained audio tussen note-on en note-off, sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
 
 Lessons learned en sprint review:
 

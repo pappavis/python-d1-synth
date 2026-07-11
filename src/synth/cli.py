@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-033 Note Off Gated Voice Duration
-# Actie: US-033-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
+# User-Story: US-034 Polyphonic Voice Mixer En Triads
+# Actie: US-034-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-034
 
 import argparse
 import importlib.util
@@ -60,6 +60,7 @@ class SynthCli:
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
+    - User Story: US-034 Polyphonic Voice Mixer En Triads
     - Version: 0.1.0
     """
 
@@ -185,6 +186,7 @@ class SynthCli:
             default=StreamingVoiceMode.FIXED.value,
         )
         play_stream.add_argument("--dedupe-window", type=float, default=0.03)
+        play_stream.add_argument("--chord-window", type=float, default=0.02)
         play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
         play_stream.add_argument("--sample-rate", type=int, default=44100)
         play_stream.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
@@ -509,6 +511,7 @@ class SynthCli:
                 note_duration_seconds=args.note_duration,
                 voice_mode=StreamingVoiceMode(args.voice_mode),
                 dedupe_window_seconds=args.dedupe_window,
+                chord_window_seconds=args.chord_window,
                 sample_rate=args.sample_rate,
                 waveform=Waveform(args.waveform),
                 channel=OutputChannel(args.channel),
@@ -522,19 +525,20 @@ class SynthCli:
         if settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(
                 "Gated MVP note: note_on plays an audible fallback buffer and note_off reports duration; "
-                "pitch bend, modulation and polyphony are later stories."
+                "polyphonic chord batches are mixed, pitch bend and modulation are later stories."
             )
         else:
             reporter.light(
                 "Near-realtime MVP note: note_on events are played as short fixed-duration audio buffers; "
-                "note_off, pitch bend and modulation are later stories."
+                "polyphonic chord batches are mixed, note_off sustain, pitch bend and modulation are later stories."
             )
         reporter.verbose(
             "Streaming MIDI audio trigger settings: "
             f"port={settings.port_name}, max_messages={settings.max_messages}, "
             f"timeout={settings.timeout_seconds:g}s, poll_interval={settings.poll_interval_seconds:g}s, "
             f"note_duration={settings.note_duration_seconds:g}s, voice_mode={settings.voice_mode.value}, "
-            f"dedupe_window={settings.dedupe_window_seconds:g}s, waveform={args.waveform}, "
+            f"dedupe_window={settings.dedupe_window_seconds:g}s, chord_window={settings.chord_window_seconds:g}s, "
+            f"waveform={args.waveform}, "
             f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
         )
         original_sigint_handler = signal.getsignal(signal.SIGINT)

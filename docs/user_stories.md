@@ -302,7 +302,7 @@ Als speler wil ik dat note-on en note-off samen de hoorbare nootlengte bepalen, 
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `StreamingVoiceMode`, `StreamingMidiAudioTriggerSettings.voice_mode`, CLI optie `--voice-mode gated`, gated note-on/note-off duration tests en `docs/note_off_gated_voice_duration_v0.1.0.md`. Default blijft `--voice-mode fixed` zodat US-031/US-032 niet breken. Scope: monofone/parallel note-on/off duurmeting per MIDI key binnen bounded CLI playback. Geen sustain pedal, envelope release, polyfonie mixer, pitch bend, modulation, GUI of plugin.
+Notitie: Done met `StreamingVoiceMode`, `StreamingMidiAudioTriggerSettings.voice_mode`, CLI optie `--voice-mode gated`, gated note-on/note-off duration tests en `docs/note_off_gated_voice_duration_v0.1.0.md`. Product Owner test bevestigde hoorbaar geluid en accepteerde dat US-033 een pulse + duration-reporting tussenstap is. Default blijft `--voice-mode fixed` zodat US-031/US-032 niet breken. Scope: monofone/parallel note-on/off duurmeting per MIDI key binnen bounded CLI playback. Geen sustain pedal, envelope release, polyfonie mixer, pitch bend, modulation, GUI of plugin.
 
 ### US-034: Polyphonic Voice Mixer En Triads
 
@@ -311,7 +311,7 @@ Als speler wil ik meerdere gelijktijdige noten kunnen horen, zodat triads en akk
 Prioriteit: Must
 Sprint: Future
 
-Notitie: Planned. Dit introduceert meerdere actieve voices en een mixer voor bijvoorbeeld drie of meer noten tegelijk.
+Notitie: In Review met `PolyphonicVoiceMixer`, streaming MIDI poll-batches, CLI optie `--chord-window`, triad batch tests en `docs/polyphonic_voice_mixer_triads_v0.1.0.md`. De story mixt gelijktijdige note-on events als akkoordbuffer, terwijl duplicate filtering verschillende chord tones behoudt. Scope: polyphonic fixed/fallback buffers; geen echte sustained voice engine, pitch bend, modulation, GUI of plugin.
 
 ### US-035: MIDI Pitch Bend Mapping En DSP
 

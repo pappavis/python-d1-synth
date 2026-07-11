@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-033 Note Off Gated Voice Duration
-# Actie: US-033-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
+# User-Story: US-034 Polyphonic Voice Mixer En Triads
+# Actie: US-034-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-034
 
 from __future__ import annotations
 
@@ -376,6 +376,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
+    - User Story: US-034 Polyphonic Voice Mixer En Triads
     - Version: 0.1.0
     """
 
@@ -386,6 +387,7 @@ class StreamingMidiAudioTriggerSettings:
     note_duration_seconds: float = 0.25
     voice_mode: StreamingVoiceMode = StreamingVoiceMode.FIXED
     dedupe_window_seconds: float = 0.03
+    chord_window_seconds: float = 0.02
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
     amplitude: float = 0.2
@@ -407,6 +409,8 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("voice_mode must be a StreamingVoiceMode")
         if self.dedupe_window_seconds <= 0:
             raise ValueError("dedupe_window_seconds must be positive")
+        if self.chord_window_seconds <= 0:
+            raise ValueError("chord_window_seconds must be positive")
         if self.sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
@@ -424,6 +428,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
+    - User Story: US-034 Polyphonic Voice Mixer En Triads
     - Version: 0.1.0
     """
 
@@ -634,6 +639,7 @@ class MidoStreamingVirtualMidiInputBackend:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-031 Live/Streaming MIDI Playback Loop
+    - User Story: US-034 Polyphonic Voice Mixer En Triads
     - Version: 0.1.0
     """
 
@@ -666,6 +672,47 @@ class MidoStreamingVirtualMidiInputBackend:
                             yield message
                         if yielded >= max_messages:
                             break
+                    time.sleep(poll_interval_seconds)
+        except TypeError as exc:
+            raise RuntimeError(
+                "Streaming virtual MIDI input could not be opened because the active mido backend does not support "
+                "virtual=True for input ports."
+            ) from exc
+        except Exception as exc:
+            raise RuntimeError(
+                "Streaming virtual MIDI input could not be opened. Check the mido/python-rtmidi backend and macOS "
+                "CoreMIDI permissions."
+            ) from exc
+
+    def iter_message_batches(
+        self,
+        input_name: str,
+        max_messages: int,
+        timeout_seconds: float,
+        poll_interval_seconds: float,
+    ) -> Iterable[tuple[MidiMessage, ...]]:
+        try:
+            import mido
+        except ImportError as exc:
+            raise RuntimeError("MIDI backend is not available. Install the midi extras first.") from exc
+
+        yielded = 0
+        start_time = time.monotonic()
+        deadline = start_time + timeout_seconds
+        try:
+            with mido.open_input(input_name, virtual=True) as port:
+                while yielded < max_messages and time.monotonic() < deadline:
+                    elapsed_seconds = time.monotonic() - start_time
+                    batch: list[MidiMessage] = []
+                    for raw_message in port.iter_pending():
+                        message = self._normalizer.normalize(raw_message, fallback_time_seconds=elapsed_seconds)
+                        if message is not None:
+                            yielded += 1
+                            batch.append(message)
+                        if yielded >= max_messages:
+                            break
+                    if batch:
+                        yield tuple(batch)
                     time.sleep(poll_interval_seconds)
         except TypeError as exc:
             raise RuntimeError(
@@ -897,7 +944,7 @@ class VirtualMidiAudioTrigger:
 
 
 class StreamingMidiAudioTrigger:
-    """Play each received virtual MIDI note_on as a short audio buffer.
+    """Play received virtual MIDI note_on messages as mono or chord audio buffers.
 
     Traceability:
     - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-031
@@ -906,6 +953,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-031 Live/Streaming MIDI Playback Loop
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
+    - User Story: US-034 Polyphonic Voice Mixer En Triads
     - Version: 0.1.0
     """
 
@@ -951,27 +999,15 @@ class StreamingMidiAudioTrigger:
         audio_frame_count = 0
         suppressed_duplicate_count = 0
 
-        for message in self._backend.iter_messages(
-            settings.port_name,
-            settings.max_messages,
-            settings.timeout_seconds,
-            settings.poll_interval_seconds,
-        ):
-            received_messages.append(message)
-            if duplicate_guard.is_duplicate(message):
-                suppressed_duplicate_count += 1
-                continue
-            if message.message_type != "note_on" or message.velocity == 0:
-                continue
+        for message_batch in self._iter_message_batches(settings):
+            batch_messages, suppressed_count = self._filter_duplicate_messages(message_batch, duplicate_guard)
+            received_messages.extend(message_batch)
+            suppressed_duplicate_count += suppressed_count
 
-            sequence = mapper.messages_to_note_sequence((message,))
-            if not sequence.events:
-                continue
-            event = sequence.events[0]
-            buffer = engine.render_note(event)
-            self._audio_player.play(buffer, device=settings.audio_device)
-            played_events.append(event)
-            audio_frame_count += buffer.samples.shape[0]
+            batch_events = self._events_from_note_on_messages(mapper, batch_messages)
+            for event_group in self._group_chord_events(batch_events, settings.chord_window_seconds):
+                audio_frame_count += self._play_events(engine, event_group, settings.audio_device)
+                played_events.extend(event_group)
 
         return self._streaming_result(
             settings=settings,
@@ -994,36 +1030,35 @@ class StreamingMidiAudioTrigger:
         audio_frame_count = 0
         suppressed_duplicate_count = 0
 
-        for message in self._backend.iter_messages(
-            settings.port_name,
-            settings.max_messages,
-            settings.timeout_seconds,
-            settings.poll_interval_seconds,
-        ):
-            received_messages.append(message)
-            if duplicate_guard.is_duplicate(message):
-                suppressed_duplicate_count += 1
-                continue
+        for message_batch in self._iter_message_batches(settings):
+            batch_messages, suppressed_count = self._filter_duplicate_messages(message_batch, duplicate_guard)
+            received_messages.extend(message_batch)
+            suppressed_duplicate_count += suppressed_count
+            pending_events_to_play: list[NoteEvent] = []
 
-            key = (message.channel, message.note_number)
-            if message.message_type == "note_on" and message.velocity > 0:
-                previous_active_note = active_note_on_by_key.get(key)
-                if previous_active_note is not None:
-                    previous_note_on, previous_event_index = previous_active_note
-                    played_events[previous_event_index] = self._gated_event_from_messages(
-                        mapper, previous_note_on, message, settings
-                    )
-                event = self._fallback_event_from_note_on(mapper, message, settings)
-                audio_frame_count += self._play_event(engine, event, settings.audio_device)
-                played_events.append(event)
-                active_note_on_by_key[key] = (message, len(played_events) - 1)
-                continue
+            for message in batch_messages:
+                key = (message.channel, message.note_number)
+                if message.message_type == "note_on" and message.velocity > 0:
+                    previous_active_note = active_note_on_by_key.get(key)
+                    if previous_active_note is not None:
+                        previous_note_on, previous_event_index = previous_active_note
+                        played_events[previous_event_index] = self._gated_event_from_messages(
+                            mapper, previous_note_on, message, settings
+                        )
+                    event = self._fallback_event_from_note_on(mapper, message, settings)
+                    pending_events_to_play.append(event)
+                    played_events.append(event)
+                    active_note_on_by_key[key] = (message, len(played_events) - 1)
+                    continue
 
-            active_note = active_note_on_by_key.pop(key, None)
-            if active_note is None:
-                continue
-            note_on, event_index = active_note
-            played_events[event_index] = self._gated_event_from_messages(mapper, note_on, message, settings)
+                active_note = active_note_on_by_key.pop(key, None)
+                if active_note is None:
+                    continue
+                note_on, event_index = active_note
+                played_events[event_index] = self._gated_event_from_messages(mapper, note_on, message, settings)
+
+            for event_group in self._group_chord_events(tuple(pending_events_to_play), settings.chord_window_seconds):
+                audio_frame_count += self._play_events(engine, event_group, settings.audio_device)
 
         return self._streaming_result(
             settings=settings,
@@ -1072,6 +1107,95 @@ class StreamingMidiAudioTrigger:
         buffer = engine.render_note(event)
         self._audio_player.play(buffer, device=audio_device)
         return int(buffer.samples.shape[0])
+
+    def _play_events(self, engine: SynthEngine, events: tuple[NoteEvent, ...], audio_device: int | str | None) -> int:
+        if len(events) == 1:
+            return self._play_event(engine, events[0], audio_device)
+        start_seconds = min(event.start_seconds for event in events)
+        chord_events = tuple(
+            NoteEvent(
+                note=event.note,
+                duration_seconds=event.duration_seconds,
+                velocity=event.velocity,
+                start_seconds=event.start_seconds - start_seconds,
+            )
+            for event in events
+        )
+        buffer = engine.render_sequence(NoteSequence(chord_events))
+        self._audio_player.play(buffer, device=audio_device)
+        return int(buffer.samples.shape[0])
+
+    def _iter_message_batches(
+        self,
+        settings: StreamingMidiAudioTriggerSettings,
+    ) -> Iterable[tuple[MidiMessage, ...]]:
+        batch_reader = getattr(self._backend, "iter_message_batches", None)
+        if callable(batch_reader):
+            yield from batch_reader(
+                settings.port_name,
+                settings.max_messages,
+                settings.timeout_seconds,
+                settings.poll_interval_seconds,
+            )
+            return
+        for message in self._backend.iter_messages(
+            settings.port_name,
+            settings.max_messages,
+            settings.timeout_seconds,
+            settings.poll_interval_seconds,
+        ):
+            yield (message,)
+
+    def _filter_duplicate_messages(
+        self,
+        message_batch: tuple[MidiMessage, ...],
+        duplicate_guard: DuplicateMidiEventGuard,
+    ) -> tuple[tuple[MidiMessage, ...], int]:
+        messages: list[MidiMessage] = []
+        suppressed_count = 0
+        for message in message_batch:
+            if duplicate_guard.is_duplicate(message):
+                suppressed_count += 1
+                continue
+            messages.append(message)
+        return tuple(messages), suppressed_count
+
+    def _events_from_note_on_messages(
+        self,
+        mapper: MidiToNoteEventMapper,
+        messages: tuple[MidiMessage, ...],
+    ) -> tuple[NoteEvent, ...]:
+        events: list[NoteEvent] = []
+        for message in messages:
+            if message.message_type != "note_on" or message.velocity == 0:
+                continue
+            sequence = mapper.messages_to_note_sequence((message,))
+            if sequence.events:
+                events.append(sequence.events[0])
+        return tuple(events)
+
+    def _group_chord_events(
+        self,
+        events: tuple[NoteEvent, ...],
+        chord_window_seconds: float,
+    ) -> tuple[tuple[NoteEvent, ...], ...]:
+        groups: list[tuple[NoteEvent, ...]] = []
+        pending_group: list[NoteEvent] = []
+        group_start_seconds: float | None = None
+        for event in sorted(events, key=lambda item: item.start_seconds):
+            if group_start_seconds is None:
+                pending_group = [event]
+                group_start_seconds = event.start_seconds
+                continue
+            if event.start_seconds - group_start_seconds <= chord_window_seconds:
+                pending_group.append(event)
+                continue
+            groups.append(tuple(pending_group))
+            pending_group = [event]
+            group_start_seconds = event.start_seconds
+        if pending_group:
+            groups.append(tuple(pending_group))
+        return tuple(groups)
 
     def _streaming_result(
         self,

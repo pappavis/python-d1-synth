@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-033
+Betrokken stories: US-001 t/m US-034
 
 ## Doel
 
@@ -104,11 +104,21 @@ US-033 volgt bewust na duplicate filtering: pas nadat de inputstream niet meer d
 
 Belangrijke scopegrens: deze story meet nootduur, maar implementeert nog geen sustain pedal, envelope release, polyfonie mixer, pitch bend of modulation.
 
-Statuslabel: US-033 `In Review`.
+Product Owner bevestigde de test als geslaagd: hoorbaar geluid werd afgespeeld, en bij een 2 seconden vastgehouden noot was duidelijk dat US-033 bewust nog een pulse + duration-reporting tussenstap is. Echte held/sustained audio blijft een latere story.
+
+Statuslabel: US-033 `Done`.
+
+## US-034 Review Voorbereiding
+
+US-034 volgt direct uit US-032 en US-033: duplicate filtering moet chord tones behouden, en note-on events die tegelijk binnenkomen moeten als akkoord kunnen klinken. De story introduceert `PolyphonicVoiceMixer`, streaming MIDI poll-batches en `--chord-window`, zodat triads zoals C-E-G als één chord buffer kunnen worden gemixt.
+
+Belangrijke scopegrens: US-034 mixt polyphonic fixed/fallback buffers, maar implementeert nog geen echte held/sustained audio tussen note-on en note-off, geen pitch bend en geen modulation.
+
+Statuslabel: US-034 `In Review`.
 
 ## Aanbevolen Volgende Stap
 
 De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of we:
 
-- US-029 afronding publiceren en daarna de volgende backlog story plannen, of
-- eerst de Lessons Learned afspraken in een kleine governance/story-template aanscherpen.
+- US-034 accepteren na Logic/keyboard triad-test, of
+- een US-034 impediment oplossen als triads nog niet als akkoordbuffer hoorbaar zijn.

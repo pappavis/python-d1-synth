@@ -461,12 +461,21 @@ Acceptatie op 2026-07-11:
 - Given de gebruiker Ctrl-C drukt, then de CLI stopt met `Streaming MIDI audio trigger interrupted by user.`
 - `docs/note_off_gated_voice_duration_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-033 Note Off Gated Voice Duration`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-033 Note Off Gated Voice Duration` en `Version: 0.1.0`.
-- Story status is `In Review`.
+- Acceptatie op 2026-07-11: Product Owner hoorde geluid via Logic/MIDI keyboard en bevestigde dat US-033 als pulse + duration-reporting tussenstap klopt.
+- Story status is `Done`.
 
 ## US-034: Polyphonic Voice Mixer En Triads
 
 - Given drie gelijktijdige note-on events, then de synth drie hoorbare voices mixt zodat triads mogelijk zijn.
-- Story status is `Planned`.
+- Given de streaming backend meerdere note-on messages in een poll-batch levert, then `midi play-stream` die als een polyphonic chord buffer afspeelt.
+- Given `--chord-window 0.02` actief is, then note-on events binnen die window samen worden gegroepeerd.
+- Given note-on events buiten de chord-window vallen, then ze als aparte buffers blijven spelen.
+- Given `--dedupe-window` actief is, then identieke echo-events worden nog steeds onderdrukt zonder verschillende chord tones te verwijderen.
+- Given `--debuglevel verbose` actief is, then de CLI toont `chord_window=...s` en de light output noemt `polyphonic chord batches are mixed`.
+- `docs/polyphonic_voice_mixer_triads_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-034 Polyphonic Voice Mixer En Triads`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-034 Polyphonic Voice Mixer En Triads` en `Version: 0.1.0`.
+- Scope: geen echte held/sustained audio tussen note-on en note-off, geen pitch bend, geen modulation, geen GUI/plugin.
+- Story status is `In Review`.
 
 ## US-035: MIDI Pitch Bend Mapping En DSP
 
