@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-034 Polyphonic Voice Mixer En Triads
-# Actie: US-034-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-034
+# User-Story: US-035 Sustained Note Audio Engine
+# Actie: US-035-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
 
 from __future__ import annotations
 
@@ -18,7 +18,13 @@ import sys
 import time
 from typing import Protocol
 
-from synth.audio import AudioBuffer, OutputChannel, SoundDeviceAudioPlayer
+from synth.audio import (
+    AudioBuffer,
+    OutputChannel,
+    SoundDeviceAudioPlayer,
+    SoundDeviceSustainedAudioPlayer,
+    SustainedAudioPlayerSettings,
+)
 from synth.engine import SynthEngine, SynthEngineSettings
 from synth.notes import NoteEvent, NoteParser, NoteSequence
 from synth.oscillators import Waveform
@@ -358,11 +364,13 @@ class StreamingVoiceMode(str, Enum):
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-033 Note Off Gated Voice Duration
+    - User Story: US-035 Sustained Note Audio Engine
     - Version: 0.1.0
     """
 
     FIXED = "fixed"
     GATED = "gated"
+    SUSTAINED = "sustained"
 
 
 @dataclass(frozen=True)
@@ -377,6 +385,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
+    - User Story: US-035 Sustained Note Audio Engine
     - Version: 0.1.0
     """
 
@@ -429,6 +438,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
+    - User Story: US-035 Sustained Note Audio Engine
     - Version: 0.1.0
     """
 
@@ -501,6 +511,20 @@ class VirtualMidiPortBackend(Protocol):
 
 class AudioPlayer(Protocol):
     def play(self, buffer: AudioBuffer, device: int | str | None = None) -> None:
+        ...
+
+
+class SustainedAudioPlayer(Protocol):
+    def start(self, settings: SustainedAudioPlayerSettings) -> None:
+        ...
+
+    def note_on(self, voice_id: tuple[int, int], frequency_hz: float, velocity: float) -> None:
+        ...
+
+    def note_off(self, voice_id: tuple[int, int]) -> None:
+        ...
+
+    def stop(self) -> int:
         ...
 
 
@@ -954,6 +978,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
+    - User Story: US-035 Sustained Note Audio Engine
     - Version: 0.1.0
     """
 
@@ -961,10 +986,14 @@ class StreamingMidiAudioTrigger:
         self,
         backend: StreamingMidiInputBackend | None = None,
         audio_player: AudioPlayer | None = None,
+        sustained_audio_player: SustainedAudioPlayer | None = None,
         duplicate_guard: DuplicateMidiEventGuard | None = None,
     ) -> None:
         self._backend = backend if backend is not None else MidoStreamingVirtualMidiInputBackend()
         self._audio_player = audio_player if audio_player is not None else SoundDeviceAudioPlayer()
+        self._sustained_audio_player = (
+            sustained_audio_player if sustained_audio_player is not None else SoundDeviceSustainedAudioPlayer()
+        )
         self._duplicate_guard = duplicate_guard
 
     def trigger(self, settings: StreamingMidiAudioTriggerSettings) -> StreamingMidiAudioTriggerResult:
@@ -985,6 +1014,8 @@ class StreamingMidiAudioTrigger:
 
         if settings.voice_mode is StreamingVoiceMode.GATED:
             return self._trigger_gated(settings, engine, mapper, duplicate_guard)
+        if settings.voice_mode is StreamingVoiceMode.SUSTAINED:
+            return self._trigger_sustained(settings, mapper, duplicate_guard)
         return self._trigger_fixed(settings, engine, mapper, duplicate_guard)
 
     def _trigger_fixed(
@@ -1059,6 +1090,67 @@ class StreamingMidiAudioTrigger:
 
             for event_group in self._group_chord_events(tuple(pending_events_to_play), settings.chord_window_seconds):
                 audio_frame_count += self._play_events(engine, event_group, settings.audio_device)
+
+        return self._streaming_result(
+            settings=settings,
+            received_messages=received_messages,
+            played_events=played_events,
+            audio_frame_count=audio_frame_count,
+            suppressed_duplicate_count=suppressed_duplicate_count,
+        )
+
+    def _trigger_sustained(
+        self,
+        settings: StreamingMidiAudioTriggerSettings,
+        mapper: MidiToNoteEventMapper,
+        duplicate_guard: DuplicateMidiEventGuard,
+    ) -> StreamingMidiAudioTriggerResult:
+        received_messages: list[MidiMessage] = []
+        played_events: list[NoteEvent] = []
+        active_note_on_by_key: dict[tuple[int, int], tuple[MidiMessage, int]] = {}
+        suppressed_duplicate_count = 0
+        sustained_player = self._sustained_audio_player
+
+        sustained_player.start(
+            SustainedAudioPlayerSettings(
+                sample_rate=settings.sample_rate,
+                waveform=settings.waveform,
+                amplitude=settings.amplitude,
+                channel=settings.channel,
+                device=settings.audio_device,
+            )
+        )
+        try:
+            for message_batch in self._iter_message_batches(settings):
+                batch_messages, suppressed_count = self._filter_duplicate_messages(message_batch, duplicate_guard)
+                received_messages.extend(message_batch)
+                suppressed_duplicate_count += suppressed_count
+
+                for message in batch_messages:
+                    key = (message.channel, message.note_number)
+                    if message.message_type == "note_on" and message.velocity > 0:
+                        previous_active_note = active_note_on_by_key.get(key)
+                        if previous_active_note is not None:
+                            previous_note_on, previous_event_index = previous_active_note
+                            played_events[previous_event_index] = self._gated_event_from_messages(
+                                mapper, previous_note_on, message, settings
+                            )
+                        event = self._fallback_event_from_note_on(mapper, message, settings)
+                        sustained_player.note_on(key, event.note.frequency_hz, event.velocity)
+                        played_events.append(event)
+                        active_note_on_by_key[key] = (message, len(played_events) - 1)
+                        continue
+
+                    active_note = active_note_on_by_key.pop(key, None)
+                    if active_note is None:
+                        continue
+                    note_on, event_index = active_note
+                    sustained_player.note_off(key)
+                    played_events[event_index] = self._gated_event_from_messages(mapper, note_on, message, settings)
+        finally:
+            for key in tuple(active_note_on_by_key):
+                sustained_player.note_off(key)
+            audio_frame_count = sustained_player.stop()
 
         return self._streaming_result(
             settings=settings,

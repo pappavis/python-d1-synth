@@ -311,9 +311,18 @@ Als speler wil ik meerdere gelijktijdige noten kunnen horen, zodat triads en akk
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `PolyphonicVoiceMixer`, streaming MIDI poll-batches, CLI optie `--chord-window`, triad batch tests en `docs/polyphonic_voice_mixer_triads_v0.1.0.md`. De story mixt gelijktijdige note-on events als akkoordbuffer, terwijl duplicate filtering verschillende chord tones behoudt. Scope: polyphonic fixed/fallback buffers; geen echte sustained voice engine, pitch bend, modulation, GUI of plugin.
+Notitie: Done met `PolyphonicVoiceMixer`, streaming MIDI poll-batches, CLI optie `--chord-window`, triad batch tests en `docs/polyphonic_voice_mixer_triads_v0.1.0.md`. Product Owner test bevestigde akkoordachtige groepen met `--chord-window 0.08`. De story mixt gelijktijdige note-on events als akkoordbuffer, terwijl duplicate filtering verschillende chord tones behoudt. Scope: polyphonic fixed/fallback buffers; geen echte sustained voice engine, pitch bend, modulation, GUI of plugin.
 
-### US-035: MIDI Pitch Bend Mapping En DSP
+### US-035: Sustained Note Audio Engine
+
+Als speler wil ik dat note-on een hoorbare voice start en note-off die voice stopt, zodat een vastgehouden toets niet als kort pulse-nootje klinkt.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: In Review met `SoundDeviceSustainedAudioPlayer`, `SustainedAudioPlayerSettings`, `SustainedVoiceState`, `StreamingVoiceMode.SUSTAINED`, CLI optie `--voice-mode sustained` en `docs/sustained_note_audio_engine_v0.1.0.md`. Scope: sustained note-on/note-off voice lifecycle; geen sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
+
+### US-036: MIDI Pitch Bend Mapping En DSP
 
 Als speler wil ik MIDI pitch bend kunnen gebruiken, zodat gespeelde noten vloeiend omhoog of omlaag kunnen buigen.
 
@@ -322,7 +331,7 @@ Sprint: Future
 
 Notitie: Planned. Pitch bend volgt na voice-lifecycle/polyfonie, omdat bend per channel of per voice correct toegepast moet worden.
 
-### US-036: MIDI Modulation CC1 Mapping En DSP
+### US-037: MIDI Modulation CC1 Mapping En DSP
 
 Als speler wil ik MIDI modulation kunnen gebruiken, zodat CC1 later vibrato, filter of andere modulatie kan aansturen.
 

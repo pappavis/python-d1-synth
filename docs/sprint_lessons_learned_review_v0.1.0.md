@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-11  
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-034
+Betrokken stories: US-001 t/m US-035
 
 ## Doel
 
@@ -114,11 +114,21 @@ US-034 volgt direct uit US-032 en US-033: duplicate filtering moet chord tones b
 
 Belangrijke scopegrens: US-034 mixt polyphonic fixed/fallback buffers, maar implementeert nog geen echte held/sustained audio tussen note-on en note-off, geen pitch bend en geen modulation.
 
-Statuslabel: US-034 `In Review`.
+Product Owner bevestigde de triad/akkoordtest als geslaagd genoeg met `--chord-window 0.08`: er waren hoorbare akkoordachtige groepen, verschillende chord tones bleven behouden en duplicate filtering verwijderde geen muzikale noten.
+
+Statuslabel: US-034 `Done`.
+
+## US-035 Review Voorbereiding
+
+US-035 volgt direct uit de Product Owner observatie dat een 2 seconden vastgehouden C3 in US-033/US-034 nog als kort pulse-nootje klonk. De story introduceert `--voice-mode sustained`, `SoundDeviceSustainedAudioPlayer` en een streaming audiocallback zodat `note_on` een voice start en `note_off` die voice stopt.
+
+Belangrijke scopegrens: US-035 behandelt de note-on/note-off voice lifecycle. Sustain pedal, envelope release, pitch bend, modulation, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-035 `In Review`.
 
 ## Aanbevolen Volgende Stap
 
 De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of we:
 
-- US-034 accepteren na Logic/keyboard triad-test, of
-- een US-034 impediment oplossen als triads nog niet als akkoordbuffer hoorbaar zijn.
+- US-035 accepteren na Logic/keyboard sustained-note test, of
+- een US-035 impediment oplossen als een vastgehouden noot nog steeds als korte pulse klinkt.

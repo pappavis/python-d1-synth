@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-034",
+            "US-001 t/m US-035",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -409,7 +409,8 @@ class TestDocumentationArtifacts:
             "US-031 `Done`",
             "US-032 `Done`",
             "US-033 `Done`",
-            "US-034 `In Review`",
+            "US-034 `Done`",
+            "US-035 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -446,6 +447,7 @@ class TestDocumentationArtifacts:
             "US-034",
             "US-035",
             "US-036",
+            "US-037",
             "geen GUI",
             "geen hardcoded MIDI hardware device names",
         )
@@ -463,7 +465,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-033 Note Off Gated Voice Duration",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--voice-mode gated",
             "StreamingVoiceMode",
@@ -483,6 +485,7 @@ class TestDocumentationArtifacts:
             "US-034",
             "US-035",
             "US-036",
+            "US-037",
             "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:
@@ -499,7 +502,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-034 Polyphonic Voice Mixer En Triads",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--chord-window",
             "chord_window=0.02s",
@@ -515,6 +518,39 @@ class TestDocumentationArtifacts:
             "Geen MIDI modulation/CC1",
             "Geen hardcoded MIDI hardware device names",
             "US-035",
+            "US-036",
+            "US-037",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us035_sustained_note_audio_engine_doc_contains_required_terms(self) -> None:
+        document = Path("docs/sustained_note_audio_engine_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-035 Sustained Note Audio Engine",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--voice-mode sustained",
+            "SoundDeviceSustainedAudioPlayer",
+            "SustainedAudioPlayerSettings",
+            "SustainedVoiceState",
+            "StreamingVoiceMode.SUSTAINED",
+            "note_on",
+            "note_off",
+            "note_on starts a streaming voice and note_off stops it",
+            "voice_mode=sustained",
+            "Streamed note durations",
+            "Geen sustain pedal",
+            "Geen MIDI pitch bend",
+            "Geen MIDI modulation/CC1",
+            "Geen hardcoded MIDI hardware device names",
             "US-036",
             "US-037",
         )

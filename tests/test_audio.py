@@ -1,6 +1,24 @@
+# Bestand: test_audio.py
+# Versienummer: 0.1.0
+# Doel: Tests voor audio routing, device selectie en sustained streaming output.
+# Sprint: Future MIDI/DAW
+# User-Story: US-035 Sustained Note Audio Engine
+# Actie: US-035-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+
 import numpy as np
 
-from synth.audio import AudioBuffer, AudioDeviceScanner, AudioDeviceSelector, ChannelRouter, OutputChannel, SoundDeviceAudioPlayer
+from synth.audio import (
+    AudioBuffer,
+    AudioDeviceScanner,
+    AudioDeviceSelector,
+    ChannelRouter,
+    OutputChannel,
+    SoundDeviceAudioPlayer,
+    SoundDeviceSustainedAudioPlayer,
+    SustainedAudioPlayerSettings,
+)
+from synth.oscillators import Waveform
 
 
 class TestChannelRouter:
@@ -86,3 +104,73 @@ class TestSoundDeviceAudioPlayer:
         SoundDeviceAudioPlayer().play(buffer, device=3)
 
         assert calls == [("play", (2, 2), 44100, 3), ("wait",)]
+
+
+class TestSoundDeviceSustainedAudioPlayer:
+    def test_callback_renders_active_voice_until_note_off(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        settings = SustainedAudioPlayerSettings(
+            sample_rate=100,
+            waveform=Waveform.SINE,
+            amplitude=0.2,
+            channel=OutputChannel.STEREO,
+        )
+        player._settings = settings
+
+        player.note_on((1, 60), frequency_hz=10.0, velocity=1.0)
+        outdata = np.zeros((20, 2), dtype=np.float32)
+
+        player._callback(outdata, 20, None, None)
+
+        assert np.any(np.abs(outdata[:, 0]) > 0.0)
+        assert np.allclose(outdata[:, 0], outdata[:, 1])
+        assert player.active_voice_count() == 1
+
+        player.note_off((1, 60))
+        silent_outdata = np.ones((20, 2), dtype=np.float32)
+
+        player._callback(silent_outdata, 20, None, None)
+
+        assert np.allclose(silent_outdata, 0.0)
+        assert player.active_voice_count() == 0
+
+    def test_start_and_stop_manage_sounddevice_stream(self, monkeypatch) -> None:
+        calls = []
+
+        class FakeOutputStream:
+            def __init__(self, samplerate, channels, dtype, device, callback):
+                calls.append(("create", samplerate, channels, dtype, device, callable(callback)))
+
+            def start(self):
+                calls.append(("start",))
+
+            def stop(self):
+                calls.append(("stop",))
+
+            def close(self):
+                calls.append(("close",))
+
+        class FakeSoundDevice:
+            OutputStream = FakeOutputStream
+
+        monkeypatch.setitem(__import__("sys").modules, "sounddevice", FakeSoundDevice())
+        player = SoundDeviceSustainedAudioPlayer()
+
+        player.start(
+            SustainedAudioPlayerSettings(
+                sample_rate=44100,
+                waveform=Waveform.SINE,
+                amplitude=0.2,
+                channel=OutputChannel.STEREO,
+                device="Scarlett 8i6 USB",
+            )
+        )
+        frames = player.stop()
+
+        assert frames == 0
+        assert calls == [
+            ("create", 44100, 2, "float32", "Scarlett 8i6 USB", True),
+            ("start",),
+            ("stop",),
+            ("close",),
+        ]

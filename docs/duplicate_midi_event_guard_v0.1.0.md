@@ -25,8 +25,9 @@ Scopegrenzen:
 
 - Geen note-off gated voice duration; dat is US-033.
 - Geen polyphonic voice mixer; dat is US-034.
-- Geen pitch bend; dat is US-035.
-- Geen modulation/CC1; dat is US-036.
+- Geen sustained note audio engine; dat is US-035.
+- Geen pitch bend; dat is US-036.
+- Geen modulation/CC1; dat is US-037.
 - geen GUI, AU/VST3 of Logic Component.
 - geen hardcoded MIDI hardware device names.
 

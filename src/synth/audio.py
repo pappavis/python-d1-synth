@@ -1,9 +1,20 @@
+# Bestand: audio.py
+# Versienummer: 0.1.0
+# Doel: Audio buffers, device selectie, routing en sustained streaming output.
+# Sprint: Future MIDI/DAW
+# User-Story: US-035 Sustained Note Audio Engine
+# Actie: US-035-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
+
 from dataclasses import dataclass
 from enum import Enum
+import threading
 from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
+
+from synth.oscillators import Waveform
 
 
 class OutputChannel(str, Enum):
@@ -129,6 +140,152 @@ class ChannelRouter:
         if channel is OutputChannel.RIGHT:
             return np.column_stack((silent, mono_samples)).astype(np.float32)
         raise ValueError(f"Unsupported output channel '{channel}'")
+
+
+@dataclass(frozen=True)
+class SustainedAudioPlayerSettings:
+    """Settings for sustained streaming audio output.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-035
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-035 Sustained Note Audio Engine
+    - Version: 0.1.0
+    """
+
+    sample_rate: int
+    waveform: Waveform
+    amplitude: float
+    channel: OutputChannel
+    device: int | str | None = None
+
+    def __post_init__(self) -> None:
+        if self.sample_rate <= 0:
+            raise ValueError("sample_rate must be positive")
+        if not 0 < self.amplitude <= 1.0:
+            raise ValueError("amplitude must be between 0 and 1")
+
+
+@dataclass
+class SustainedVoiceState:
+    """Mutable oscillator state for one active sustained MIDI voice.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-035
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-035 Sustained Note Audio Engine
+    - Version: 0.1.0
+    """
+
+    frequency_hz: float
+    velocity: float
+    phase_cycles: float = 0.0
+
+
+class SoundDeviceSustainedAudioPlayer:
+    """Stream active sustained voices until their note-off messages arrive.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-035
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-035 Sustained Note Audio Engine
+    - Version: 0.1.0
+    """
+
+    def __init__(self, channel_router: ChannelRouter | None = None) -> None:
+        self._channel_router = channel_router if channel_router is not None else ChannelRouter()
+        self._lock = threading.RLock()
+        self._voice_by_id: dict[tuple[int, int], SustainedVoiceState] = {}
+        self._settings: SustainedAudioPlayerSettings | None = None
+        self._stream = None
+        self._rendered_frame_count = 0
+
+    def start(self, settings: SustainedAudioPlayerSettings) -> None:
+        try:
+            import sounddevice
+        except ImportError as exc:
+            raise RuntimeError(
+                "sounddevice is not installed. Install project dependencies before sustained playback."
+            ) from exc
+
+        stream = sounddevice.OutputStream(
+            samplerate=settings.sample_rate,
+            channels=2,
+            dtype="float32",
+            device=settings.device,
+            callback=self._callback,
+        )
+        with self._lock:
+            self._settings = settings
+            self._rendered_frame_count = 0
+            self._voice_by_id.clear()
+            self._stream = stream
+        stream.start()
+
+    def note_on(self, voice_id: tuple[int, int], frequency_hz: float, velocity: float) -> None:
+        with self._lock:
+            self._voice_by_id[voice_id] = SustainedVoiceState(frequency_hz=frequency_hz, velocity=velocity)
+
+    def note_off(self, voice_id: tuple[int, int]) -> None:
+        with self._lock:
+            self._voice_by_id.pop(voice_id, None)
+
+    def stop(self) -> int:
+        with self._lock:
+            stream = self._stream
+            self._stream = None
+            self._voice_by_id.clear()
+            rendered_frame_count = self._rendered_frame_count
+        if stream is not None:
+            stream.stop()
+            stream.close()
+        return rendered_frame_count
+
+    def active_voice_count(self) -> int:
+        with self._lock:
+            return len(self._voice_by_id)
+
+    def _callback(self, outdata, frames, time_info, status) -> None:
+        del time_info, status
+        with self._lock:
+            settings = self._settings
+            voice_items = tuple(self._voice_by_id.items())
+        if settings is None:
+            outdata[:] = np.zeros((frames, 2), dtype=np.float32)
+            return
+
+        mono = np.zeros(frames, dtype=np.float32)
+        updated_voices: dict[tuple[int, int], SustainedVoiceState] = {}
+        timeline = np.arange(frames, dtype=np.float64) / settings.sample_rate
+        for voice_id, voice in voice_items:
+            phase = voice.phase_cycles + voice.frequency_hz * timeline
+            mono += self._waveform_samples(settings.waveform, phase) * settings.amplitude * voice.velocity
+            updated_phase = float((voice.phase_cycles + frames * voice.frequency_hz / settings.sample_rate) % 1.0)
+            updated_voices[voice_id] = SustainedVoiceState(
+                frequency_hz=voice.frequency_hz,
+                velocity=voice.velocity,
+                phase_cycles=updated_phase,
+            )
+
+        mono = np.clip(mono, -1.0, 1.0).astype(np.float32)
+        outdata[:] = self._channel_router.route(mono, settings.channel)
+        with self._lock:
+            for voice_id, voice in updated_voices.items():
+                if voice_id in self._voice_by_id:
+                    self._voice_by_id[voice_id] = voice
+            self._rendered_frame_count += frames
+
+    def _waveform_samples(self, waveform: Waveform, phase: NDArray[np.float64]) -> NDArray[np.float32]:
+        if waveform is Waveform.SINE:
+            return np.sin(2.0 * np.pi * phase).astype(np.float32)
+        if waveform is Waveform.SAW:
+            return (2.0 * (phase - np.floor(phase + 0.5))).astype(np.float32)
+        if waveform is Waveform.SQUARE:
+            return np.where(np.sin(2.0 * np.pi * phase) >= 0.0, 1.0, -1.0).astype(np.float32)
+        raise ValueError(f"Unsupported waveform '{waveform}'")
 
 
 class SoundDeviceAudioPlayer:

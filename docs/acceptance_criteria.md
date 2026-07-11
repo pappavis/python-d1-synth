@@ -475,14 +475,28 @@ Acceptatie op 2026-07-11:
 - `docs/polyphonic_voice_mixer_triads_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-034 Polyphonic Voice Mixer En Triads`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-034 Polyphonic Voice Mixer En Triads` en `Version: 0.1.0`.
 - Scope: geen echte held/sustained audio tussen note-on en note-off, geen pitch bend, geen modulation, geen GUI/plugin.
+- Acceptatie op 2026-07-11: Product Owner hoorde akkoordachtige groepen met `--chord-window 0.08`.
+- Story status is `Done`.
+
+## US-035: Sustained Note Audio Engine
+
+- Given `midi play-stream --voice-mode sustained` draait, when een `note_on` ontvangen wordt, then de synth een actieve streaming voice start.
+- Given een bijbehorende `note_off` ontvangen wordt, then de actieve streaming voice stopt.
+- Given een toets ongeveer 2 seconden wordt vastgehouden, then de hoorbare toon ongeveer die duur aanhoudt en niet alleen als korte pulse speelt.
+- Given meerdere note-on events actief zijn, then de sustained audio player meerdere actieve voices tegelijk kan mixen.
+- Given een note-off ontbreekt bij einde van de bounded run, then de open voice veilig wordt gestopt.
+- Given `--debuglevel verbose` actief is, then de CLI toont `voice_mode=sustained` en `Streamed note durations`.
+- `docs/sustained_note_audio_engine_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-035 Sustained Note Audio Engine`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-035 Sustained Note Audio Engine` en `Version: 0.1.0`.
+- Scope: geen sustain pedal, envelope release, pitch bend, modulation, GUI/plugin.
 - Story status is `In Review`.
 
-## US-035: MIDI Pitch Bend Mapping En DSP
+## US-036: MIDI Pitch Bend Mapping En DSP
 
 - Given MIDI pitch bend events, then de synth oscillatorfrequentie hoorbaar kan buigen.
 - Story status is `Planned`.
 
-## US-036: MIDI Modulation CC1 Mapping En DSP
+## US-037: MIDI Modulation CC1 Mapping En DSP
 
 - Given MIDI CC1 modulation events, then de synth die naar een hoorbare modulatieparameter kan mappen.
 - Story status is `Planned`.

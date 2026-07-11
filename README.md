@@ -306,7 +306,7 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Product Owner hoorde geluid via Logic/MIDI keyboard. Bij een 2 seconden vastgehouden C3 speelde US-033 bewust nog een kort pulse-nootje, terwijl verbose output de nootduur al rapporteerde. Echte held/sustained audio blijft US-035.
 
-US-034 is in review: `midi play-stream` kan note-on events die in dezelfde streaming poll-batch binnenkomen als polyphonic chord buffer mixen. Dit maakt triads/akkoorden hoorbaar zonder de US-033 scope naar sustained voices, pitch bend of modulation uit te breiden.
+US-034 is afgerond: `midi play-stream` kan note-on events die in dezelfde streaming poll-batch binnenkomen als polyphonic chord buffer mixen. Dit maakt triads/akkoorden hoorbaar zonder de US-033 scope naar sustained voices, pitch bend of modulation uit te breiden.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 10 --note-duration 0.25 --voice-mode gated --dedupe-window 0.03 --chord-window 0.02 --debuglevel verbose
@@ -318,7 +318,21 @@ Controleer in verbose output:
 - `polyphonic chord batches are mixed`
 - Triads zoals C-E-G klinken als één akkoordbuffer in plaats van losse na elkaar gespeelde noten.
 
-Scope: geen echte held/sustained audio tussen note-on en note-off, sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
+Bevestigd gedrag: Product Owner hoorde akkoordachtige groepen met `--chord-window 0.08`; verschillende chord tones bleven behouden en er waren geen duplicate suppressions nodig.
+
+US-035 is in review: `midi play-stream` ondersteunt nu `--voice-mode sustained`. In deze mode start `note_on` een actieve streaming voice en stopt `note_off` die voice, zodat een langer vastgehouden toets niet meer alleen als kort pulse-nootje speelt.
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --debuglevel verbose
+```
+
+Controleer in verbose output:
+
+- `voice_mode=sustained`
+- `Sustained MVP note: note_on starts a streaming voice and note_off stops it`
+- Een 2 seconden vastgehouden C3 klinkt ongeveer 2 seconden door.
+
+Scope: geen sustain pedal, envelope release, pitch bend, modulation, GUI of plugin.
 
 Lessons learned en sprint review:
 

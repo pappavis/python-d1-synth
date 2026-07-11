@@ -5,7 +5,7 @@ Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie
 Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -28,8 +28,9 @@ Scopegrenzen:
 - Geen envelope release.
 - Geen echte held/sustained audio tussen note-on en note-off; dat vereist een latere low-latency voice engine.
 - Geen polyphonic voice mixer of triads; dat is US-034.
-- Geen MIDI pitch bend; dat is US-035.
-- Geen MIDI modulation/CC1; dat is US-036.
+- Geen echte held/sustained audio tussen note-on en note-off; dat is US-035.
+- Geen MIDI pitch bend; dat is US-036.
+- Geen MIDI modulation/CC1; dat is US-037.
 - Geen GUI, AU/VST3, Logic Component of plugin.
 - Geen hardcoded MIDI hardware device names.
 
@@ -65,6 +66,12 @@ Acceptatie:
 - Duplicate MIDI messages worden nog steeds onderdrukt.
 - Ctrl-C stopt de commandline met een interruptmelding.
 - Eventuele kleine latency is toegestaan binnen US-033; low-latency voice mixing blijft later werk.
+
+Product Owner acceptatie op 2026-07-11:
+
+- Hoorbaar geluid via Logic/MIDI keyboard bevestigd.
+- Pulse + duration-reporting is geaccepteerd als tussenstap naar US-035 sustained playback.
+- US-033 status: `Done`.
 
 ## Traceability
 

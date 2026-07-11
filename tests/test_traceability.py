@@ -2,11 +2,17 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-034 Polyphonic Voice Mixer En Triads
-# Actie: US-034-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-034
+# User-Story: US-035 Sustained Note Audio Engine
+# Actie: US-035-TRACEABILITY-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
 
-from synth.audio import ChannelRouter, OutputChannel
+from synth.audio import (
+    ChannelRouter,
+    OutputChannel,
+    SoundDeviceSustainedAudioPlayer,
+    SustainedAudioPlayerSettings,
+    SustainedVoiceState,
+)
 from synth.cli import SynthCli
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import PolyphonicVoiceMixer
@@ -345,6 +351,30 @@ class TestCodeTraceability:
             StreamingMidiAudioTriggerSettings,
             StreamingMidiAudioTriggerResult,
             MidoStreamingVirtualMidiInputBackend,
+            StreamingMidiAudioTrigger,
+            SynthCli,
+        )
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us035_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-035 Sustained Note Audio Engine",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            SustainedAudioPlayerSettings,
+            SustainedVoiceState,
+            SoundDeviceSustainedAudioPlayer,
+            StreamingVoiceMode,
+            StreamingMidiAudioTriggerSettings,
+            StreamingMidiAudioTriggerResult,
             StreamingMidiAudioTrigger,
             SynthCli,
         )

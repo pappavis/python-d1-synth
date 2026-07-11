@@ -3,7 +3,7 @@
 Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -55,6 +55,12 @@ Acceptatie:
 - `--voice-mode fixed` en `--voice-mode gated` blijven beide werken.
 - Eventuele kleine latency en pulse-achtig nootgedrag zijn toegestaan binnen US-034; echte sustained playback blijft US-035.
 
+Product Owner acceptatie op 2026-07-11:
+
+- Test met `--chord-window 0.08` speelde hoorbaar akkoordachtige groepen.
+- CLI toonde `Streamed 17 MIDI-triggered note events` en `suppressed 0 duplicate MIDI messages`.
+- US-034 status: `Done`.
+
 ## Traceability
 
 - ChatID: CHATOD-20260709-D1PY-MVP-001 / US-034
@@ -62,4 +68,3 @@ Acceptatie:
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-034 Polyphonic Voice Mixer En Triads
 - Version: 0.1.0
-

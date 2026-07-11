@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-034 Polyphonic Voice Mixer En Triads
-# Actie: US-034-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-034
+# User-Story: US-035 Sustained Note Audio Engine
+# Actie: US-035-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-035
 
 import argparse
 import importlib.util
@@ -61,6 +61,7 @@ class SynthCli:
     - User Story: US-032 Duplicate MIDI Event Guard
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-034 Polyphonic Voice Mixer En Triads
+    - User Story: US-035 Sustained Note Audio Engine
     - Version: 0.1.0
     """
 
@@ -522,7 +523,12 @@ class SynthCli:
             return 2
 
         reporter.light(f"Opening streaming virtual MIDI input port: {settings.port_name}")
-        if settings.voice_mode is StreamingVoiceMode.GATED:
+        if settings.voice_mode is StreamingVoiceMode.SUSTAINED:
+            reporter.light(
+                "Sustained MVP note: note_on starts a streaming voice and note_off stops it; "
+                "pitch bend and modulation are later stories."
+            )
+        elif settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(
                 "Gated MVP note: note_on plays an audible fallback buffer and note_off reports duration; "
                 "polyphonic chord batches are mixed, pitch bend and modulation are later stories."
