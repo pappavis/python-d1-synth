@@ -132,7 +132,9 @@ Statuslabel: US-035 `Done`.
 
 US-036 volgt logisch na sustained playback, omdat pitch bend alleen zinvol hoorbaar is wanneer een voice actief blijft klinken. De story voegt mido `pitchwheel` normalisatie, `MidiPitchBendMapper`, `--pitch-bend-range` en `SoundDeviceSustainedAudioPlayer.pitch_bend(...)` toe.
 
-Belangrijke scopegrens: US-036 behandelt alleen pitch bend per MIDI channel op actieve sustained voices. Modulation/CC1, sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
+Belangrijke scopegrens: US-036 behandelt pitch bend op actieve sustained voices. Modulation/CC1, sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
+
+Impediment-001 les: verbose MIDI logging moet altijd channel-informatie tonen en de acceptatietest moet controleren of `note_on` en `pitch_bend` op hetzelfde channel binnenkomen. De SMK37/Logic test liet `note_on` op channel 1 en pitch bend op channel 4 zien; daarom is `--pitch-bend-channel-mode omni` toegevoegd als expliciete MVP/diagnose-route zonder de veilige default `same` te wijzigen.
 
 Statuslabel: US-036 `In Review`.
 

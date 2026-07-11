@@ -63,10 +63,11 @@ const futureStories = [
   ["US-030", "Story", "Future MIDI En DAW Integratie", "Logic MIDI Region Multi-Note Playback", "Done", "Must", "DSP Engineer", 5, "Future", "Korte Logic MIDI region met meerdere noten rendert als hoorbare batch.", "Multi-note mapping, fallback timing en verbose sequence-output tests falen.", "MidiMessageNormalizer fallback time, VirtualMidiAudioTriggerResult.played_events en CLI Rendered sequence events output.", "US-029", "Klanttest geslaagd: Logic speelde 5 hoorbare MIDI-triggered note events; circa 2s delay is batch-scope en geen blocker."],
   ["US-031", "Story", "Future MIDI En DAW Integratie", "Live/Streaming MIDI Playback Loop", "Done", "Must", "DSP Engineer", 8, "Future", "Ontvangen note_on events spelen direct als korte audio buffers.", "Streaming backend, per-note audio calls en play-stream CLI tests falen.", "MidoStreamingVirtualMidiInputBackend, StreamingMidiAudioTrigger en midi play-stream command.", "US-030", "Klanttest geslaagd: Logic streamde 18 hoorbare note events; dubbele events worden US-032."],
   ["US-032", "Story", "Future MIDI En DAW Integratie", "Duplicate MIDI Event Guard", "Done", "Must", "DSP Engineer", 5, "Future", "Dubbele MIDI note events uit Logic/routing spelen niet dubbel hoorbaar af, zonder simultane verschillende noten te onderdrukken.", "Dedup window, streaming duplicate suppression, CLI diagnostics en traceability tests falen.", "DuplicateMidiEventGuard, --dedupe-window, suppressed_duplicate_count en docs/duplicate_midi_event_guard_v0.1.0.md.", "US-031", "Klanttest geslaagd: Logic/live playback hoorbaar; 6 note events gespeeld en 23 duplicate MIDI messages onderdrukt. Kleine latency blijft latere story."],
-  ["US-033", "Story", "Future MIDI En DAW Integratie", "Note Off Gated Voice Duration", "In Review", "Must", "DSP Engineer", 8, "Future", "Note-off bepaalt nootlengte in gated streaming mode in plaats van alleen fixed note-duration.", "Voice mode, note_on/note_off duration, fallback duration, CLI diagnostics en traceability tests falen.", "StreamingVoiceMode, --voice-mode gated, active note state per MIDI key en Streamed note durations output.", "US-032", "In review: default fixed mode blijft bestaan; sustain, polyfonie, pitch bend en modulation blijven latere stories."],
-  ["US-034", "Story", "Future MIDI En DAW Integratie", "Polyphonic Voice Mixer En Triads", "Planned", "Must", "DSP Engineer", 8, "Future", "Drie of meer gelijktijdige noten kunnen als triads hoorbaar worden gemixt.", "Polyphonic mixer tests falen.", "Meerdere actieve voices en clipping/level beheer.", "US-033", "Nodig voor akkoorden en later betere DAW playback."],
-  ["US-035", "Story", "Future MIDI En DAW Integratie", "MIDI Pitch Bend Mapping En DSP", "Planned", "Should", "DSP Engineer", 5, "Future", "Pitch bend events buigen oscillatorfrequentie hoorbaar.", "Pitch bend mapping en DSP tests falen.", "Pitch bend parser plus frequentie-offset per channel/voice.", "US-033, US-034", "Pitch bend pas na betrouwbare voice state."],
-  ["US-036", "Story", "Future MIDI En DAW Integratie", "MIDI Modulation CC1 Mapping En DSP", "Planned", "Should", "DSP Engineer", 5, "Future", "CC1 modulation stuurt een hoorbare synthparameter aan.", "CC1 mapping tests falen.", "Control change parser plus eenvoudige modulation target.", "US-033, US-034", "Eerste target later kiezen: vibrato of filter."],
+  ["US-033", "Story", "Future MIDI En DAW Integratie", "Note Off Gated Voice Duration", "Done", "Must", "DSP Engineer", 8, "Future", "Note-off bepaalt nootlengte in gated streaming mode in plaats van alleen fixed note-duration.", "Voice mode, note_on/note_off duration, fallback duration, CLI diagnostics en traceability tests falen.", "StreamingVoiceMode, --voice-mode gated, active note state per MIDI key en Streamed note durations output.", "US-032", "Product Owner accepteerde pulse + duration-reporting als tussenstap naar sustained playback."],
+  ["US-034", "Story", "Future MIDI En DAW Integratie", "Polyphonic Voice Mixer En Triads", "Done", "Must", "DSP Engineer", 8, "Future", "Drie of meer gelijktijdige noten kunnen als triads hoorbaar worden gemixt.", "Polyphonic mixer tests falen.", "PolyphonicVoiceMixer, chord-window batching en triad playback docs/tests.", "US-033", "Klanttest geslaagd met hoorbare triads; echte sustained audio blijft US-035."],
+  ["US-035", "Story", "Future MIDI En DAW Integratie", "Sustained Note Audio Engine", "Done", "Must", "DSP Engineer", 8, "Future", "note_on start een streaming voice en note_off stopt die voice.", "Sustained audio callback en lifecycle tests falen.", "SoundDeviceSustainedAudioPlayer, --voice-mode sustained en held-note diagnostics.", "US-034", "Klanttest geslaagd: sustained mode speelde hoorbaar door tot note-off; Total streamed audio frames: 575172."],
+  ["US-036", "Story", "Future MIDI En DAW Integratie", "MIDI Pitch Bend Mapping En DSP", "In Review", "Should", "DSP Engineer", 5, "Future", "Pitch bend events buigen sustained oscillatorfrequentie hoorbaar.", "Pitch bend mapping, channel routing en control-message burst tests falen.", "MidiPitchBendMapper, --pitch-bend-range, --pitch-bend-channel-mode en --max-control-messages.", "US-035", "Impediment-001: SMK37/Logic kan note-on op channel 1 en pitch bend op channel 4 sturen; gebruik --pitch-bend-channel-mode omni."],
+  ["US-037", "Story", "Future MIDI En DAW Integratie", "MIDI Modulation CC1 Mapping En DSP", "Planned", "Should", "DSP Engineer", 5, "Future", "CC1 modulation stuurt een hoorbare synthparameter aan.", "CC1 mapping tests falen.", "Control change parser plus eenvoudige modulation target.", "US-036", "Eerste target later kiezen: vibrato of filter."],
 ];
 
 board.showGridLines = false;
@@ -124,8 +125,8 @@ future.getRange("A1").values = [["python-d1-synth Future MIDI/DAW Backlog"]];
 future.getRange("A2:N2").merge();
 future.getRange("A2").values = [["Scope mutation: Logic Pro 12.3, other DAWs, generic USB MIDI, external MIDI, RaspiMidiHub, physical MIDI hub, MiniFreak, Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave"]];
 future.getRange("A4:N4").values = [headers];
-future.getRange("A5:N22").values = futureStories;
-const futureTable = future.tables.add("A4:N22", true, "FutureMidiDawBacklog");
+future.getRange("A5:N23").values = futureStories;
+const futureTable = future.tables.add("A4:N23", true, "FutureMidiDawBacklog");
 futureTable.style = "TableStyleMedium4";
 futureTable.showFilterButton = true;
 future.getRange("A1:N1").format = {
@@ -143,14 +144,14 @@ future.getRange("A4:N4").format = {
   font: { bold: true, color: "#FFFFFF" },
   wrapText: true,
 };
-future.getRange("A5:N22").format = {
+future.getRange("A5:N23").format = {
   wrapText: true,
   verticalAlignment: "top",
 };
-future.getRange("H5:H22").setNumberFormat("0");
-future.getRange("A4:N22").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
-future.getRange("A4:N22").format.autofitColumns();
-future.getRange("A4:N22").format.autofitRows();
+future.getRange("H5:H23").setNumberFormat("0");
+future.getRange("A4:N23").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
+future.getRange("A4:N23").format.autofitColumns();
+future.getRange("A4:N23").format.autofitRows();
 future.freezePanes.freezeRows(4);
 future.getRange("A:A").format.columnWidth = 10;
 future.getRange("B:B").format.columnWidth = 10;
@@ -186,9 +187,9 @@ summary.getRange("B4:B9").formulas = [
   ["=COUNTIF('Sprint 1 Board'!F5:F22,\"Should\")"],
   ["=SUM('Sprint 1 Board'!H5:H22)"],
   ["=COUNTIF('Sprint 1 Board'!E5:E22,\"In Review\")"],
-  ["=COUNTA('Future MIDI DAW'!A5:A22)"],
+  ["=COUNTA('Future MIDI DAW'!A5:A23)"],
 ];
-summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H22)"]];
+summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H23)"]];
 summary.getRange("D3:F8").values = [
   ["Status", "Count", "Story Points"],
   ["To Do", null, null],
@@ -241,7 +242,7 @@ ref.getRange("A:D").format.autofitColumns();
 
 const boardPreview = await workbook.render({
   sheetName: "Sprint 1 Board",
-  range: "A1:N22",
+  range: "A1:N23",
   scale: 1,
   format: "png",
 });
@@ -275,7 +276,7 @@ console.log(inspect.ndjson);
 
 const futureInspect = await workbook.inspect({
   kind: "table",
-  range: "'Future MIDI DAW'!A4:N22",
+  range: "'Future MIDI DAW'!A4:N23",
   include: "values,formulas",
   tableMaxRows: 22,
   tableMaxCols: 14,

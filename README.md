@@ -334,16 +334,23 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Product Owner testte `--voice-mode sustained`; noten bleven hoorbaar tot note-off en `Total streamed audio frames: 575172` bevestigde streaming audio.
 
-US-036 is in review: sustained playback verwerkt nu MIDI pitch bend messages. Pitch bend wordt per MIDI channel gemapt naar actieve sustained voices. Default bereik is `--pitch-bend-range 2`, dus volledige pitch bend is ongeveer twee semitones omhoog of omlaag.
+US-036 is in review: sustained playback verwerkt nu MIDI pitch bend messages. Pitch bend wordt standaard per MIDI channel gemapt naar actieve sustained voices. Default bereik is `--pitch-bend-range 2`, dus volledige pitch bend is ongeveer twee semitones omhoog of omlaag.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --debuglevel verbose
+```
+
+Als een controller of DAW note events op een ander MIDI channel stuurt dan pitch bend events, zoals een SMK37/Logic route met note-on op channel 1 en pitch bend op channel 4, gebruik dan de expliciete MVP testmode:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --debuglevel verbose
 ```
 
 Controleer in verbose output:
 
 - `voice_mode=sustained`
 - `pitch_bend_range=2st`
+- `pitch_bend_channel_mode=omni` wanneer cross-channel pitch bend nodig is.
 - `Received MIDI messages` bevat `pitch_bend:<waarde>:channel=<n>`.
 
 Scope: geen sustain pedal, envelope release, modulation, GUI of plugin.

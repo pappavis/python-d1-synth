@@ -3,8 +3,8 @@
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
 # User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
+# Actie: US-036-IMPEDIMENT-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
 
 import numpy as np
 
@@ -16,6 +16,7 @@ from synth.midi import (
     MidiDevice,
     MidiInputReceiveResult,
     MidiMessage,
+    PitchBendChannelMode,
     StreamingMidiAudioTriggerResult,
     StreamingVoiceMode,
     VirtualMidiAudioTriggerResult,
@@ -992,6 +993,8 @@ class TestSynthCli:
                 assert settings.voice_mode is StreamingVoiceMode.SUSTAINED
                 assert settings.audio_device == "Scarlett 8i6 USB"
                 assert settings.pitch_bend_range_semitones == 12.0
+                assert settings.pitch_bend_channel_mode is PitchBendChannelMode.OMNI
+                assert settings.max_control_messages == 2048
                 parser = NoteParser()
                 return StreamingMidiAudioTriggerResult(
                     port_name=settings.port_name,
@@ -1036,6 +1039,10 @@ class TestSynthCli:
                 "sustained",
                 "--pitch-bend-range",
                 "12",
+                "--pitch-bend-channel-mode",
+                "omni",
+                "--max-control-messages",
+                "2048",
                 "--debuglevel",
                 "verbose",
             ]
@@ -1046,6 +1053,8 @@ class TestSynthCli:
         assert "Sustained MVP note: note_on starts a streaming voice and note_off stops it" in output
         assert "voice_mode=sustained" in output
         assert "pitch_bend_range=12st" in output
+        assert "pitch_bend_channel_mode=omni" in output
+        assert "max_control_messages=2048" in output
         assert "pitch_bend:4096:channel=1" in output
         assert "Streamed note durations: C4@0.000s/2.000s" in output
         assert "Total streamed audio frames: 88200, sample_rate=44100 Hz" in output

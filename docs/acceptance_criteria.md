@@ -496,9 +496,11 @@ Acceptatie op 2026-07-11:
 
 - Given een mido `pitchwheel` message binnenkomt, then die naar interne `MidiMessage(message_type="pitch_bend")` wordt genormaliseerd.
 - Given `--voice-mode sustained` draait en pitch bend events binnenkomen, then actieve voices op hetzelfde MIDI channel in frequentie worden gebogen.
+- Given een controller note events en pitch bend events op verschillende MIDI channels stuurt, then `--pitch-bend-channel-mode omni` de bend hoorbaar toepast op actieve sustained voices.
+- Given veel pitch bend control messages binnenkomen, then `--max-control-messages` voorkomt dat control-message bursts de note-event testlimiet meteen opeten.
 - Given een pitch bend event vóór een nieuwe `note_on` binnenkomt, then de nieuwe voice de huidige channel bend erft.
 - Given `--pitch-bend-range 2` actief is, then MIDI waarde `8191` ongeveer +2 semitones en `-8192` ongeveer -2 semitones oplevert.
-- Given `--debuglevel verbose` actief is, then de CLI toont `pitch_bend_range=...st` en received messages zoals `pitch_bend:4096:channel=1`.
+- Given `--debuglevel verbose` actief is, then de CLI toont `pitch_bend_range=...st`, `pitch_bend_channel_mode=...` en received messages zoals `pitch_bend:4096:channel=1`.
 - `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-036 MIDI Pitch Bend Mapping En DSP`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-036 MIDI Pitch Bend Mapping En DSP` en `Version: 0.1.0`.
 - Scope: geen modulation/CC1, geen sustain pedal, geen envelope release, geen GUI/plugin.

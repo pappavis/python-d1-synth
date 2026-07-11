@@ -3,8 +3,8 @@
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
 # User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-TRACEABILITY-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
+# Actie: US-036-IMPEDIMENT-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
 
 from synth.audio import (
     ChannelRouter,
@@ -33,6 +33,7 @@ from synth.midi import (
     MidiMessageNormalizer,
     MidiMessage,
     MidiToNoteEventMapper,
+    PitchBendChannelMode,
     MidoMidiInputBackend,
     MidoStreamingVirtualMidiInputBackend,
     MidoVirtualMidiInputBackend,
@@ -397,6 +398,7 @@ class TestCodeTraceability:
             MidiMessage,
             MidiMessageNormalizer,
             MidiPitchBendMapper,
+            PitchBendChannelMode,
             SustainedVoiceState,
             SoundDeviceSustainedAudioPlayer,
             StreamingVoiceMode,

@@ -329,7 +329,7 @@ Als speler wil ik MIDI pitch bend kunnen gebruiken, zodat gespeelde noten vloeie
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `MidiPitchBendMapper`, `MidiMessage(message_type="pitch_bend")`, mido `pitchwheel` normalisatie, `SoundDeviceSustainedAudioPlayer.pitch_bend(...)`, CLI optie `--pitch-bend-range` en `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md`. Scope: pitch bend per MIDI channel op actieve sustained voices; geen modulation/CC1, sustain pedal, envelope release, GUI of plugin.
+Notitie: In Review met `MidiPitchBendMapper`, `MidiMessage(message_type="pitch_bend")`, mido `pitchwheel` normalisatie, `SoundDeviceSustainedAudioPlayer.pitch_bend(...)`, CLI opties `--pitch-bend-range`, `--pitch-bend-channel-mode same|omni`, `--max-control-messages` en `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md`. Impediment-001 dekt SMK37/Logic routes waar note-on op channel 1 en pitch bend op channel 4 binnenkomt; `omni` past bend bewust toe op actieve sustained voices. Scope: pitch bend op sustained voices; geen modulation/CC1, sustain pedal, envelope release, GUI of plugin.
 
 ### US-037: MIDI Modulation CC1 Mapping En DSP
 

@@ -3,8 +3,8 @@
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
 # User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
+# Actie: US-036-IMPEDIMENT-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
 
 from __future__ import annotations
 
@@ -381,6 +381,21 @@ class StreamingVoiceMode(str, Enum):
     SUSTAINED = "sustained"
 
 
+class PitchBendChannelMode(str, Enum):
+    """Pitch bend routing mode for sustained MIDI playback.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - Version: 0.1.0
+    """
+
+    SAME = "same"
+    OMNI = "omni"
+
+
 @dataclass(frozen=True)
 class StreamingMidiAudioTriggerSettings:
     """Settings for near-realtime virtual MIDI streaming playback.
@@ -407,6 +422,8 @@ class StreamingMidiAudioTriggerSettings:
     dedupe_window_seconds: float = 0.03
     chord_window_seconds: float = 0.02
     pitch_bend_range_semitones: float = 2.0
+    pitch_bend_channel_mode: PitchBendChannelMode = PitchBendChannelMode.SAME
+    max_control_messages: int = 1024
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
     amplitude: float = 0.2
@@ -432,6 +449,10 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("chord_window_seconds must be positive")
         if self.pitch_bend_range_semitones <= 0:
             raise ValueError("pitch_bend_range_semitones must be positive")
+        if not isinstance(self.pitch_bend_channel_mode, PitchBendChannelMode):
+            raise ValueError("pitch_bend_channel_mode must be a PitchBendChannelMode")
+        if self.max_control_messages < 0:
+            raise ValueError("max_control_messages must not be negative")
         if self.sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
@@ -1174,6 +1195,7 @@ class StreamingMidiAudioTrigger:
         sustained_player = self._sustained_audio_player
         pitch_bend_mapper = MidiPitchBendMapper(settings.pitch_bend_range_semitones)
         pitch_bend_by_channel: dict[int, float] = {}
+        omni_pitch_bend_semitones: float | None = None
 
         sustained_player.start(
             SustainedAudioPlayerSettings(
@@ -1194,8 +1216,14 @@ class StreamingMidiAudioTrigger:
                     key = (message.channel, message.note_number)
                     if message.message_type == "pitch_bend":
                         semitones = pitch_bend_mapper.semitones_for(message.pitch_bend_value)
-                        pitch_bend_by_channel[message.channel] = semitones
-                        sustained_player.pitch_bend(message.channel, semitones)
+                        if settings.pitch_bend_channel_mode is PitchBendChannelMode.OMNI:
+                            omni_pitch_bend_semitones = semitones
+                            active_channels = {active_channel for active_channel, _note_number in active_note_on_by_key}
+                            for active_channel in active_channels:
+                                sustained_player.pitch_bend(active_channel, semitones)
+                        else:
+                            pitch_bend_by_channel[message.channel] = semitones
+                            sustained_player.pitch_bend(message.channel, semitones)
                         continue
                     if message.message_type == "note_on" and message.velocity > 0:
                         previous_active_note = active_note_on_by_key.get(key)
@@ -1206,7 +1234,10 @@ class StreamingMidiAudioTrigger:
                             )
                         event = self._fallback_event_from_note_on(mapper, message, settings)
                         sustained_player.note_on(key, event.note.frequency_hz, event.velocity)
-                        if message.channel in pitch_bend_by_channel:
+                        if settings.pitch_bend_channel_mode is PitchBendChannelMode.OMNI:
+                            if omni_pitch_bend_semitones is not None:
+                                sustained_player.pitch_bend(message.channel, omni_pitch_bend_semitones)
+                        elif message.channel in pitch_bend_by_channel:
                             sustained_player.pitch_bend(message.channel, pitch_bend_by_channel[message.channel])
                         played_events.append(event)
                         active_note_on_by_key[key] = (message, len(played_events) - 1)
@@ -1293,17 +1324,18 @@ class StreamingMidiAudioTrigger:
         settings: StreamingMidiAudioTriggerSettings,
     ) -> Iterable[tuple[MidiMessage, ...]]:
         batch_reader = getattr(self._backend, "iter_message_batches", None)
+        backend_message_limit = settings.max_messages + settings.max_control_messages
         if callable(batch_reader):
             yield from batch_reader(
                 settings.port_name,
-                settings.max_messages,
+                backend_message_limit,
                 settings.timeout_seconds,
                 settings.poll_interval_seconds,
             )
             return
         for message in self._backend.iter_messages(
             settings.port_name,
-            settings.max_messages,
+            backend_message_limit,
             settings.timeout_seconds,
             settings.poll_interval_seconds,
         ):

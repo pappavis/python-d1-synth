@@ -16,8 +16,11 @@ US-036 voegt MIDI pitch bend toe aan sustained playback. Pitch bend messages wor
 - `MidiPitchBendMapper` mapt raw pitch bend waarden naar semitone-offsets en frequentieratio's.
 - `StreamingMidiAudioTriggerSettings.pitch_bend_range_semitones` configureert het bendbereik.
 - CLI optie: `--pitch-bend-range`, default `2.0`.
-- `SoundDeviceSustainedAudioPlayer.pitch_bend(channel, semitones)` past actieve voices op hetzelfde MIDI channel aan.
+- CLI optie: `--pitch-bend-channel-mode same|omni`, default `same`.
+- CLI optie: `--max-control-messages`, default `1024`, geeft pitch bend/control bursts extra ruimte naast de note-event testlimiet.
+- `SoundDeviceSustainedAudioPlayer.pitch_bend(channel, semitones)` past actieve voices op het gekozen MIDI channel aan.
 - Nieuwe sustained note-on events erven de laatst ontvangen pitch bend op hun MIDI channel.
+- In `omni` mode past een ontvangen pitch bend message de bend toe op alle actieve sustained voice channels. Dit is bedoeld voor MVP/diagnose-routes waar de controller of DAW note events en pitch bend events op verschillende MIDI channels aanlevert.
 
 Scopegrenzen:
 
@@ -42,10 +45,16 @@ Logic Pro of MIDI keyboard test:
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --debuglevel verbose
 ```
 
+SMK37/Logic cross-channel test:
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 32 --timeout 30 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --debuglevel verbose
+```
+
 Verwachte CLI-indicaties:
 
 ```text
-Streaming MIDI audio trigger settings: ... voice_mode=sustained ... pitch_bend_range=2st ...
+Streaming MIDI audio trigger settings: ... voice_mode=sustained ... pitch_bend_range=2st ... pitch_bend_channel_mode=omni ...
 Received MIDI messages: ... pitch_bend:4096:channel=1 ...
 ```
 
@@ -54,14 +63,15 @@ Acceptatie:
 - Pitch bend messages verschijnen in verbose output.
 - Een actieve sustained voice buigt hoorbaar in toonhoogte.
 - Bend werkt per MIDI channel.
+- `--pitch-bend-channel-mode omni` maakt pitch bend hoorbaar wanneer note events en pitch bend events op verschillende channels binnenkomen.
+- Pitch bend bursts stoppen de stream niet meer na de eerste `--max-messages 32`; `--max-control-messages` geeft control messages aparte speelruimte.
 - Zonder pitch bend blijft sustained playback uit US-035 ongewijzigd.
 - Eventuele kleine latency is toegestaan binnen US-036; modulation/CC1 blijft US-037.
 
 ## Traceability
 
-- ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
+- ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
 - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-036 MIDI Pitch Bend Mapping En DSP
 - Version: 0.1.0
-
