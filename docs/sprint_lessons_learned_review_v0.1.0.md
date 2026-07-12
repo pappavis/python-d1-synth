@@ -148,6 +148,8 @@ Belangrijke scopegrens: US-037 gebruikt CC1 alleen voor eenvoudige vibrato-depth
 
 Statuslabel: US-037 `In Review`.
 
+US-037-IMPEDIMENT-001 les: sustained audio cleanup mag bij `Ctrl-C` niet vertrouwen op een gewone PortAudio/CoreAudio `stop()`, omdat die in lange performance-sessies kan blokkeren. De interrupt-route gebruikt nu `abort()` wanneer beschikbaar en valt alleen terug naar `stop()` als de stream geen abort ondersteunt.
+
 ## Aanbevolen Volgende Stap
 
 De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of we:

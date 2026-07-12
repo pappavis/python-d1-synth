@@ -55,6 +55,7 @@ Acceptatie:
 
 - CC1 messages verschijnen in verbose output als `control_change:1:<waarde>:channel=<n>`.
 - Een actieve sustained voice krijgt hoorbare vibrato wanneer CC1 boven nul staat.
+- `Ctrl-C` stopt de CLI via immediate sustained audio abort tijdens cleanup.
 - Zonder CC1 blijft sustained playback uit US-035 en pitch bend uit US-036 ongewijzigd.
 - Eventuele kleine latency is toegestaan binnen US-037; professionele low-latency audio optimalisatie blijft later werk.
 

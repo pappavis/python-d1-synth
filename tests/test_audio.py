@@ -3,8 +3,8 @@
 # Doel: Tests voor audio routing, device selectie en sustained streaming output.
 # Sprint: Future MIDI/DAW
 # User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
+# Actie: US-037-IMPEDIMENT-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
 
 import numpy as np
 
@@ -205,5 +205,46 @@ class TestSoundDeviceSustainedAudioPlayer:
             ("create", 44100, 2, "float32", "Scarlett 8i6 USB", True),
             ("start",),
             ("stop",),
+            ("close",),
+        ]
+
+    def test_abort_uses_stream_abort_for_interrupt_cleanup(self, monkeypatch) -> None:
+        calls = []
+
+        class FakeOutputStream:
+            def __init__(self, samplerate, channels, dtype, device, callback):
+                calls.append(("create", samplerate, channels, dtype, device, callable(callback)))
+
+            def start(self):
+                calls.append(("start",))
+
+            def abort(self):
+                calls.append(("abort",))
+
+            def close(self):
+                calls.append(("close",))
+
+        class FakeSoundDevice:
+            OutputStream = FakeOutputStream
+
+        monkeypatch.setitem(__import__("sys").modules, "sounddevice", FakeSoundDevice())
+        player = SoundDeviceSustainedAudioPlayer()
+
+        player.start(
+            SustainedAudioPlayerSettings(
+                sample_rate=44100,
+                waveform=Waveform.SINE,
+                amplitude=0.2,
+                channel=OutputChannel.STEREO,
+                device="Scarlett 8i6 USB",
+            )
+        )
+        frames = player.abort()
+
+        assert frames == 0
+        assert calls == [
+            ("create", 44100, 2, "float32", "Scarlett 8i6 USB", True),
+            ("start",),
+            ("abort",),
             ("close",),
         ]

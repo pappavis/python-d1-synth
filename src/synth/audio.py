@@ -3,8 +3,8 @@
 # Doel: Audio buffers, device selectie, routing en sustained streaming output.
 # Sprint: Future MIDI/DAW
 # User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
+# Actie: US-037-IMPEDIMENT-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
 
 from dataclasses import dataclass
 from enum import Enum
@@ -287,6 +287,21 @@ class SoundDeviceSustainedAudioPlayer:
             rendered_frame_count = self._rendered_frame_count
         if stream is not None:
             stream.stop()
+            stream.close()
+        return rendered_frame_count
+
+    def abort(self) -> int:
+        with self._lock:
+            stream = self._stream
+            self._stream = None
+            self._voice_by_id.clear()
+            rendered_frame_count = self._rendered_frame_count
+        if stream is not None:
+            abort = getattr(stream, "abort", None)
+            if callable(abort):
+                abort()
+            else:
+                stream.stop()
             stream.close()
         return rendered_frame_count
 

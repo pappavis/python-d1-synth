@@ -367,6 +367,8 @@ Controleer in verbose output:
 - `modulation_vibrato_rate=5Hz`
 - `Received MIDI messages` bevat `control_change:1:<waarde>:channel=<n>` wanneer CC1 binnenkomt.
 
+US-037 interrupt-fix: bij `Ctrl-C` gebruikt sustained streaming nu een immediate audio-stream abort tijdens cleanup, zodat PortAudio/CoreAudio niet eerst langdurig op een gewone `stop()` hoeft te wachten.
+
 Scope: geen sustain pedal, envelope release, GUI of plugin.
 
 Lessons learned en sprint review:

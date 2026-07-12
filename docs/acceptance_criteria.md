@@ -514,6 +514,7 @@ Acceptatie op 2026-07-11:
 - Given `--voice-mode sustained` draait en CC1 events binnenkomen, then actieve voices op hetzelfde MIDI channel vibrato krijgen.
 - Given een CC1 event vóór een nieuwe `note_on` binnenkomt, then de nieuwe voice de huidige channel modulation erft.
 - Given `--debuglevel verbose` actief is, then de CLI toont `modulation_vibrato_depth=...st`, `modulation_vibrato_rate=...Hz` en received messages zoals `control_change:1:96:channel=1`.
+- Given de gebruiker Ctrl-C drukt tijdens sustained streaming, then de audio-stream via immediate abort wordt opgeschoond en de CLI `Streaming MIDI audio trigger interrupted by user.` rapporteert.
 - `docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-037 MIDI Modulation CC1 Mapping En DSP`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-037 MIDI Modulation CC1 Mapping En DSP` en `Version: 0.1.0`.
 - Scope: CC1 stuurt alleen eenvoudige vibrato-depth; geen filter, sustain pedal, envelope release, GUI/plugin.

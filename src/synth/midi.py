@@ -3,8 +3,8 @@
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
 # User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
+# Actie: US-037-IMPEDIMENT-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
 
 from __future__ import annotations
 
@@ -646,6 +646,9 @@ class SustainedAudioPlayer(Protocol):
     def stop(self) -> int:
         ...
 
+    def abort(self) -> int:
+        ...
+
 
 class StreamingMidiInputBackend(Protocol):
     def iter_messages(
@@ -1257,6 +1260,7 @@ class StreamingMidiAudioTrigger:
         pitch_bend_by_channel: dict[int, float] = {}
         modulation_depth_by_channel: dict[int, float] = {}
         omni_pitch_bend_semitones: float | None = None
+        interrupted = False
 
         sustained_player.start(
             SustainedAudioPlayerSettings(
@@ -1327,10 +1331,13 @@ class StreamingMidiAudioTrigger:
                     note_on, event_index = active_note
                     sustained_player.note_off(key)
                     played_events[event_index] = self._gated_event_from_messages(mapper, note_on, message, settings)
+        except KeyboardInterrupt:
+            interrupted = True
+            raise
         finally:
             for key in tuple(active_note_on_by_key):
                 sustained_player.note_off(key)
-            audio_frame_count = sustained_player.stop()
+            audio_frame_count = sustained_player.abort() if interrupted else sustained_player.stop()
 
         return self._streaming_result(
             settings=settings,
