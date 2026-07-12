@@ -384,7 +384,7 @@ Stoppen:
 
 Bevestigd gedrag: Product Owner testte US-038 als geslaagd.
 
-US-039 is in review: `midi play-stream --voice-mode sustained` verwerkt nu MIDI CC64 sustain pedal. CC64 waarden `64..127` houden released voices vast; CC64 waarden `0..63` laten de vastgehouden voices los.
+US-039 is afgerond: `midi play-stream --voice-mode sustained` verwerkt nu MIDI CC64 sustain pedal. CC64 waarden `64..127` houden released voices vast; CC64 waarden `0..63` laten de vastgehouden voices los.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --until-interrupt --debuglevel verbose
@@ -395,6 +395,8 @@ Controleer in verbose output:
 - `control_change:64:127:channel=<n>` bij pedal down
 - `control_change:64:0:channel=<n>` bij pedal up
 - Losgelaten toetsen blijven hoorbaar zolang CC64 down is.
+
+Bevestigd gedrag: Product Owner heeft geen fysieke sustain pedal en accepteerde US-039 op basis van aanname plus groene automatische CC64-tests.
 
 Scope: geen envelope release, GUI of plugin.
 

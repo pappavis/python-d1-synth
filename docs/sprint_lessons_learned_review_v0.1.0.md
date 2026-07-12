@@ -168,8 +168,10 @@ US-039 volgt logisch na sustained voices, pitch bend, modulation en performance 
 
 Belangrijke scopegrens: US-039 implementeert alleen binaire sustain pedal down/up met CC64 threshold 64. Half-pedal curves, sostenuto, envelope release, GUI en plugin packaging blijven aparte stories.
 
-Statuslabel: US-039 `In Review`.
+Product Owner accepteerde US-039 op 2026-07-12 zonder fysieke sustain pedal, op basis van aanname plus groene automatische CC64-tests. Les: wanneer hardware ontbreekt, moet de story duidelijk vastleggen of acceptatie hardwarematig, DAW-matig of op basis van testdekking gebeurt.
+
+Statuslabel: US-039 `Done`.
 
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of US-039 sustain pedal CC64 hoorbaar werkt en netjes met `Ctrl-C` blijft stoppen.
+De eerstvolgende taak is US-040 Envelope Release / Soft Note-Off, omdat note-off en CC64 release nu nog hard stoppen.

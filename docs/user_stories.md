@@ -356,4 +356,4 @@ Als speler wil ik MIDI sustain pedal kunnen gebruiken, zodat notes blijven klink
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met `control_change:64` handling in `--voice-mode sustained`, CC64 threshold `64`, held-voice release bij pedal up, verbose diagnostics en `docs/sustain_pedal_cc64_v0.1.0.md`. Scope: geen half-pedal curves, geen envelope release, geen sostenuto pedal, GUI of plugin.
+Notitie: Done met `control_change:64` handling in `--voice-mode sustained`, CC64 threshold `64`, held-voice release bij pedal up, verbose diagnostics en `docs/sustain_pedal_cc64_v0.1.0.md`. Product Owner heeft geen fysieke sustain pedal en accepteerde US-039 op basis van aanname plus groene automatische CC64-tests. Scope: geen half-pedal curves, geen envelope release, geen sostenuto pedal, GUI of plugin.

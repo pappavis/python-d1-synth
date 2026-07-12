@@ -541,5 +541,6 @@ Acceptatie op 2026-07-11:
 - Given `--debuglevel verbose` actief is, then de CLI toont received messages zoals `control_change:64:127:channel=1`.
 - `docs/sustain_pedal_cc64_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-039 Sustain Pedal CC64`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-039 Sustain Pedal CC64` en `Version: 0.1.0`.
+- Acceptatie op 2026-07-12: Product Owner heeft geen fysieke sustain pedal en accepteerde US-039 op basis van aanname plus groene automatische CC64-tests.
 - Scope: geen half-pedal curves, geen envelope release, geen sostenuto pedal, geen GUI/plugin en geen hardcoded MIDI hardware device names.
-- Story status is `In Review`.
+- Story status is `Done`.

@@ -2,7 +2,7 @@
 
 - Sprintnummer: Future MIDI/DAW
 - Doc versie: 0.1.0
-- Status: In Review
+- Status: Done
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-039 Sustain Pedal CC64
 - Actie: US-039-RED-GREEN-001
@@ -10,6 +10,8 @@
 ## Doel
 
 US-039 voegt MIDI sustain pedal ondersteuning toe aan sustained playback. CC64 is de MIDI sustain controller: waarden `64..127` betekenen pedal down en waarden `0..63` betekenen pedal up.
+
+Product Owner acceptatie op 2026-07-12: er is geen fysieke sustain pedal beschikbaar; US-039 is geaccepteerd op basis van aanname plus groene automatische CC64-tests.
 
 ## Gedrag
 

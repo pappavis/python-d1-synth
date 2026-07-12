@@ -414,7 +414,7 @@ class TestDocumentationArtifacts:
             "US-036 `Done`",
             "US-037 `Done`",
             "US-038 `Done`",
-            "US-039 `In Review`",
+            "US-039 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -659,12 +659,13 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-039 Sustain Pedal CC64",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "control_change:64",
             "CC64",
             "64..127",
             "0..63",
+            "Product Owner acceptatie op 2026-07-12",
             "control_change:64:127:channel=<n>",
             "control_change:64:0:channel=<n>",
             "Ctrl-C",
