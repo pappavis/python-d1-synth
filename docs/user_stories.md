@@ -347,4 +347,13 @@ Als speler wil ik `midi play-stream` kunnen starten zonder korte testlimiet, zod
 Prioriteit: Must
 Sprint: Future
 
-Notitie: In Review met CLI optie `--until-interrupt`, `StreamingMidiAudioTriggerSettings.run_until_interrupted`, praktische lange backend-limieten, verbose `until_interrupt=true` diagnostics en `docs/performance_mode_until_interrupt_v0.1.0.md`. Scope: performance-mode voor bestaande commandline streaming; geen sustain pedal, envelope release, GUI of plugin.
+Notitie: Done met CLI optie `--until-interrupt`, `StreamingMidiAudioTriggerSettings.run_until_interrupted`, praktische lange backend-limieten, verbose `until_interrupt=true` diagnostics en `docs/performance_mode_until_interrupt_v0.1.0.md`. Product Owner testte US-038 als geslaagd. Scope: performance-mode voor bestaande commandline streaming; geen envelope release, GUI of plugin.
+
+### US-039: Sustain Pedal CC64
+
+Als speler wil ik MIDI sustain pedal kunnen gebruiken, zodat notes blijven klinken nadat ik toetsen loslaat zolang de pedal ingedrukt is.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: In Review met `control_change:64` handling in `--voice-mode sustained`, CC64 threshold `64`, held-voice release bij pedal up, verbose diagnostics en `docs/sustain_pedal_cc64_v0.1.0.md`. Scope: geen half-pedal curves, geen envelope release, geen sostenuto pedal, GUI of plugin.

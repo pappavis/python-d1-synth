@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-038 Performance Mode Until Interrupt
-# Actie: US-038-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
+# User-Story: US-039 Sustain Pedal CC64
+# Actie: US-039-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-039
 
 from __future__ import annotations
 
@@ -384,6 +384,7 @@ class StreamingVoiceMode(str, Enum):
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-038 Performance Mode Until Interrupt
+    - User Story: US-039 Sustain Pedal CC64
     - Version: 0.1.0
     """
 
@@ -423,6 +424,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-038 Performance Mode Until Interrupt
+    - User Story: US-039 Sustain Pedal CC64
     - Version: 0.1.0
     """
 
@@ -495,6 +497,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-038 Performance Mode Until Interrupt
+    - User Story: US-039 Sustain Pedal CC64
     - Version: 0.1.0
     """
 
@@ -1129,6 +1132,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-038 Performance Mode Until Interrupt
+    - User Story: US-039 Sustain Pedal CC64
     - Version: 0.1.0
     """
 
@@ -1264,6 +1268,8 @@ class StreamingMidiAudioTrigger:
         modulation_mapper = MidiModulationMapper(settings.modulation_vibrato_depth_semitones)
         pitch_bend_by_channel: dict[int, float] = {}
         modulation_depth_by_channel: dict[int, float] = {}
+        sustain_down_by_channel: dict[int, bool] = {}
+        sustained_release_keys: set[tuple[int, int]] = set()
         omni_pitch_bend_semitones: float | None = None
         interrupted = False
 
@@ -1296,15 +1302,30 @@ class StreamingMidiAudioTrigger:
                             sustained_player.pitch_bend(message.channel, semitones)
                         continue
                     if message.message_type == "control_change":
-                        if message.control_number != 1:
+                        if message.control_number == 1:
+                            depth = modulation_mapper.depth_for(message.control_value)
+                            modulation_depth_by_channel[message.channel] = depth
+                            sustained_player.modulation(
+                                message.channel,
+                                depth,
+                                settings.modulation_vibrato_rate_hz,
+                            )
                             continue
-                        depth = modulation_mapper.depth_for(message.control_value)
-                        modulation_depth_by_channel[message.channel] = depth
-                        sustained_player.modulation(
-                            message.channel,
-                            depth,
-                            settings.modulation_vibrato_rate_hz,
-                        )
+                        if message.control_number == 64:
+                            sustain_down = message.control_value >= 64
+                            sustain_down_by_channel[message.channel] = sustain_down
+                            if not sustain_down:
+                                for released_key in self._release_sustained_keys_for_channel(
+                                    message.channel,
+                                    message,
+                                    active_note_on_by_key,
+                                    sustained_release_keys,
+                                    played_events,
+                                    mapper,
+                                    settings,
+                                ):
+                                    sustained_player.note_off(released_key)
+                            continue
                         continue
                     if message.message_type == "note_on" and message.velocity > 0:
                         previous_active_note = active_note_on_by_key.get(key)
@@ -1313,6 +1334,7 @@ class StreamingMidiAudioTrigger:
                             played_events[previous_event_index] = self._gated_event_from_messages(
                                 mapper, previous_note_on, message, settings
                             )
+                            sustained_release_keys.discard(key)
                         event = self._fallback_event_from_note_on(mapper, message, settings)
                         sustained_player.note_on(key, event.note.frequency_hz, event.velocity)
                         if settings.pitch_bend_channel_mode is PitchBendChannelMode.OMNI:
@@ -1333,6 +1355,10 @@ class StreamingMidiAudioTrigger:
                     active_note = active_note_on_by_key.pop(key, None)
                     if active_note is None:
                         continue
+                    if sustain_down_by_channel.get(message.channel, False):
+                        active_note_on_by_key[key] = active_note
+                        sustained_release_keys.add(key)
+                        continue
                     note_on, event_index = active_note
                     sustained_player.note_off(key)
                     played_events[event_index] = self._gated_event_from_messages(mapper, note_on, message, settings)
@@ -1351,6 +1377,37 @@ class StreamingMidiAudioTrigger:
             audio_frame_count=audio_frame_count,
             suppressed_duplicate_count=suppressed_duplicate_count,
         )
+
+    def _release_sustained_keys_for_channel(
+        self,
+        channel: int,
+        release_message: MidiMessage,
+        active_note_on_by_key: dict[tuple[int, int], tuple[MidiMessage, int]],
+        sustained_release_keys: set[tuple[int, int]],
+        played_events: list[NoteEvent],
+        mapper: MidiToNoteEventMapper,
+        settings: StreamingMidiAudioTriggerSettings,
+    ) -> tuple[tuple[int, int], ...]:
+        released_keys: list[tuple[int, int]] = []
+        for key in tuple(sustained_release_keys):
+            key_channel, note_number = key
+            if key_channel != channel:
+                continue
+            active_note = active_note_on_by_key.pop(key, None)
+            sustained_release_keys.discard(key)
+            if active_note is None:
+                continue
+            note_on, event_index = active_note
+            note_off = MidiMessage(
+                message_type="note_off",
+                note_number=note_number,
+                velocity=release_message.velocity,
+                channel=channel,
+                time_seconds=release_message.time_seconds,
+            )
+            played_events[event_index] = self._gated_event_from_messages(mapper, note_on, note_off, settings)
+            released_keys.append(key)
+        return tuple(released_keys)
 
     def _gated_event_from_messages(
         self,

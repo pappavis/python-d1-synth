@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-038 Performance Mode Until Interrupt
-# Actie: US-038-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
+# User-Story: US-039 Sustain Pedal CC64
+# Actie: US-039-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-039
 
 from synth.audio import (
     ChannelRouter,
@@ -448,6 +448,27 @@ class TestCodeTraceability:
             "Version: 0.1.0",
         )
         traceable_objects = (
+            StreamingMidiAudioTriggerSettings,
+            StreamingMidiAudioTriggerResult,
+            StreamingMidiAudioTrigger,
+            SynthCli,
+        )
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us039_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-039 Sustain Pedal CC64",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            StreamingVoiceMode,
             StreamingMidiAudioTriggerSettings,
             StreamingMidiAudioTriggerResult,
             StreamingMidiAudioTrigger,

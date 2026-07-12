@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-038",
+            "US-001 t/m US-039",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -413,7 +413,8 @@ class TestDocumentationArtifacts:
             "US-035 `Done`",
             "US-036 `Done`",
             "US-037 `Done`",
-            "US-038 `In Review`",
+            "US-038 `Done`",
+            "US-039 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -635,12 +636,39 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-038 Performance Mode Until Interrupt",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--until-interrupt",
             "Performance mode: running until Ctrl-C",
             "until_interrupt=true",
+            "Product Owner acceptatie op 2026-07-12",
             "Streaming MIDI audio trigger interrupted by user.",
+            "Geen hardcoded MIDI hardware device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us039_sustain_pedal_cc64_doc_contains_required_terms(self) -> None:
+        document = Path("docs/sustain_pedal_cc64_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-039 Sustain Pedal CC64",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "control_change:64",
+            "CC64",
+            "64..127",
+            "0..63",
+            "control_change:64:127:channel=<n>",
+            "control_change:64:0:channel=<n>",
+            "Ctrl-C",
+            "Geen half-pedal curves",
             "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:

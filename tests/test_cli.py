@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-038 Performance Mode Until Interrupt
-# Actie: US-038-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
+# User-Story: US-039 Sustain Pedal CC64
+# Actie: US-039-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-039
 
 import numpy as np
 
@@ -1028,6 +1028,15 @@ class TestSynthCli:
                             control_number=1,
                             control_value=96,
                         ),
+                        MidiMessage(
+                            message_type="control_change",
+                            note_number=0,
+                            velocity=0,
+                            channel=1,
+                            time_seconds=1.6,
+                            control_number=64,
+                            control_value=127,
+                        ),
                         MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=2.0),
                     ),
                     played_events=(
@@ -1078,6 +1087,8 @@ class TestSynthCli:
         assert "control_change:1:96:channel=1" in output
         assert "Streamed note durations: C4@0.000s/2.000s" in output
         assert "Total streamed audio frames: 88200, sample_rate=44100 Hz" in output
+        assert "CC64 sustain pedal holds released voices" in output
+        assert "control_change:64:127:channel=1" in output
 
     def test_midi_play_stream_until_interrupt_passes_performance_mode(self, monkeypatch, capsys) -> None:
         class FakeAudioSelector:

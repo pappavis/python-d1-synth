@@ -529,5 +529,17 @@ Acceptatie op 2026-07-11:
 - Given de gebruiker Ctrl-C drukt, then de bestaande interrupt cleanup actief blijft en `Streaming MIDI audio trigger interrupted by user.` rapporteert.
 - `docs/performance_mode_until_interrupt_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-038 Performance Mode Until Interrupt`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-038 Performance Mode Until Interrupt` en `Version: 0.1.0`.
+- Acceptatie op 2026-07-12: Product Owner testte US-038 performance mode als geslaagd.
 - Scope: performance mode wijzigt alleen de CLI streaming sessielimiet; geen sustain pedal, envelope release, GUI/plugin of hardcoded MIDI hardware device names.
+- Story status is `Done`.
+
+## US-039: Sustain Pedal CC64
+
+- Given `control_change:64` met waarde `64..127` binnenkomt, then sustained mode de sustain pedal voor dat MIDI channel als down registreert.
+- Given een `note_off` binnenkomt terwijl CC64 down is, then de voice hoorbaar blijft spelen.
+- Given `control_change:64` met waarde `0..63` binnenkomt, then de door sustain vastgehouden voices op dat MIDI channel worden losgelaten.
+- Given `--debuglevel verbose` actief is, then de CLI toont received messages zoals `control_change:64:127:channel=1`.
+- `docs/sustain_pedal_cc64_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-039 Sustain Pedal CC64`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-039 Sustain Pedal CC64` en `Version: 0.1.0`.
+- Scope: geen half-pedal curves, geen envelope release, geen sostenuto pedal, geen GUI/plugin en geen hardcoded MIDI hardware device names.
 - Story status is `In Review`.

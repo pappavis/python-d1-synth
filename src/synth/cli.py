@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-038 Performance Mode Until Interrupt
-# Actie: US-038-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
+# User-Story: US-039 Sustain Pedal CC64
+# Actie: US-039-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-039
 
 import argparse
 import importlib.util
@@ -66,6 +66,7 @@ class SynthCli:
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-038 Performance Mode Until Interrupt
+    - User Story: US-039 Sustain Pedal CC64
     - Version: 0.1.0
     """
 
@@ -548,7 +549,8 @@ class SynthCli:
         if settings.voice_mode is StreamingVoiceMode.SUSTAINED:
             reporter.light(
                 "Sustained MVP note: note_on starts a streaming voice and note_off stops it; "
-                "pitch bend bends active sustained voices; CC1 modulation adds vibrato."
+                "pitch bend bends active sustained voices; CC1 modulation adds vibrato; "
+                "CC64 sustain pedal holds released voices."
             )
         elif settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(

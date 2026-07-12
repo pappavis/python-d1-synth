@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger, pitch bend en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-038 Performance Mode Until Interrupt
-# Actie: US-038-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
+# User-Story: US-039 Sustain Pedal CC64
+# Actie: US-039-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-039
 
 import pytest
 
@@ -1421,6 +1421,82 @@ class TestStreamingMidiAudioTrigger:
         assert backend.requested_timeout_seconds > 600
         assert result.played_event_count == 1
         assert audio_player.play_count == 1
+
+    def test_streaming_trigger_sustained_mode_holds_note_off_until_cc64_pedal_up(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-039 should use batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.10),
+                    MidiMessage(
+                        message_type="control_change",
+                        note_number=0,
+                        velocity=0,
+                        channel=1,
+                        time_seconds=0.20,
+                        control_number=64,
+                        control_value=127,
+                    ),
+                    MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=0.50),
+                    MidiMessage(
+                        message_type="control_change",
+                        note_number=0,
+                        velocity=0,
+                        channel=1,
+                        time_seconds=1.50,
+                        control_number=64,
+                        control_value=0,
+                    ),
+                )
+
+        class FakeSustainedAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def start(self, settings):
+                self.calls.append(("start",))
+
+            def note_on(self, voice_id, frequency_hz, velocity):
+                self.calls.append(("note_on", voice_id, round(frequency_hz, 2)))
+
+            def note_off(self, voice_id):
+                self.calls.append(("note_off", voice_id))
+
+            def pitch_bend(self, channel, semitones):
+                self.calls.append(("pitch_bend", channel, round(semitones, 3)))
+
+            def modulation(self, channel, depth_semitones, rate_hz):
+                self.calls.append(("modulation", channel, round(depth_semitones, 3), round(rate_hz, 3)))
+
+            def stop(self):
+                self.calls.append(("stop",))
+                return 61740
+
+        sustained_audio_player = FakeSustainedAudioPlayer()
+
+        result = StreamingMidiAudioTrigger(
+            backend=FakeStreamingBatchBackend(),
+            sustained_audio_player=sustained_audio_player,
+        ).trigger(
+            StreamingMidiAudioTriggerSettings(
+                port_name="python-d1-synth",
+                max_messages=4,
+                timeout_seconds=2.0,
+                voice_mode=StreamingVoiceMode.SUSTAINED,
+            )
+        )
+
+        assert result.received_message_count == 4
+        assert result.played_event_count == 1
+        assert result.played_events[0].duration_seconds == pytest.approx(1.40)
+        assert sustained_audio_player.calls == [
+            ("start",),
+            ("note_on", (1, 60), 261.63),
+            ("note_off", (1, 60)),
+            ("stop",),
+        ]
 
     def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
         class FakeStreamingBackend:

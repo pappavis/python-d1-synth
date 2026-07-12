@@ -371,7 +371,7 @@ US-037 interrupt-fix: bij `Ctrl-C` gebruikt sustained streaming nu een immediate
 
 Bevestigd gedrag: Product Owner hoorde pitch bend en CC1 modulation hoorbaar werken; de US-037 interrupt-fix is getest en akkoord.
 
-US-038 is in review: voor gewoon spelen zonder kunstmatige sessielimiet kan `midi play-stream` nu in performance mode draaien met `--until-interrupt`. In die mode blijven de bestaande `--max-messages` en `--timeout` argumenten geldig voor parser/traceability, maar de runtime gebruikt praktische lange backend-limieten en stopt primair via `Ctrl-C`.
+US-038 is afgerond: voor gewoon spelen zonder kunstmatige sessielimiet kan `midi play-stream` nu in performance mode draaien met `--until-interrupt`. In die mode blijven de bestaande `--max-messages` en `--timeout` argumenten geldig voor parser/traceability, maar de runtime gebruikt praktische lange backend-limieten en stopt primair via `Ctrl-C`.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --until-interrupt --debuglevel light
@@ -382,7 +382,21 @@ Stoppen:
 - Druk `Ctrl-C` in de terminal waar `play-stream` draait.
 - Verwachte melding: `Streaming MIDI audio trigger interrupted by user.`
 
-Scope: geen sustain pedal, envelope release, GUI of plugin.
+Bevestigd gedrag: Product Owner testte US-038 als geslaagd.
+
+US-039 is in review: `midi play-stream --voice-mode sustained` verwerkt nu MIDI CC64 sustain pedal. CC64 waarden `64..127` houden released voices vast; CC64 waarden `0..63` laten de vastgehouden voices los.
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --until-interrupt --debuglevel verbose
+```
+
+Controleer in verbose output:
+
+- `control_change:64:127:channel=<n>` bij pedal down
+- `control_change:64:0:channel=<n>` bij pedal up
+- Losgelaten toetsen blijven hoorbaar zolang CC64 down is.
+
+Scope: geen envelope release, GUI of plugin.
 
 Lessons learned en sprint review:
 

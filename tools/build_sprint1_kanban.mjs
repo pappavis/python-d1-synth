@@ -68,7 +68,8 @@ const futureStories = [
   ["US-035", "Story", "Future MIDI En DAW Integratie", "Sustained Note Audio Engine", "Done", "Must", "DSP Engineer", 8, "Future", "note_on start een streaming voice en note_off stopt die voice.", "Sustained audio callback en lifecycle tests falen.", "SoundDeviceSustainedAudioPlayer, --voice-mode sustained en held-note diagnostics.", "US-034", "Klanttest geslaagd: sustained mode speelde hoorbaar door tot note-off; Total streamed audio frames: 575172."],
   ["US-036", "Story", "Future MIDI En DAW Integratie", "MIDI Pitch Bend Mapping En DSP", "Done", "Should", "DSP Engineer", 5, "Future", "Pitch bend events buigen sustained oscillatorfrequentie hoorbaar.", "Pitch bend mapping, channel routing en control-message burst tests falen.", "MidiPitchBendMapper, --pitch-bend-range, --pitch-bend-channel-mode en --max-control-messages.", "US-035", "Product Owner accepteerde hoorbare sustained playback, triads, korte/lange nootduur en nette Ctrl-C interrupt met --timeout 600."],
   ["US-037", "Story", "Future MIDI En DAW Integratie", "MIDI Modulation CC1 Mapping En DSP", "Done", "Should", "DSP Engineer", 5, "Future", "CC1 modulation stuurt eenvoudige vibrato-depth op sustained voices aan.", "CC1 normalisatie, modulation mapper, sustained player modulation en CLI diagnostics tests falen.", "MidiModulationMapper, control_change normalisatie, --modulation-vibrato-depth en --modulation-vibrato-rate.", "US-036", "Klanttest geslaagd: pitch bend en CC1 modulation hoorbaar; interrupt-fix getest en akkoord."],
-  ["US-038", "Story", "Future MIDI En DAW Integratie", "Performance Mode Until Interrupt", "In Review", "Must", "DSP Engineer", 3, "Future", "play-stream kan als performance-run draaien tot Ctrl-C zonder korte testlimiet.", "--until-interrupt, effective backend limits, Ctrl-C cleanup en CLI diagnostics tests falen.", "StreamingMidiAudioTriggerSettings.run_until_interrupted, --until-interrupt en performance-mode README/docs.", "US-037", "In review: performance mode gebruikt praktische lange backend-limieten en meldt until_interrupt=true."],
+  ["US-038", "Story", "Future MIDI En DAW Integratie", "Performance Mode Until Interrupt", "Done", "Must", "DSP Engineer", 3, "Future", "play-stream kan als performance-run draaien tot Ctrl-C zonder korte testlimiet.", "--until-interrupt, effective backend limits, Ctrl-C cleanup en CLI diagnostics tests falen.", "StreamingMidiAudioTriggerSettings.run_until_interrupted, --until-interrupt en performance-mode README/docs.", "US-037", "Klanttest geslaagd: performance mode met --until-interrupt werkt."],
+  ["US-039", "Story", "Future MIDI En DAW Integratie", "Sustain Pedal CC64", "In Review", "Must", "DSP Engineer", 5, "Future", "CC64 sustain pedal houdt released sustained voices vast tot pedal up.", "CC64 down/up, held note release, CLI diagnostics en docs tests falen.", "control_change:64 handling in sustained mode, pedal threshold 64 en docs/sustain_pedal_cc64_v0.1.0.md.", "US-035, US-038", "In review: CC64 64..127 is pedal down; 0..63 is pedal up."],
 ];
 
 board.showGridLines = false;
@@ -126,8 +127,8 @@ future.getRange("A1").values = [["python-d1-synth Future MIDI/DAW Backlog"]];
 future.getRange("A2:N2").merge();
 future.getRange("A2").values = [["Scope mutation: Logic Pro 12.3, other DAWs, generic USB MIDI, external MIDI, RaspiMidiHub, physical MIDI hub, MiniFreak, Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave"]];
 future.getRange("A4:N4").values = [headers];
-future.getRange("A5:N24").values = futureStories;
-const futureTable = future.tables.add("A4:N24", true, "FutureMidiDawBacklog");
+future.getRange("A5:N25").values = futureStories;
+const futureTable = future.tables.add("A4:N25", true, "FutureMidiDawBacklog");
 futureTable.style = "TableStyleMedium4";
 futureTable.showFilterButton = true;
 future.getRange("A1:N1").format = {
@@ -145,14 +146,14 @@ future.getRange("A4:N4").format = {
   font: { bold: true, color: "#FFFFFF" },
   wrapText: true,
 };
-future.getRange("A5:N24").format = {
+future.getRange("A5:N25").format = {
   wrapText: true,
   verticalAlignment: "top",
 };
-future.getRange("H5:H24").setNumberFormat("0");
-future.getRange("A4:N24").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
-future.getRange("A4:N24").format.autofitColumns();
-future.getRange("A4:N24").format.autofitRows();
+future.getRange("H5:H25").setNumberFormat("0");
+future.getRange("A4:N25").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
+future.getRange("A4:N25").format.autofitColumns();
+future.getRange("A4:N25").format.autofitRows();
 future.freezePanes.freezeRows(4);
 future.getRange("A:A").format.columnWidth = 10;
 future.getRange("B:B").format.columnWidth = 10;
@@ -188,9 +189,9 @@ summary.getRange("B4:B9").formulas = [
   ["=COUNTIF('Sprint 1 Board'!F5:F22,\"Should\")"],
   ["=SUM('Sprint 1 Board'!H5:H22)"],
   ["=COUNTIF('Sprint 1 Board'!E5:E22,\"In Review\")"],
-  ["=COUNTA('Future MIDI DAW'!A5:A24)"],
+  ["=COUNTA('Future MIDI DAW'!A5:A25)"],
 ];
-summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H24)"]];
+summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H25)"]];
 summary.getRange("D3:F8").values = [
   ["Status", "Count", "Story Points"],
   ["To Do", null, null],
@@ -259,7 +260,7 @@ await fs.writeFile(`${outputDir}/sprint_1_summary_preview.png`, new Uint8Array(a
 
 const futurePreview = await workbook.render({
   sheetName: "Future MIDI DAW",
-  range: "A1:N24",
+  range: "A1:N25",
   scale: 1,
   format: "png",
 });
@@ -277,7 +278,7 @@ console.log(inspect.ndjson);
 
 const futureInspect = await workbook.inspect({
   kind: "table",
-  range: "'Future MIDI DAW'!A4:N24",
+  range: "'Future MIDI DAW'!A4:N25",
   include: "values,formulas",
   tableMaxRows: 22,
   tableMaxCols: 14,

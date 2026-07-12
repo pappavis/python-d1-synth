@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-12
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-038
+Betrokken stories: US-001 t/m US-039
 
 ## Doel
 
@@ -158,8 +158,18 @@ US-038 volgt direct uit de Product Owner vraag om de synth "gewoon te gebruiken"
 
 Belangrijke scopegrens: US-038 verandert alleen de sessielimiet van de bestaande streaming route. Sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
 
-Statuslabel: US-038 `In Review`.
+Product Owner bevestigde US-038 op 2026-07-12 als geslaagd.
+
+Statuslabel: US-038 `Done`.
+
+## US-039 Review Voorbereiding
+
+US-039 volgt logisch na sustained voices, pitch bend, modulation en performance mode: een speler verwacht dat MIDI CC64 sustain pedal een losgelaten toets hoorbaar vasthoudt totdat de pedal omhoog gaat.
+
+Belangrijke scopegrens: US-039 implementeert alleen binaire sustain pedal down/up met CC64 threshold 64. Half-pedal curves, sostenuto, envelope release, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-039 `In Review`.
 
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of US-038 performance mode met `--until-interrupt` hoorbaar werkt en netjes met `Ctrl-C` stopt.
+De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of US-039 sustain pedal CC64 hoorbaar werkt en netjes met `Ctrl-C` blijft stoppen.

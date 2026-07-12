@@ -2,7 +2,7 @@
 
 - Sprintnummer: Future MIDI/DAW
 - Doc versie: 0.1.0
-- Status: In Review
+- Status: Done
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-038 Performance Mode Until Interrupt
 - Actie: US-038-RED-GREEN-001
@@ -10,6 +10,8 @@
 ## Doel
 
 US-038 maakt `midi play-stream` bruikbaar als eenvoudige performance-run: de gebruiker kan de Python D1 synth starten, in Logic/DAW of op een MIDI keyboard spelen, en de sessie stoppen met `Ctrl-C`.
+
+Product Owner acceptatie op 2026-07-12: performance mode is getest als geslaagd.
 
 ## Gedrag
 
