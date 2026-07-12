@@ -366,3 +366,12 @@ Prioriteit: Should
 Sprint: Future
 
 Notitie: Done met `SustainedAudioPlayerSettings.release_seconds`, release frames in `SustainedVoiceState`, CLI optie `--release-time`, audio callback fade-out tests en `docs/envelope_release_soft_note_off_v0.1.0.md`. Product Owner accepteerde US-040 op 2026-07-12. Default is `--release-time 0.03`; `--release-time 0` herstelt hard-stop gedrag voor vergelijking. Scope: geen volledige ADSR envelope, geen filter envelope, GUI of plugin.
+
+### US-041: Amp Envelope ADSR Parameters
+
+Als speler wil ik attack, decay, sustain en release voor amplitude kunnen instellen, zodat sustained notes minder statisch klinken en patch-karakter krijgen.
+
+Prioriteit: Should
+Sprint: Future
+
+Notitie: In Review met `SustainedAudioPlayerSettings.attack_seconds`, `decay_seconds`, `sustain_level`, bestaande `release_seconds`, CLI opties `--attack-time`, `--decay-time`, `--sustain-level`, `--release-time`, audio callback envelope tests en `docs/amp_envelope_adsr_parameters_v0.1.0.md`. Scope: geen filter envelope, geen velocity-afhankelijke envelope curves, GUI of plugin.

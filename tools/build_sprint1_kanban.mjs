@@ -71,6 +71,7 @@ const futureStories = [
   ["US-038", "Story", "Future MIDI En DAW Integratie", "Performance Mode Until Interrupt", "Done", "Must", "DSP Engineer", 3, "Future", "play-stream kan als performance-run draaien tot Ctrl-C zonder korte testlimiet.", "--until-interrupt, effective backend limits, Ctrl-C cleanup en CLI diagnostics tests falen.", "StreamingMidiAudioTriggerSettings.run_until_interrupted, --until-interrupt en performance-mode README/docs.", "US-037", "Klanttest geslaagd: performance mode met --until-interrupt werkt."],
   ["US-039", "Story", "Future MIDI En DAW Integratie", "Sustain Pedal CC64", "Done", "Must", "DSP Engineer", 5, "Future", "CC64 sustain pedal houdt released sustained voices vast tot pedal up.", "CC64 down/up, held note release, CLI diagnostics en docs tests falen.", "control_change:64 handling in sustained mode, pedal threshold 64 en docs/sustain_pedal_cc64_v0.1.0.md.", "US-035, US-038", "PO accepteerde zonder fysieke sustain pedal, op basis van aanname plus groene automatische CC64-tests."],
   ["US-040", "Story", "Future MIDI En DAW Integratie", "Envelope Release / Soft Note-Off", "Done", "Should", "DSP Engineer", 5, "Future", "note-off en sustain pedal release stoppen met korte fade-out in plaats van hard afkappen.", "release-time, sustained audio envelope, CLI diagnostics en docs tests falen.", "SustainedVoiceState release frames, --release-time en soft note-off docs/tests.", "US-035, US-039", "PO accepteerde US-040 op 2026-07-12; default release_time=0.03s en --release-time 0 zet hard stop terug."],
+  ["US-041", "Story", "Future MIDI En DAW Integratie", "Amp Envelope ADSR Parameters", "In Review", "Should", "DSP Engineer", 5, "Future", "Attack, decay, sustain en release vormen de amplitude van sustained voices.", "ADSR settings validation, audio callback envelope, CLI diagnostics en docs tests falen.", "SustainedAudioPlayerSettings ADSR velden, --attack-time, --decay-time, --sustain-level en docs/amp_envelope_adsr_parameters_v0.1.0.md.", "US-040", "In review: commandline ADSR parameters, geen filter envelope, GUI of plugin scope."],
 ];
 
 board.showGridLines = false;
@@ -128,8 +129,8 @@ future.getRange("A1").values = [["python-d1-synth Future MIDI/DAW Backlog"]];
 future.getRange("A2:N2").merge();
 future.getRange("A2").values = [["Scope mutation: Logic Pro 12.3, other DAWs, generic USB MIDI, external MIDI, RaspiMidiHub, physical MIDI hub, MiniFreak, Arturia KeyLab Mk3, Fishman TriplePlay, M-Vave"]];
 future.getRange("A4:N4").values = [headers];
-future.getRange("A5:N26").values = futureStories;
-const futureTable = future.tables.add("A4:N26", true, "FutureMidiDawBacklog");
+future.getRange("A5:N27").values = futureStories;
+const futureTable = future.tables.add("A4:N27", true, "FutureMidiDawBacklog");
 futureTable.style = "TableStyleMedium4";
 futureTable.showFilterButton = true;
 future.getRange("A1:N1").format = {
@@ -147,14 +148,14 @@ future.getRange("A4:N4").format = {
   font: { bold: true, color: "#FFFFFF" },
   wrapText: true,
 };
-future.getRange("A5:N26").format = {
+future.getRange("A5:N27").format = {
   wrapText: true,
   verticalAlignment: "top",
 };
-future.getRange("H5:H26").setNumberFormat("0");
-future.getRange("A4:N26").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
-future.getRange("A4:N26").format.autofitColumns();
-future.getRange("A4:N26").format.autofitRows();
+future.getRange("H5:H27").setNumberFormat("0");
+future.getRange("A4:N27").format.borders = { preset: "inside", style: "thin", color: "#D9EAD3" };
+future.getRange("A4:N27").format.autofitColumns();
+future.getRange("A4:N27").format.autofitRows();
 future.freezePanes.freezeRows(4);
 future.getRange("A:A").format.columnWidth = 10;
 future.getRange("B:B").format.columnWidth = 10;
@@ -190,9 +191,9 @@ summary.getRange("B4:B9").formulas = [
   ["=COUNTIF('Sprint 1 Board'!F5:F22,\"Should\")"],
   ["=SUM('Sprint 1 Board'!H5:H22)"],
   ["=COUNTIF('Sprint 1 Board'!E5:E22,\"In Review\")"],
-  ["=COUNTA('Future MIDI DAW'!A5:A26)"],
+  ["=COUNTA('Future MIDI DAW'!A5:A27)"],
 ];
-summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H26)"]];
+summary.getRange("B10").formulas = [["=SUM('Future MIDI DAW'!H5:H27)"]];
 summary.getRange("D3:F8").values = [
   ["Status", "Count", "Story Points"],
   ["To Do", null, null],
@@ -261,7 +262,7 @@ await fs.writeFile(`${outputDir}/sprint_1_summary_preview.png`, new Uint8Array(a
 
 const futurePreview = await workbook.render({
   sheetName: "Future MIDI DAW",
-  range: "A1:N26",
+  range: "A1:N27",
   scale: 1,
   format: "png",
 });
@@ -279,9 +280,9 @@ console.log(inspect.ndjson);
 
 const futureInspect = await workbook.inspect({
   kind: "table",
-  range: "'Future MIDI DAW'!A4:N26",
+  range: "'Future MIDI DAW'!A4:N27",
   include: "values,formulas",
-  tableMaxRows: 23,
+  tableMaxRows: 24,
   tableMaxCols: 14,
   maxChars: 7000,
 });

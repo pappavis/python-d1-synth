@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-040",
+            "US-001 t/m US-041",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -416,6 +416,7 @@ class TestDocumentationArtifacts:
             "US-038 `Done`",
             "US-039 `Done`",
             "US-040 `Done`",
+            "US-041 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -699,6 +700,38 @@ class TestDocumentationArtifacts:
             "CC1 modulation",
             "Ctrl-C",
             "Geen volledige ADSR envelope",
+            "Geen hardcoded MIDI hardware device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us041_amp_envelope_adsr_parameters_doc_contains_required_terms(self) -> None:
+        document = Path("docs/amp_envelope_adsr_parameters_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-041 Amp Envelope ADSR Parameters",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--voice-mode sustained",
+            "--attack-time 0.02",
+            "--decay-time 0.12",
+            "--sustain-level 0.6",
+            "--release-time 0.08",
+            "attack_time=0.02s",
+            "decay_time=0.12s",
+            "sustain_level=0.6",
+            "release_time=0.08s",
+            "Pitch bend",
+            "CC1 modulation",
+            "CC64 sustain pedal",
+            "Ctrl-C",
+            "Geen filter envelope",
             "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:

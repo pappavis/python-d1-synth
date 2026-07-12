@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-040 Envelope Release / Soft Note-Off
-# Actie: US-040-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
+# User-Story: US-041 Amp Envelope ADSR Parameters
+# Actie: US-041-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
 
 import numpy as np
 
@@ -998,6 +998,9 @@ class TestSynthCli:
                 assert settings.modulation_vibrato_depth_semitones == 0.75
                 assert settings.modulation_vibrato_rate_hz == 6.5
                 assert settings.run_until_interrupted is False
+                assert settings.attack_time_seconds == 0.02
+                assert settings.decay_time_seconds == 0.12
+                assert settings.sustain_level == 0.6
                 assert settings.release_time_seconds == 0.08
                 parser = NoteParser()
                 return StreamingMidiAudioTriggerResult(
@@ -1069,6 +1072,12 @@ class TestSynthCli:
                 "0.75",
                 "--modulation-vibrato-rate",
                 "6.5",
+                "--attack-time",
+                "0.02",
+                "--decay-time",
+                "0.12",
+                "--sustain-level",
+                "0.6",
                 "--release-time",
                 "0.08",
                 "--debuglevel",
@@ -1086,13 +1095,16 @@ class TestSynthCli:
         assert "modulation_vibrato_depth=0.75st" in output
         assert "modulation_vibrato_rate=6.5Hz" in output
         assert "until_interrupt=false" in output
+        assert "attack_time=0.02s" in output
+        assert "decay_time=0.12s" in output
+        assert "sustain_level=0.6" in output
         assert "release_time=0.08s" in output
         assert "pitch_bend:4096:channel=1" in output
         assert "control_change:1:96:channel=1" in output
         assert "Streamed note durations: C4@0.000s/2.000s" in output
         assert "Total streamed audio frames: 88200, sample_rate=44100 Hz" in output
         assert "CC64 sustain pedal holds released voices" in output
-        assert "release-time softens note-off" in output
+        assert "ADSR envelope shapes amplitude" in output
         assert "control_change:64:127:channel=1" in output
 
     def test_midi_play_stream_until_interrupt_passes_performance_mode(self, monkeypatch, capsys) -> None:

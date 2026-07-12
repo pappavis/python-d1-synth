@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-040 Envelope Release / Soft Note-Off
-# Actie: US-040-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
+# User-Story: US-041 Amp Envelope ADSR Parameters
+# Actie: US-041-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
 
 from __future__ import annotations
 
@@ -386,6 +386,7 @@ class StreamingVoiceMode(str, Enum):
     - User Story: US-038 Performance Mode Until Interrupt
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -427,6 +428,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-038 Performance Mode Until Interrupt
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -444,6 +446,9 @@ class StreamingMidiAudioTriggerSettings:
     modulation_vibrato_depth_semitones: float = 0.25
     modulation_vibrato_rate_hz: float = 5.0
     run_until_interrupted: bool = False
+    attack_time_seconds: float = 0.0
+    decay_time_seconds: float = 0.0
+    sustain_level: float = 1.0
     release_time_seconds: float = 0.03
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
@@ -478,6 +483,12 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("modulation_vibrato_depth_semitones must not be negative")
         if self.modulation_vibrato_rate_hz <= 0:
             raise ValueError("modulation_vibrato_rate_hz must be positive")
+        if self.attack_time_seconds < 0:
+            raise ValueError("attack_time_seconds must not be negative")
+        if self.decay_time_seconds < 0:
+            raise ValueError("decay_time_seconds must not be negative")
+        if not 0 <= self.sustain_level <= 1.0:
+            raise ValueError("sustain_level must be between 0 and 1")
         if self.release_time_seconds < 0:
             raise ValueError("release_time_seconds must not be negative")
         if self.sample_rate <= 0:
@@ -504,6 +515,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-038 Performance Mode Until Interrupt
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -1140,6 +1152,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-038 Performance Mode Until Interrupt
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -1287,6 +1300,9 @@ class StreamingMidiAudioTrigger:
                 amplitude=settings.amplitude,
                 channel=settings.channel,
                 device=settings.audio_device,
+                attack_seconds=settings.attack_time_seconds,
+                decay_seconds=settings.decay_time_seconds,
+                sustain_level=settings.sustain_level,
                 release_seconds=settings.release_time_seconds,
             )
         )

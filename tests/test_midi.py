@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger, pitch bend en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-040 Envelope Release / Soft Note-Off
-# Actie: US-040-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
+# User-Story: US-041 Amp Envelope ADSR Parameters
+# Actie: US-041-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
 
 import pytest
 
@@ -1509,6 +1509,68 @@ class TestStreamingMidiAudioTrigger:
             ("stop",),
         ]
 
+    def test_streaming_trigger_sustained_mode_passes_adsr_settings_to_player(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-041 should use batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.10),
+                    MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=0.40),
+                )
+
+        class FakeSustainedAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def start(self, settings):
+                self.calls.append(
+                    (
+                        "start",
+                        round(settings.attack_seconds, 3),
+                        round(settings.decay_seconds, 3),
+                        round(settings.sustain_level, 3),
+                        round(settings.release_seconds, 3),
+                    )
+                )
+
+            def note_on(self, voice_id, frequency_hz, velocity):
+                self.calls.append(("note_on", voice_id))
+
+            def note_off(self, voice_id):
+                self.calls.append(("note_off", voice_id))
+
+            def stop(self):
+                self.calls.append(("stop",))
+                return 13230
+
+        sustained_audio_player = FakeSustainedAudioPlayer()
+
+        result = StreamingMidiAudioTrigger(
+            backend=FakeStreamingBatchBackend(),
+            sustained_audio_player=sustained_audio_player,
+        ).trigger(
+            StreamingMidiAudioTriggerSettings(
+                port_name="python-d1-synth",
+                max_messages=2,
+                timeout_seconds=1.0,
+                voice_mode=StreamingVoiceMode.SUSTAINED,
+                attack_time_seconds=0.02,
+                decay_time_seconds=0.12,
+                sustain_level=0.6,
+                release_time_seconds=0.08,
+            )
+        )
+
+        assert result.played_event_count == 1
+        assert sustained_audio_player.calls == [
+            ("start", 0.02, 0.12, 0.6, 0.08),
+            ("note_on", (1, 60)),
+            ("note_off", (1, 60)),
+            ("stop",),
+        ]
+
     def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
         class FakeStreamingBackend:
             def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
@@ -1563,6 +1625,14 @@ class TestStreamingMidiAudioTrigger:
     def test_streaming_settings_require_non_negative_release_time(self) -> None:
         with pytest.raises(ValueError, match="release_time_seconds"):
             StreamingMidiAudioTriggerSettings(release_time_seconds=-0.1)
+
+    def test_streaming_settings_require_valid_adsr_values(self) -> None:
+        with pytest.raises(ValueError, match="attack_time_seconds"):
+            StreamingMidiAudioTriggerSettings(attack_time_seconds=-0.1)
+        with pytest.raises(ValueError, match="decay_time_seconds"):
+            StreamingMidiAudioTriggerSettings(decay_time_seconds=-0.1)
+        with pytest.raises(ValueError, match="sustain_level"):
+            StreamingMidiAudioTriggerSettings(sustain_level=1.1)
 
     def test_streaming_settings_require_supported_voice_mode(self) -> None:
         with pytest.raises(ValueError, match="voice_mode"):

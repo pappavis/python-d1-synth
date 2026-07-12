@@ -2,11 +2,12 @@
 # Versienummer: 0.1.0
 # Doel: Tests voor audio routing, device selectie en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-040 Envelope Release / Soft Note-Off
-# Actie: US-040-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
+# User-Story: US-041 Amp Envelope ADSR Parameters
+# Actie: US-041-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
 
 import numpy as np
+import pytest
 
 from synth.audio import (
     AudioBuffer,
@@ -107,6 +108,32 @@ class TestSoundDeviceAudioPlayer:
 
 
 class TestSoundDeviceSustainedAudioPlayer:
+    def test_sustained_settings_validate_adsr_parameters(self) -> None:
+        with pytest.raises(ValueError, match="attack_seconds"):
+            SustainedAudioPlayerSettings(
+                sample_rate=100,
+                waveform=Waveform.SINE,
+                amplitude=0.2,
+                channel=OutputChannel.STEREO,
+                attack_seconds=-0.01,
+            )
+        with pytest.raises(ValueError, match="decay_seconds"):
+            SustainedAudioPlayerSettings(
+                sample_rate=100,
+                waveform=Waveform.SINE,
+                amplitude=0.2,
+                channel=OutputChannel.STEREO,
+                decay_seconds=-0.01,
+            )
+        with pytest.raises(ValueError, match="sustain_level"):
+            SustainedAudioPlayerSettings(
+                sample_rate=100,
+                waveform=Waveform.SINE,
+                amplitude=0.2,
+                channel=OutputChannel.STEREO,
+                sustain_level=1.1,
+            )
+
     def test_callback_renders_active_voice_until_note_off(self) -> None:
         player = SoundDeviceSustainedAudioPlayer()
         settings = SustainedAudioPlayerSettings(
@@ -154,6 +181,52 @@ class TestSoundDeviceSustainedAudioPlayer:
 
         assert np.max(np.abs(release_outdata[:, 0])) > 0.0
         assert np.max(np.abs(release_outdata[-1:, 0])) < np.max(np.abs(release_outdata[:1, 0]))
+        assert player.active_voice_count() == 0
+
+    def test_callback_applies_attack_decay_sustain_envelope(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        settings = SustainedAudioPlayerSettings(
+            sample_rate=100,
+            waveform=Waveform.SQUARE,
+            amplitude=1.0,
+            channel=OutputChannel.STEREO,
+            attack_seconds=0.04,
+            decay_seconds=0.04,
+            sustain_level=0.5,
+            release_seconds=0.0,
+        )
+        player._settings = settings
+
+        player.note_on((1, 60), frequency_hz=1.0, velocity=1.0)
+        outdata = np.zeros((10, 2), dtype=np.float32)
+
+        player._callback(outdata, 10, None, None)
+
+        assert np.allclose(outdata[:, 0], [0.25, 0.5, 0.75, 1.0, 0.875, 0.75, 0.625, 0.5, 0.5, 0.5])
+        assert np.allclose(outdata[:, 0], outdata[:, 1])
+
+    def test_release_starts_from_current_adsr_level(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        settings = SustainedAudioPlayerSettings(
+            sample_rate=100,
+            waveform=Waveform.SQUARE,
+            amplitude=1.0,
+            channel=OutputChannel.STEREO,
+            attack_seconds=0.04,
+            decay_seconds=0.0,
+            sustain_level=1.0,
+            release_seconds=0.04,
+        )
+        player._settings = settings
+
+        player.note_on((1, 60), frequency_hz=1.0, velocity=1.0)
+        player._callback(np.zeros((2, 2), dtype=np.float32), 2, None, None)
+        player.note_off((1, 60))
+        release_outdata = np.zeros((4, 2), dtype=np.float32)
+
+        player._callback(release_outdata, 4, None, None)
+
+        assert np.allclose(release_outdata[:, 0], [0.75, 0.5625, 0.375, 0.1875])
         assert player.active_voice_count() == 0
 
     def test_pitch_bend_updates_only_matching_channel_voice_frequency(self) -> None:

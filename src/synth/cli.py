@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-040 Envelope Release / Soft Note-Off
-# Actie: US-040-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
+# User-Story: US-041 Amp Envelope ADSR Parameters
+# Actie: US-041-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
 
 import argparse
 import importlib.util
@@ -68,6 +68,7 @@ class SynthCli:
     - User Story: US-038 Performance Mode Until Interrupt
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -204,6 +205,9 @@ class SynthCli:
         play_stream.add_argument("--modulation-vibrato-depth", type=float, default=0.25)
         play_stream.add_argument("--modulation-vibrato-rate", type=float, default=5.0)
         play_stream.add_argument("--until-interrupt", action="store_true")
+        play_stream.add_argument("--attack-time", type=float, default=0.0)
+        play_stream.add_argument("--decay-time", type=float, default=0.0)
+        play_stream.add_argument("--sustain-level", type=float, default=1.0)
         play_stream.add_argument("--release-time", type=float, default=0.03)
         play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
         play_stream.add_argument("--sample-rate", type=int, default=44100)
@@ -536,6 +540,9 @@ class SynthCli:
                 modulation_vibrato_depth_semitones=args.modulation_vibrato_depth,
                 modulation_vibrato_rate_hz=args.modulation_vibrato_rate,
                 run_until_interrupted=args.until_interrupt,
+                attack_time_seconds=args.attack_time,
+                decay_time_seconds=args.decay_time,
+                sustain_level=args.sustain_level,
                 release_time_seconds=args.release_time,
                 sample_rate=args.sample_rate,
                 waveform=Waveform(args.waveform),
@@ -553,7 +560,7 @@ class SynthCli:
             reporter.light(
                 "Sustained MVP note: note_on starts a streaming voice and note_off stops it; "
                 "pitch bend bends active sustained voices; CC1 modulation adds vibrato; "
-                "CC64 sustain pedal holds released voices; release-time softens note-off."
+                "CC64 sustain pedal holds released voices; ADSR envelope shapes amplitude."
             )
         elif settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(
@@ -577,6 +584,9 @@ class SynthCli:
             f"modulation_vibrato_depth={settings.modulation_vibrato_depth_semitones:g}st, "
             f"modulation_vibrato_rate={settings.modulation_vibrato_rate_hz:g}Hz, "
             f"until_interrupt={str(settings.run_until_interrupted).lower()}, "
+            f"attack_time={settings.attack_time_seconds:g}s, "
+            f"decay_time={settings.decay_time_seconds:g}s, "
+            f"sustain_level={settings.sustain_level:g}, "
             f"release_time={settings.release_time_seconds:g}s, "
             f"waveform={args.waveform}, "
             f"sample_rate={args.sample_rate} Hz, channel={args.channel}"

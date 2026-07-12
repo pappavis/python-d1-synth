@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Audio buffers, device selectie, routing en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-040 Envelope Release / Soft Note-Off
-# Actie: US-040-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
+# User-Story: US-041 Amp Envelope ADSR Parameters
+# Actie: US-041-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
 
 from dataclasses import dataclass
 from enum import Enum
@@ -153,6 +153,7 @@ class SustainedAudioPlayerSettings:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -161,6 +162,9 @@ class SustainedAudioPlayerSettings:
     amplitude: float
     channel: OutputChannel
     device: int | str | None = None
+    attack_seconds: float = 0.0
+    decay_seconds: float = 0.0
+    sustain_level: float = 1.0
     release_seconds: float = 0.03
 
     def __post_init__(self) -> None:
@@ -168,6 +172,12 @@ class SustainedAudioPlayerSettings:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
             raise ValueError("amplitude must be between 0 and 1")
+        if self.attack_seconds < 0:
+            raise ValueError("attack_seconds must not be negative")
+        if self.decay_seconds < 0:
+            raise ValueError("decay_seconds must not be negative")
+        if not 0 <= self.sustain_level <= 1.0:
+            raise ValueError("sustain_level must be between 0 and 1")
         if self.release_seconds < 0:
             raise ValueError("release_seconds must not be negative")
 
@@ -184,6 +194,7 @@ class SustainedVoiceState:
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -194,8 +205,10 @@ class SustainedVoiceState:
     modulation_depth_semitones: float = 0.0
     modulation_rate_hz: float = 5.0
     lfo_phase_cycles: float = 0.0
+    age_frames: int = 0
     release_remaining_frames: int = 0
     release_total_frames: int = 0
+    release_start_level: float = 1.0
 
 
 class SoundDeviceSustainedAudioPlayer:
@@ -209,6 +222,7 @@ class SoundDeviceSustainedAudioPlayer:
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - User Story: US-040 Envelope Release / Soft Note-Off
+    - User Story: US-041 Amp Envelope ADSR Parameters
     - Version: 0.1.0
     """
 
@@ -260,6 +274,7 @@ class SoundDeviceSustainedAudioPlayer:
                 self._voice_by_id.pop(voice_id, None)
                 return
             release_frames = max(1, int(round(settings.release_seconds * settings.sample_rate)))
+            release_start_level = self._active_envelope_level(settings, voice.age_frames)
             self._voice_by_id[voice_id] = SustainedVoiceState(
                 base_frequency_hz=voice.base_frequency_hz,
                 frequency_hz=voice.frequency_hz,
@@ -268,8 +283,10 @@ class SoundDeviceSustainedAudioPlayer:
                 modulation_depth_semitones=voice.modulation_depth_semitones,
                 modulation_rate_hz=voice.modulation_rate_hz,
                 lfo_phase_cycles=voice.lfo_phase_cycles,
+                age_frames=voice.age_frames,
                 release_remaining_frames=release_frames,
                 release_total_frames=release_frames,
+                release_start_level=release_start_level,
             )
 
     def pitch_bend(self, channel: int, semitones: float) -> None:
@@ -287,8 +304,10 @@ class SoundDeviceSustainedAudioPlayer:
                     modulation_depth_semitones=voice.modulation_depth_semitones,
                     modulation_rate_hz=voice.modulation_rate_hz,
                     lfo_phase_cycles=voice.lfo_phase_cycles,
+                    age_frames=voice.age_frames,
                     release_remaining_frames=voice.release_remaining_frames,
                     release_total_frames=voice.release_total_frames,
+                    release_start_level=voice.release_start_level,
                 )
 
     def modulation(self, channel: int, depth_semitones: float, rate_hz: float) -> None:
@@ -305,8 +324,10 @@ class SoundDeviceSustainedAudioPlayer:
                     modulation_depth_semitones=depth_semitones,
                     modulation_rate_hz=rate_hz,
                     lfo_phase_cycles=voice.lfo_phase_cycles,
+                    age_frames=voice.age_frames,
                     release_remaining_frames=voice.release_remaining_frames,
                     release_total_frames=voice.release_total_frames,
+                    release_start_level=voice.release_start_level,
                 )
 
     def stop(self) -> int:
@@ -356,10 +377,11 @@ class SoundDeviceSustainedAudioPlayer:
             instantaneous_frequency = self._modulated_frequency(voice, timeline)
             increments = instantaneous_frequency / settings.sample_rate
             phase = voice.phase_cycles + np.cumsum(increments) - increments[0]
-            envelope = self._release_envelope(voice, frames)
+            envelope = self._amplitude_envelope(settings, voice, frames)
             mono += self._waveform_samples(settings.waveform, phase) * settings.amplitude * voice.velocity * envelope
             updated_phase = float((voice.phase_cycles + float(np.sum(increments))) % 1.0)
             updated_lfo_phase = float((voice.lfo_phase_cycles + frames * voice.modulation_rate_hz / settings.sample_rate) % 1.0)
+            updated_age_frames = voice.age_frames + frames
             release_remaining_frames = max(0, voice.release_remaining_frames - frames)
             if voice.release_total_frames > 0 and release_remaining_frames == 0:
                 completed_voice_ids.append(voice_id)
@@ -372,8 +394,10 @@ class SoundDeviceSustainedAudioPlayer:
                 modulation_depth_semitones=voice.modulation_depth_semitones,
                 modulation_rate_hz=voice.modulation_rate_hz,
                 lfo_phase_cycles=updated_lfo_phase,
+                age_frames=updated_age_frames,
                 release_remaining_frames=release_remaining_frames,
                 release_total_frames=voice.release_total_frames,
+                release_start_level=voice.release_start_level,
             )
 
         mono = np.clip(mono, -1.0, 1.0).astype(np.float32)
@@ -393,12 +417,40 @@ class SoundDeviceSustainedAudioPlayer:
         semitone_offset = voice.modulation_depth_semitones * np.sin(2.0 * np.pi * lfo_phase)
         return voice.frequency_hz * np.power(2.0, semitone_offset / 12.0)
 
-    def _release_envelope(self, voice: SustainedVoiceState, frames: int) -> NDArray[np.float32]:
+    def _amplitude_envelope(
+        self,
+        settings: SustainedAudioPlayerSettings,
+        voice: SustainedVoiceState,
+        frames: int,
+    ) -> NDArray[np.float32]:
         if voice.release_total_frames == 0:
-            return np.ones(frames, dtype=np.float32)
+            frame_positions = voice.age_frames + np.arange(frames, dtype=np.float64)
+            return self._active_envelope(settings, frame_positions).astype(np.float32)
         remaining = voice.release_remaining_frames - np.arange(frames, dtype=np.float64)
-        envelope = np.clip(remaining / voice.release_total_frames, 0.0, 1.0)
+        envelope = np.clip(remaining / voice.release_total_frames, 0.0, 1.0) * voice.release_start_level
         return envelope.astype(np.float32)
+
+    def _active_envelope(self, settings: SustainedAudioPlayerSettings, frame_positions: NDArray[np.float64]) -> NDArray[np.float64]:
+        attack_frames = int(round(settings.attack_seconds * settings.sample_rate))
+        decay_frames = int(round(settings.decay_seconds * settings.sample_rate))
+        levels = np.full(frame_positions.shape, settings.sustain_level, dtype=np.float64)
+        if attack_frames > 0:
+            attack_mask = frame_positions < attack_frames
+            levels[attack_mask] = (frame_positions[attack_mask] + 1.0) / attack_frames
+        else:
+            attack_mask = np.zeros(frame_positions.shape, dtype=bool)
+        if decay_frames > 0:
+            decay_start = attack_frames
+            decay_end = decay_start + decay_frames
+            decay_mask = (frame_positions >= decay_start) & (frame_positions < decay_end)
+            decay_progress = (frame_positions[decay_mask] - decay_start + 1.0) / decay_frames
+            levels[decay_mask] = 1.0 + (settings.sustain_level - 1.0) * decay_progress
+        elif attack_frames == 0:
+            levels[~attack_mask] = settings.sustain_level
+        return np.clip(levels, 0.0, 1.0)
+
+    def _active_envelope_level(self, settings: SustainedAudioPlayerSettings, age_frames: int) -> float:
+        return float(self._active_envelope(settings, np.array([age_frames], dtype=np.float64))[0])
 
     def _waveform_samples(self, waveform: Waveform, phase: NDArray[np.float64]) -> NDArray[np.float32]:
         if waveform is Waveform.SINE:

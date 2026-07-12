@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-12
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-040
+Betrokken stories: US-001 t/m US-041
 
 ## Doel
 
@@ -182,6 +182,14 @@ Product Owner accepteerde US-040 op 2026-07-12 na push en akkoord.
 
 Statuslabel: US-040 `Done`.
 
+## US-041 Review Voorbereiding
+
+US-041 volgt logisch na US-040: soft note-off lost het harde einde op, maar de amplitude tijdens note-on en hold blijft nog statisch. De story voegt daarom attack, decay en sustain-level toe aan de bestaande release-time route.
+
+Belangrijke scopegrens: US-041 behandelt alleen amplitude ADSR in sustained mode. Filter envelopes, velocity-afhankelijke curves, YAML patch envelopes, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-041 `In Review`.
+
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende logische taak is US-041 Amp Envelope ADSR Parameters, omdat US-040 alleen een vaste release fade toevoegt. Attack, decay, sustain en release als patch/CLI parameters horen in een aparte story.
+De eerstvolgende taak is US-041 handmatig accepteren of een impediment vastleggen. Test met `--attack-time 0.02 --decay-time 0.12 --sustain-level 0.6 --release-time 0.08` en vergelijk eventueel met de US-040 defaults.
