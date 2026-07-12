@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-037",
+            "US-001 t/m US-038",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -412,7 +412,8 @@ class TestDocumentationArtifacts:
             "US-034 `Done`",
             "US-035 `Done`",
             "US-036 `Done`",
-            "US-037 `In Review`",
+            "US-037 `Done`",
+            "US-038 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -604,7 +605,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-037 MIDI Modulation CC1 Mapping En DSP",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--modulation-vibrato-depth",
             "--modulation-vibrato-rate",
@@ -616,7 +617,30 @@ class TestDocumentationArtifacts:
             "control_number",
             "control_value",
             "SoundDeviceSustainedAudioPlayer.modulation",
+            "Product Owner acceptatie op 2026-07-12",
             "Geen filter-modulatie",
+            "Geen hardcoded MIDI hardware device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us038_performance_mode_until_interrupt_doc_contains_required_terms(self) -> None:
+        document = Path("docs/performance_mode_until_interrupt_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-038 Performance Mode Until Interrupt",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--until-interrupt",
+            "Performance mode: running until Ctrl-C",
+            "until_interrupt=true",
+            "Streaming MIDI audio trigger interrupted by user.",
             "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:

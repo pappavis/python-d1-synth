@@ -3,11 +3,13 @@
 Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie
-Status: In Review
+Status: Done
 
 ## Doel
 
 US-037 voegt MIDI CC1 modulation toe aan sustained playback. CC1 messages worden genormaliseerd als interne `control_change` messages en sturen een eenvoudige vibrato-depth aan op actieve sustained voices.
+
+Product Owner acceptatie op 2026-07-12: pitch bend en CC1 modulation waren hoorbaar, en de interrupt-fix is akkoord.
 
 ## Implementatie
 

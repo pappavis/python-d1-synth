@@ -338,6 +338,13 @@ Als speler wil ik MIDI modulation kunnen gebruiken, zodat CC1 later vibrato, fil
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `MidiMessage(message_type="control_change")`, mido `control_change` normalisatie, `MidiModulationMapper`, `SoundDeviceSustainedAudioPlayer.modulation(...)`, CLI opties `--modulation-vibrato-depth` en `--modulation-vibrato-rate`, plus `docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md`. Scope: CC1 stuurt eenvoudige vibrato-depth; geen filter, sustain pedal, envelope release, GUI of plugin.
+Notitie: Done met `MidiMessage(message_type="control_change")`, mido `control_change` normalisatie, `MidiModulationMapper`, `SoundDeviceSustainedAudioPlayer.modulation(...)`, CLI opties `--modulation-vibrato-depth` en `--modulation-vibrato-rate`, plus `docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md`. Product Owner accepteerde hoorbare pitch bend/CC1 modulation en de interrupt-fix. Scope: CC1 stuurt eenvoudige vibrato-depth; geen filter, sustain pedal, envelope release, GUI of plugin.
 
-Notitie: Planned. Eerste implementatie wordt waarschijnlijk CC1 mapping plus een eenvoudige hoorbare parameter, niet meteen een volledige modulation matrix.
+### US-038: Performance Mode Until Interrupt
+
+Als speler wil ik `midi play-stream` kunnen starten zonder korte testlimiet, zodat ik de synth gewoon kan bespelen tot ik zelf met `Ctrl-C` stop.
+
+Prioriteit: Must
+Sprint: Future
+
+Notitie: In Review met CLI optie `--until-interrupt`, `StreamingMidiAudioTriggerSettings.run_until_interrupted`, praktische lange backend-limieten, verbose `until_interrupt=true` diagnostics en `docs/performance_mode_until_interrupt_v0.1.0.md`. Scope: performance-mode voor bestaande commandline streaming; geen sustain pedal, envelope release, GUI of plugin.

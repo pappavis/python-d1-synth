@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger, pitch bend en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
+# User-Story: US-038 Performance Mode Until Interrupt
+# Actie: US-038-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
 
 import pytest
 
@@ -1382,6 +1382,45 @@ class TestStreamingMidiAudioTrigger:
             )
 
         assert sustained_audio_player.calls == [("start",), ("note_on", (1, 60)), ("note_off", (1, 60)), ("abort",)]
+
+    def test_streaming_trigger_until_interrupt_uses_practical_performance_limits(self) -> None:
+        class FakeStreamingBatchBackend:
+            def __init__(self):
+                self.requested_max_messages = None
+                self.requested_timeout_seconds = None
+
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-038 should use batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                self.requested_max_messages = max_messages
+                self.requested_timeout_seconds = timeout_seconds
+                yield (MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.10),)
+
+        class FakeAudioPlayer:
+            def __init__(self):
+                self.play_count = 0
+
+            def play(self, buffer, device=None):
+                self.play_count += 1
+
+        backend = FakeStreamingBatchBackend()
+        audio_player = FakeAudioPlayer()
+
+        result = StreamingMidiAudioTrigger(backend=backend, audio_player=audio_player).trigger(
+            StreamingMidiAudioTriggerSettings(
+                port_name="python-d1-synth",
+                max_messages=1,
+                max_control_messages=0,
+                timeout_seconds=1.0,
+                run_until_interrupted=True,
+            )
+        )
+
+        assert backend.requested_max_messages > 10000
+        assert backend.requested_timeout_seconds > 600
+        assert result.played_event_count == 1
+        assert audio_player.play_count == 1
 
     def test_streaming_trigger_reports_no_audio_when_only_note_off_messages_arrive(self) -> None:
         class FakeStreamingBackend:

@@ -355,7 +355,7 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Product Owner hoorde sustained playback, triads, correcte korte/lange noten en bruikbare langere sessies met `--timeout 600`. De commandline stopt netjes met `Ctrl-C`.
 
-US-037 is in review: MIDI CC1 modulation wordt genormaliseerd als `control_change` en in `--voice-mode sustained` als eenvoudige vibrato-depth toegepast op actieve voices. Default vibrato is subtiel: `--modulation-vibrato-depth 0.25` en `--modulation-vibrato-rate 5`.
+US-037 is afgerond: MIDI CC1 modulation wordt genormaliseerd als `control_change` en in `--voice-mode sustained` als eenvoudige vibrato-depth toegepast op actieve voices. Default vibrato is subtiel: `--modulation-vibrato-depth 0.25` en `--modulation-vibrato-rate 5`.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --debuglevel light
@@ -368,6 +368,19 @@ Controleer in verbose output:
 - `Received MIDI messages` bevat `control_change:1:<waarde>:channel=<n>` wanneer CC1 binnenkomt.
 
 US-037 interrupt-fix: bij `Ctrl-C` gebruikt sustained streaming nu een immediate audio-stream abort tijdens cleanup, zodat PortAudio/CoreAudio niet eerst langdurig op een gewone `stop()` hoeft te wachten.
+
+Bevestigd gedrag: Product Owner hoorde pitch bend en CC1 modulation hoorbaar werken; de US-037 interrupt-fix is getest en akkoord.
+
+US-038 is in review: voor gewoon spelen zonder kunstmatige sessielimiet kan `midi play-stream` nu in performance mode draaien met `--until-interrupt`. In die mode blijven de bestaande `--max-messages` en `--timeout` argumenten geldig voor parser/traceability, maar de runtime gebruikt praktische lange backend-limieten en stopt primair via `Ctrl-C`.
+
+```bash
+PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --until-interrupt --debuglevel light
+```
+
+Stoppen:
+
+- Druk `Ctrl-C` in de terminal waar `play-stream` draait.
+- Verwachte melding: `Streaming MIDI audio trigger interrupted by user.`
 
 Scope: geen sustain pedal, envelope release, GUI of plugin.
 

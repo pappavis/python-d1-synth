@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
+# User-Story: US-038 Performance Mode Until Interrupt
+# Actie: US-038-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
 
 import numpy as np
 
@@ -997,6 +997,7 @@ class TestSynthCli:
                 assert settings.max_control_messages == 2048
                 assert settings.modulation_vibrato_depth_semitones == 0.75
                 assert settings.modulation_vibrato_rate_hz == 6.5
+                assert settings.run_until_interrupted is False
                 parser = NoteParser()
                 return StreamingMidiAudioTriggerResult(
                     port_name=settings.port_name,
@@ -1072,10 +1073,61 @@ class TestSynthCli:
         assert "max_control_messages=2048" in output
         assert "modulation_vibrato_depth=0.75st" in output
         assert "modulation_vibrato_rate=6.5Hz" in output
+        assert "until_interrupt=false" in output
         assert "pitch_bend:4096:channel=1" in output
         assert "control_change:1:96:channel=1" in output
         assert "Streamed note durations: C4@0.000s/2.000s" in output
         assert "Total streamed audio frames: 88200, sample_rate=44100 Hz" in output
+
+    def test_midi_play_stream_until_interrupt_passes_performance_mode(self, monkeypatch, capsys) -> None:
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                return AudioDeviceSelection(sounddevice_value="Scarlett 8i6 USB", source="cli")
+
+        class FakeStreamingMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.run_until_interrupted is True
+                assert settings.max_messages == 10000
+                assert settings.timeout_seconds == 600.0
+                return StreamingMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=0,
+                    played_event_count=0,
+                    audio_frame_count=0,
+                    sample_rate=44100,
+                    message=(
+                        "Received 0 MIDI note messages from streaming virtual MIDI port "
+                        "python-d1-synth; no audio played."
+                    ),
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "StreamingMidiAudioTrigger", FakeStreamingMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-stream",
+                "--port-name",
+                "python-d1-synth",
+                "--audio-device",
+                "Scarlett 8i6 USB",
+                "--max-messages",
+                "10000",
+                "--timeout",
+                "600",
+                "--voice-mode",
+                "sustained",
+                "--until-interrupt",
+                "--debuglevel",
+                "verbose",
+            ]
+        )
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Performance mode: running until Ctrl-C" in output
+        assert "until_interrupt=true" in output
 
     def test_midi_play_stream_handles_keyboard_interrupt(self, monkeypatch, capsys) -> None:
         class FakeAudioSelector:

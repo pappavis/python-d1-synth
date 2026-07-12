@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-12
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-037
+Betrokken stories: US-001 t/m US-038
 
 ## Doel
 
@@ -146,13 +146,20 @@ US-037 volgt direct uit US-036: nadat sustained playback en pitch bend werken, k
 
 Belangrijke scopegrens: US-037 gebruikt CC1 alleen voor eenvoudige vibrato-depth. Filter-modulatie, sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
 
-Statuslabel: US-037 `In Review`.
+Product Owner bevestigde US-037 op 2026-07-12 als geslaagd: pitch bend werkt, CC1 modulation is hoorbaar, en de interrupt-fix is getest en akkoord.
+
+Statuslabel: US-037 `Done`.
 
 US-037-IMPEDIMENT-001 les: sustained audio cleanup mag bij `Ctrl-C` niet vertrouwen op een gewone PortAudio/CoreAudio `stop()`, omdat die in lange performance-sessies kan blokkeren. De interrupt-route gebruikt nu `abort()` wanneer beschikbaar en valt alleen terug naar `stop()` als de stream geen abort ondersteunt.
 
+## US-038 Review Voorbereiding
+
+US-038 volgt direct uit de Product Owner vraag om de synth "gewoon te gebruiken" zonder korte testlimieten. De story voegt `--until-interrupt` toe aan `midi play-stream`, zodat de commandline performance-run primair stopt via `Ctrl-C`.
+
+Belangrijke scopegrens: US-038 verandert alleen de sessielimiet van de bestaande streaming route. Sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-038 `In Review`.
+
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of we:
-
-- US-037 accepteren na Logic/keyboard mod wheel test, of
-- een US-037 impediment oplossen als CC1 messages niet zichtbaar zijn of vibrato niet hoorbaar reageert.
+De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of US-038 performance mode met `--until-interrupt` hoorbaar werkt en netjes met `Ctrl-C` stopt.

@@ -517,5 +517,17 @@ Acceptatie op 2026-07-11:
 - Given de gebruiker Ctrl-C drukt tijdens sustained streaming, then de audio-stream via immediate abort wordt opgeschoond en de CLI `Streaming MIDI audio trigger interrupted by user.` rapporteert.
 - `docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-037 MIDI Modulation CC1 Mapping En DSP`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-037 MIDI Modulation CC1 Mapping En DSP` en `Version: 0.1.0`.
+- Acceptatie op 2026-07-12: Product Owner hoorde pitch bend en CC1 modulation werken en accepteerde de US-037 interrupt-fix.
 - Scope: CC1 stuurt alleen eenvoudige vibrato-depth; geen filter, sustain pedal, envelope release, GUI/plugin.
+- Story status is `Done`.
+
+## US-038: Performance Mode Until Interrupt
+
+- Given `midi play-stream --until-interrupt` draait, then de streaming route niet stopt door de normale `--max-messages` of `--timeout` testlimieten.
+- Given `--debuglevel light` actief is, then de CLI meldt `Performance mode: running until Ctrl-C`.
+- Given `--debuglevel verbose` actief is, then de CLI toont `until_interrupt=true`.
+- Given de gebruiker Ctrl-C drukt, then de bestaande interrupt cleanup actief blijft en `Streaming MIDI audio trigger interrupted by user.` rapporteert.
+- `docs/performance_mode_until_interrupt_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-038 Performance Mode Until Interrupt`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-038 Performance Mode Until Interrupt` en `Version: 0.1.0`.
+- Scope: performance mode wijzigt alleen de CLI streaming sessielimiet; geen sustain pedal, envelope release, GUI/plugin of hardcoded MIDI hardware device names.
 - Story status is `In Review`.

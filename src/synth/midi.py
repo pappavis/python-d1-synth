@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
+# User-Story: US-038 Performance Mode Until Interrupt
+# Actie: US-038-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-038
 
 from __future__ import annotations
 
@@ -383,6 +383,7 @@ class StreamingVoiceMode(str, Enum):
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - User Story: US-038 Performance Mode Until Interrupt
     - Version: 0.1.0
     """
 
@@ -421,6 +422,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - User Story: US-038 Performance Mode Until Interrupt
     - Version: 0.1.0
     """
 
@@ -437,6 +439,7 @@ class StreamingMidiAudioTriggerSettings:
     max_control_messages: int = 1024
     modulation_vibrato_depth_semitones: float = 0.25
     modulation_vibrato_rate_hz: float = 5.0
+    run_until_interrupted: bool = False
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
     amplitude: float = 0.2
@@ -491,6 +494,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - User Story: US-038 Performance Mode Until Interrupt
     - Version: 0.1.0
     """
 
@@ -1124,6 +1128,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - User Story: US-038 Performance Mode Until Interrupt
     - Version: 0.1.0
     """
 
@@ -1409,22 +1414,33 @@ class StreamingMidiAudioTrigger:
         settings: StreamingMidiAudioTriggerSettings,
     ) -> Iterable[tuple[MidiMessage, ...]]:
         batch_reader = getattr(self._backend, "iter_message_batches", None)
-        backend_message_limit = settings.max_messages + settings.max_control_messages
+        backend_message_limit = self._backend_message_limit(settings)
+        timeout_seconds = self._backend_timeout_seconds(settings)
         if callable(batch_reader):
             yield from batch_reader(
                 settings.port_name,
                 backend_message_limit,
-                settings.timeout_seconds,
+                timeout_seconds,
                 settings.poll_interval_seconds,
             )
             return
         for message in self._backend.iter_messages(
             settings.port_name,
             backend_message_limit,
-            settings.timeout_seconds,
+            timeout_seconds,
             settings.poll_interval_seconds,
         ):
             yield (message,)
+
+    def _backend_message_limit(self, settings: StreamingMidiAudioTriggerSettings) -> int:
+        if settings.run_until_interrupted:
+            return sys.maxsize
+        return settings.max_messages + settings.max_control_messages
+
+    def _backend_timeout_seconds(self, settings: StreamingMidiAudioTriggerSettings) -> float:
+        if settings.run_until_interrupted:
+            return 365 * 24 * 60 * 60.0
+        return settings.timeout_seconds
 
     def _filter_duplicate_messages(
         self,
