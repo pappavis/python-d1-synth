@@ -555,5 +555,6 @@ Acceptatie op 2026-07-11:
 - Given `--debuglevel verbose` actief is, then de CLI toont `release_time=<waarde>s`.
 - `docs/envelope_release_soft_note_off_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-040 Envelope Release / Soft Note-Off`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-040 Envelope Release / Soft Note-Off` en `Version: 0.1.0`.
+- Acceptatie op 2026-07-12: Product Owner accepteerde US-040 na push en akkoord.
 - Scope: geen volledige ADSR envelope, geen filter envelope, geen GUI/plugin en geen hardcoded MIDI hardware device names.
-- Story status is `In Review`.
+- Story status is `Done`.

@@ -2,7 +2,7 @@
 
 - Sprintnummer: Future MIDI/DAW
 - Doc versie: 0.1.0
-- Status: In Review
+- Status: Done
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-040 Envelope Release / Soft Note-Off
 - Actie: US-040-RED-GREEN-001
@@ -10,6 +10,8 @@
 ## Doel
 
 US-040 verzacht het einde van sustained notes. In plaats van een voice direct hard te stoppen bij `note_off`, krijgt de voice een korte release envelope. Daardoor klinkt note-off minder abrupt en is de synth beter speelbaar via Logic, MIDI keyboard en de bestaande commandline performance mode.
+
+Product Owner acceptatie op 2026-07-12: US-040 is na push geaccepteerd.
 
 ## Gedrag
 

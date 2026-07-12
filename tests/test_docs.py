@@ -415,7 +415,7 @@ class TestDocumentationArtifacts:
             "US-037 `Done`",
             "US-038 `Done`",
             "US-039 `Done`",
-            "US-040 `In Review`",
+            "US-040 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -687,12 +687,13 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-040 Envelope Release / Soft Note-Off",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--voice-mode sustained",
             "--release-time 0.03",
             "--release-time 0",
             "release_time=<waarde>s",
+            "Product Owner acceptatie op 2026-07-12",
             "CC64 sustain pedal",
             "Pitch bend",
             "CC1 modulation",

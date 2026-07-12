@@ -398,7 +398,7 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Product Owner heeft geen fysieke sustain pedal en accepteerde US-039 op basis van aanname plus groene automatische CC64-tests.
 
-US-040 is in review: `midi play-stream --voice-mode sustained` ondersteunt nu een korte release envelope bij note-off, zodat voices niet meer hard worden afgekapt. De default is `--release-time 0.03`; met `--release-time 0` kun je het oude hard-stop gedrag terugzetten om te vergelijken.
+US-040 is afgerond: `midi play-stream --voice-mode sustained` ondersteunt nu een korte release envelope bij note-off, zodat voices niet meer hard worden afgekapt. De default is `--release-time 0.03`; met `--release-time 0` kun je het oude hard-stop gedrag terugzetten om te vergelijken.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --release-time 0.03 --until-interrupt --debuglevel verbose
@@ -417,6 +417,8 @@ Controleer in verbose output:
 - `Ctrl-C` stopt de performance-run zonder hang.
 
 Scope: geen ADSR envelope, filter envelope, GUI of plugin.
+
+Bevestigd gedrag: Product Owner accepteerde US-040 op 2026-07-12.
 
 Lessons learned en sprint review:
 

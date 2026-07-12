@@ -178,8 +178,10 @@ US-040 volgt direct uit US-035 en US-039: sustained voices stoppen functioneel c
 
 Belangrijke scopegrens: US-040 behandelt alleen soft note-off/release fade in sustained mode. Volledige ADSR, filter envelope, velocity-afhankelijke release curves, GUI en plugin packaging blijven aparte stories.
 
-Statuslabel: US-040 `In Review`.
+Product Owner accepteerde US-040 op 2026-07-12 na push en akkoord.
+
+Statuslabel: US-040 `Done`.
 
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende taak na US-040 review is een kleine acceptatie- of afrondingsstap: Product Owner vergelijkt `--release-time 0.03` met `--release-time 0`, waarna US-040 naar `Done` kan of een impediment kan worden vastgelegd.
+De eerstvolgende logische taak is US-041 Amp Envelope ADSR Parameters, omdat US-040 alleen een vaste release fade toevoegt. Attack, decay, sustain en release als patch/CLI parameters horen in een aparte story.

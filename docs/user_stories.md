@@ -365,4 +365,4 @@ Als speler wil ik dat note-off niet hard wordt afgekapt, zodat sustained notes n
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `SustainedAudioPlayerSettings.release_seconds`, release frames in `SustainedVoiceState`, CLI optie `--release-time`, audio callback fade-out tests en `docs/envelope_release_soft_note_off_v0.1.0.md`. Default is `--release-time 0.03`; `--release-time 0` herstelt hard-stop gedrag voor vergelijking. Scope: geen volledige ADSR envelope, geen filter envelope, GUI of plugin.
+Notitie: Done met `SustainedAudioPlayerSettings.release_seconds`, release frames in `SustainedVoiceState`, CLI optie `--release-time`, audio callback fade-out tests en `docs/envelope_release_soft_note_off_v0.1.0.md`. Product Owner accepteerde US-040 op 2026-07-12. Default is `--release-time 0.03`; `--release-time 0` herstelt hard-stop gedrag voor vergelijking. Scope: geen volledige ADSR envelope, geen filter envelope, GUI of plugin.
