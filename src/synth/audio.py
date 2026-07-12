@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Audio buffers, device selectie, routing en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
+# User-Story: US-040 Envelope Release / Soft Note-Off
+# Actie: US-040-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
 
 from dataclasses import dataclass
 from enum import Enum
@@ -152,6 +152,7 @@ class SustainedAudioPlayerSettings:
     - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-035 Sustained Note Audio Engine
+    - User Story: US-040 Envelope Release / Soft Note-Off
     - Version: 0.1.0
     """
 
@@ -160,12 +161,15 @@ class SustainedAudioPlayerSettings:
     amplitude: float
     channel: OutputChannel
     device: int | str | None = None
+    release_seconds: float = 0.03
 
     def __post_init__(self) -> None:
         if self.sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
             raise ValueError("amplitude must be between 0 and 1")
+        if self.release_seconds < 0:
+            raise ValueError("release_seconds must not be negative")
 
 
 @dataclass
@@ -179,6 +183,7 @@ class SustainedVoiceState:
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - User Story: US-040 Envelope Release / Soft Note-Off
     - Version: 0.1.0
     """
 
@@ -189,6 +194,8 @@ class SustainedVoiceState:
     modulation_depth_semitones: float = 0.0
     modulation_rate_hz: float = 5.0
     lfo_phase_cycles: float = 0.0
+    release_remaining_frames: int = 0
+    release_total_frames: int = 0
 
 
 class SoundDeviceSustainedAudioPlayer:
@@ -201,6 +208,7 @@ class SoundDeviceSustainedAudioPlayer:
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
     - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - User Story: US-040 Envelope Release / Soft Note-Off
     - Version: 0.1.0
     """
 
@@ -244,7 +252,25 @@ class SoundDeviceSustainedAudioPlayer:
 
     def note_off(self, voice_id: tuple[int, int]) -> None:
         with self._lock:
-            self._voice_by_id.pop(voice_id, None)
+            voice = self._voice_by_id.get(voice_id)
+            settings = self._settings
+            if voice is None:
+                return
+            if settings is None or settings.release_seconds == 0:
+                self._voice_by_id.pop(voice_id, None)
+                return
+            release_frames = max(1, int(round(settings.release_seconds * settings.sample_rate)))
+            self._voice_by_id[voice_id] = SustainedVoiceState(
+                base_frequency_hz=voice.base_frequency_hz,
+                frequency_hz=voice.frequency_hz,
+                velocity=voice.velocity,
+                phase_cycles=voice.phase_cycles,
+                modulation_depth_semitones=voice.modulation_depth_semitones,
+                modulation_rate_hz=voice.modulation_rate_hz,
+                lfo_phase_cycles=voice.lfo_phase_cycles,
+                release_remaining_frames=release_frames,
+                release_total_frames=release_frames,
+            )
 
     def pitch_bend(self, channel: int, semitones: float) -> None:
         bend_ratio = math.pow(2.0, semitones / 12.0)
@@ -261,6 +287,8 @@ class SoundDeviceSustainedAudioPlayer:
                     modulation_depth_semitones=voice.modulation_depth_semitones,
                     modulation_rate_hz=voice.modulation_rate_hz,
                     lfo_phase_cycles=voice.lfo_phase_cycles,
+                    release_remaining_frames=voice.release_remaining_frames,
+                    release_total_frames=voice.release_total_frames,
                 )
 
     def modulation(self, channel: int, depth_semitones: float, rate_hz: float) -> None:
@@ -277,6 +305,8 @@ class SoundDeviceSustainedAudioPlayer:
                     modulation_depth_semitones=depth_semitones,
                     modulation_rate_hz=rate_hz,
                     lfo_phase_cycles=voice.lfo_phase_cycles,
+                    release_remaining_frames=voice.release_remaining_frames,
+                    release_total_frames=voice.release_total_frames,
                 )
 
     def stop(self) -> int:
@@ -320,14 +350,20 @@ class SoundDeviceSustainedAudioPlayer:
 
         mono = np.zeros(frames, dtype=np.float32)
         updated_voices: dict[tuple[int, int], SustainedVoiceState] = {}
+        completed_voice_ids: list[tuple[int, int]] = []
         timeline = np.arange(frames, dtype=np.float64) / settings.sample_rate
         for voice_id, voice in voice_items:
             instantaneous_frequency = self._modulated_frequency(voice, timeline)
             increments = instantaneous_frequency / settings.sample_rate
             phase = voice.phase_cycles + np.cumsum(increments) - increments[0]
-            mono += self._waveform_samples(settings.waveform, phase) * settings.amplitude * voice.velocity
+            envelope = self._release_envelope(voice, frames)
+            mono += self._waveform_samples(settings.waveform, phase) * settings.amplitude * voice.velocity * envelope
             updated_phase = float((voice.phase_cycles + float(np.sum(increments))) % 1.0)
             updated_lfo_phase = float((voice.lfo_phase_cycles + frames * voice.modulation_rate_hz / settings.sample_rate) % 1.0)
+            release_remaining_frames = max(0, voice.release_remaining_frames - frames)
+            if voice.release_total_frames > 0 and release_remaining_frames == 0:
+                completed_voice_ids.append(voice_id)
+                continue
             updated_voices[voice_id] = SustainedVoiceState(
                 base_frequency_hz=voice.base_frequency_hz,
                 frequency_hz=voice.frequency_hz,
@@ -336,11 +372,15 @@ class SoundDeviceSustainedAudioPlayer:
                 modulation_depth_semitones=voice.modulation_depth_semitones,
                 modulation_rate_hz=voice.modulation_rate_hz,
                 lfo_phase_cycles=updated_lfo_phase,
+                release_remaining_frames=release_remaining_frames,
+                release_total_frames=voice.release_total_frames,
             )
 
         mono = np.clip(mono, -1.0, 1.0).astype(np.float32)
         outdata[:] = self._channel_router.route(mono, settings.channel)
         with self._lock:
+            for voice_id in completed_voice_ids:
+                self._voice_by_id.pop(voice_id, None)
             for voice_id, voice in updated_voices.items():
                 if voice_id in self._voice_by_id:
                     self._voice_by_id[voice_id] = voice
@@ -352,6 +392,13 @@ class SoundDeviceSustainedAudioPlayer:
         lfo_phase = voice.lfo_phase_cycles + voice.modulation_rate_hz * timeline
         semitone_offset = voice.modulation_depth_semitones * np.sin(2.0 * np.pi * lfo_phase)
         return voice.frequency_hz * np.power(2.0, semitone_offset / 12.0)
+
+    def _release_envelope(self, voice: SustainedVoiceState, frames: int) -> NDArray[np.float32]:
+        if voice.release_total_frames == 0:
+            return np.ones(frames, dtype=np.float32)
+        remaining = voice.release_remaining_frames - np.arange(frames, dtype=np.float64)
+        envelope = np.clip(remaining / voice.release_total_frames, 0.0, 1.0)
+        return envelope.astype(np.float32)
 
     def _waveform_samples(self, waveform: Waveform, phase: NDArray[np.float64]) -> NDArray[np.float32]:
         if waveform is Waveform.SINE:

@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-12
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-039
+Betrokken stories: US-001 t/m US-040
 
 ## Doel
 
@@ -172,6 +172,14 @@ Product Owner accepteerde US-039 op 2026-07-12 zonder fysieke sustain pedal, op 
 
 Statuslabel: US-039 `Done`.
 
+## US-040 Review Voorbereiding
+
+US-040 volgt direct uit US-035 en US-039: sustained voices stoppen functioneel correct, maar hard note-off en sustain-release kunnen click-achtig of te abrupt klinken. De story voegt daarom een korte release envelope toe via `--release-time`.
+
+Belangrijke scopegrens: US-040 behandelt alleen soft note-off/release fade in sustained mode. Volledige ADSR, filter envelope, velocity-afhankelijke release curves, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-040 `In Review`.
+
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende taak is US-040 Envelope Release / Soft Note-Off, omdat note-off en CC64 release nu nog hard stoppen.
+De eerstvolgende taak na US-040 review is een kleine acceptatie- of afrondingsstap: Product Owner vergelijkt `--release-time 0.03` met `--release-time 0`, waarna US-040 naar `Done` kan of een impediment kan worden vastgelegd.

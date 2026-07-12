@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-039",
+            "US-001 t/m US-040",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -415,6 +415,7 @@ class TestDocumentationArtifacts:
             "US-037 `Done`",
             "US-038 `Done`",
             "US-039 `Done`",
+            "US-040 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -670,6 +671,33 @@ class TestDocumentationArtifacts:
             "control_change:64:0:channel=<n>",
             "Ctrl-C",
             "Geen half-pedal curves",
+            "Geen hardcoded MIDI hardware device names",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us040_envelope_release_soft_note_off_doc_contains_required_terms(self) -> None:
+        document = Path("docs/envelope_release_soft_note_off_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-040 Envelope Release / Soft Note-Off",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--voice-mode sustained",
+            "--release-time 0.03",
+            "--release-time 0",
+            "release_time=<waarde>s",
+            "CC64 sustain pedal",
+            "Pitch bend",
+            "CC1 modulation",
+            "Ctrl-C",
+            "Geen volledige ADSR envelope",
             "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:

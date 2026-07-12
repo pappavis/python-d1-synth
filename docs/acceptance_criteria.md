@@ -544,3 +544,16 @@ Acceptatie op 2026-07-11:
 - Acceptatie op 2026-07-12: Product Owner heeft geen fysieke sustain pedal en accepteerde US-039 op basis van aanname plus groene automatische CC64-tests.
 - Scope: geen half-pedal curves, geen envelope release, geen sostenuto pedal, geen GUI/plugin en geen hardcoded MIDI hardware device names.
 - Story status is `Done`.
+
+## US-040: Envelope Release / Soft Note-Off
+
+- Given `midi play-stream --voice-mode sustained` draait, when een `note_off` binnenkomt, then de voice via een korte release envelope uitfade in plaats van direct hard te stoppen.
+- Given `--release-time 0.03` gebruikt wordt, then de audio callback ongeveer 30 ms release frames toepast.
+- Given `--release-time 0` gebruikt wordt, then het oude hard-stop gedrag beschikbaar blijft voor technische vergelijking.
+- Given CC64 sustain pedal een voice vasthoudt, then de release envelope pas start wanneer de voice werkelijk losgelaten wordt.
+- Given pitch bend en CC1 modulation actief zijn, then de release envelope die bestaande sustained voice controls niet blokkeert.
+- Given `--debuglevel verbose` actief is, then de CLI toont `release_time=<waarde>s`.
+- `docs/envelope_release_soft_note_off_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-040 Envelope Release / Soft Note-Off`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-040 Envelope Release / Soft Note-Off` en `Version: 0.1.0`.
+- Scope: geen volledige ADSR envelope, geen filter envelope, geen GUI/plugin en geen hardcoded MIDI hardware device names.
+- Story status is `In Review`.

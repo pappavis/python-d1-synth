@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Tests voor audio routing, device selectie en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
-# Actie: US-037-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037-IMPEDIMENT-001
+# User-Story: US-040 Envelope Release / Soft Note-Off
+# Actie: US-040-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
 
 import numpy as np
 
@@ -114,6 +114,7 @@ class TestSoundDeviceSustainedAudioPlayer:
             waveform=Waveform.SINE,
             amplitude=0.2,
             channel=OutputChannel.STEREO,
+            release_seconds=0.0,
         )
         player._settings = settings
 
@@ -132,6 +133,27 @@ class TestSoundDeviceSustainedAudioPlayer:
         player._callback(silent_outdata, 20, None, None)
 
         assert np.allclose(silent_outdata, 0.0)
+        assert player.active_voice_count() == 0
+
+    def test_callback_fades_released_voice_before_removing_it(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        settings = SustainedAudioPlayerSettings(
+            sample_rate=100,
+            waveform=Waveform.SQUARE,
+            amplitude=0.2,
+            channel=OutputChannel.STEREO,
+            release_seconds=0.05,
+        )
+        player._settings = settings
+
+        player.note_on((1, 60), frequency_hz=10.0, velocity=1.0)
+        player.note_off((1, 60))
+        release_outdata = np.zeros((5, 2), dtype=np.float32)
+
+        player._callback(release_outdata, 5, None, None)
+
+        assert np.max(np.abs(release_outdata[:, 0])) > 0.0
+        assert np.max(np.abs(release_outdata[-1:, 0])) < np.max(np.abs(release_outdata[:1, 0]))
         assert player.active_voice_count() == 0
 
     def test_pitch_bend_updates_only_matching_channel_voice_frequency(self) -> None:

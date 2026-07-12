@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger, pitch bend en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-039 Sustain Pedal CC64
-# Actie: US-039-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-039
+# User-Story: US-040 Envelope Release / Soft Note-Off
+# Actie: US-040-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-040
 
 import pytest
 
@@ -1172,7 +1172,7 @@ class TestStreamingMidiAudioTrigger:
                 self.calls = []
 
             def start(self, settings):
-                self.calls.append(("start",))
+                self.calls.append(("start", round(settings.release_seconds, 3)))
 
             def note_on(self, voice_id, frequency_hz, velocity):
                 self.calls.append(("note_on", voice_id, round(frequency_hz, 2)))
@@ -1205,7 +1205,7 @@ class TestStreamingMidiAudioTrigger:
         assert result.received_message_count == 3
         assert result.played_event_count == 1
         assert sustained_audio_player.calls == [
-            ("start",),
+            ("start", 0.03),
             ("pitch_bend", 1, 2.0),
             ("note_on", (1, 60), 261.63),
             ("pitch_bend", 1, 2.0),
@@ -1241,7 +1241,7 @@ class TestStreamingMidiAudioTrigger:
                 self.calls = []
 
             def start(self, settings):
-                self.calls.append(("start",))
+                self.calls.append(("start", round(settings.release_seconds, 3)))
 
             def note_on(self, voice_id, frequency_hz, velocity):
                 self.calls.append(("note_on", voice_id, round(frequency_hz, 2)))
@@ -1278,7 +1278,7 @@ class TestStreamingMidiAudioTrigger:
         assert result.received_message_count == 3
         assert result.played_event_count == 1
         assert sustained_audio_player.calls == [
-            ("start",),
+            ("start", 0.03),
             ("note_on", (1, 55), 196.0),
             ("pitch_bend", 1, 1.0),
             ("note_off", (1, 55)),
@@ -1298,7 +1298,7 @@ class TestStreamingMidiAudioTrigger:
                 self.calls = []
 
             def start(self, settings):
-                self.calls.append(("start",))
+                self.calls.append(("start", round(settings.release_seconds, 3)))
 
             def note_on(self, voice_id, frequency_hz, velocity):
                 self.calls.append(("note_on", voice_id))
@@ -1327,7 +1327,12 @@ class TestStreamingMidiAudioTrigger:
 
         assert result.played_event_count == 1
         assert result.played_events[0].duration_seconds == pytest.approx(0.25)
-        assert sustained_audio_player.calls == [("start",), ("note_on", (1, 67)), ("note_off", (1, 67)), ("stop",)]
+        assert sustained_audio_player.calls == [
+            ("start", 0.03),
+            ("note_on", (1, 67)),
+            ("note_off", (1, 67)),
+            ("stop",),
+        ]
 
     def test_streaming_trigger_sustained_mode_aborts_audio_stream_on_keyboard_interrupt(self) -> None:
         class FakeStreamingBatchBackend:
@@ -1343,7 +1348,7 @@ class TestStreamingMidiAudioTrigger:
                 self.calls = []
 
             def start(self, settings):
-                self.calls.append(("start",))
+                self.calls.append(("start", round(settings.release_seconds, 3)))
 
             def note_on(self, voice_id, frequency_hz, velocity):
                 self.calls.append(("note_on", voice_id))
@@ -1381,7 +1386,12 @@ class TestStreamingMidiAudioTrigger:
                 )
             )
 
-        assert sustained_audio_player.calls == [("start",), ("note_on", (1, 60)), ("note_off", (1, 60)), ("abort",)]
+        assert sustained_audio_player.calls == [
+            ("start", 0.03),
+            ("note_on", (1, 60)),
+            ("note_off", (1, 60)),
+            ("abort",),
+        ]
 
     def test_streaming_trigger_until_interrupt_uses_practical_performance_limits(self) -> None:
         class FakeStreamingBatchBackend:
@@ -1456,7 +1466,7 @@ class TestStreamingMidiAudioTrigger:
                 self.calls = []
 
             def start(self, settings):
-                self.calls.append(("start",))
+                self.calls.append(("start", round(settings.release_seconds, 3)))
 
             def note_on(self, voice_id, frequency_hz, velocity):
                 self.calls.append(("note_on", voice_id, round(frequency_hz, 2)))
@@ -1485,6 +1495,7 @@ class TestStreamingMidiAudioTrigger:
                 max_messages=4,
                 timeout_seconds=2.0,
                 voice_mode=StreamingVoiceMode.SUSTAINED,
+                release_time_seconds=0.08,
             )
         )
 
@@ -1492,7 +1503,7 @@ class TestStreamingMidiAudioTrigger:
         assert result.played_event_count == 1
         assert result.played_events[0].duration_seconds == pytest.approx(1.40)
         assert sustained_audio_player.calls == [
-            ("start",),
+            ("start", 0.08),
             ("note_on", (1, 60), 261.63),
             ("note_off", (1, 60)),
             ("stop",),
@@ -1548,6 +1559,10 @@ class TestStreamingMidiAudioTrigger:
     def test_streaming_settings_require_positive_modulation_rate(self) -> None:
         with pytest.raises(ValueError, match="modulation_vibrato_rate_hz"):
             StreamingMidiAudioTriggerSettings(modulation_vibrato_rate_hz=0)
+
+    def test_streaming_settings_require_non_negative_release_time(self) -> None:
+        with pytest.raises(ValueError, match="release_time_seconds"):
+            StreamingMidiAudioTriggerSettings(release_time_seconds=-0.1)
 
     def test_streaming_settings_require_supported_voice_mode(self) -> None:
         with pytest.raises(ValueError, match="voice_mode"):
