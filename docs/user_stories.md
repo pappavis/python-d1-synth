@@ -329,7 +329,7 @@ Als speler wil ik MIDI pitch bend kunnen gebruiken, zodat gespeelde noten vloeie
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `MidiPitchBendMapper`, `MidiMessage(message_type="pitch_bend")`, mido `pitchwheel` normalisatie, `SoundDeviceSustainedAudioPlayer.pitch_bend(...)`, CLI opties `--pitch-bend-range`, `--pitch-bend-channel-mode same|omni`, `--max-control-messages` en `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md`. Impediment-001 dekt SMK37/Logic routes waar note-on op channel 1 en pitch bend op channel 4 binnenkomt; `omni` past bend bewust toe op actieve sustained voices. Scope: pitch bend op sustained voices; geen modulation/CC1, sustain pedal, envelope release, GUI of plugin.
+Notitie: Done met `MidiPitchBendMapper`, `MidiMessage(message_type="pitch_bend")`, mido `pitchwheel` normalisatie, `SoundDeviceSustainedAudioPlayer.pitch_bend(...)`, CLI opties `--pitch-bend-range`, `--pitch-bend-channel-mode same|omni`, `--max-control-messages` en `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md`. Product Owner accepteerde hoorbare sustained playback, triads en korte/lange nootduur; `Ctrl-C` stopt de langere sessie. Scope: pitch bend op sustained voices; geen sustain pedal, envelope release, GUI of plugin.
 
 ### US-037: MIDI Modulation CC1 Mapping En DSP
 
@@ -337,5 +337,7 @@ Als speler wil ik MIDI modulation kunnen gebruiken, zodat CC1 later vibrato, fil
 
 Prioriteit: Should
 Sprint: Future
+
+Notitie: In Review met `MidiMessage(message_type="control_change")`, mido `control_change` normalisatie, `MidiModulationMapper`, `SoundDeviceSustainedAudioPlayer.modulation(...)`, CLI opties `--modulation-vibrato-depth` en `--modulation-vibrato-rate`, plus `docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md`. Scope: CC1 stuurt eenvoudige vibrato-depth; geen filter, sustain pedal, envelope release, GUI of plugin.
 
 Notitie: Planned. Eerste implementatie wordt waarschijnlijk CC1 mapping plus een eenvoudige hoorbare parameter, niet meteen een volledige modulation matrix.

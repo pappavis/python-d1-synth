@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Unit tests voor MIDI discovery, selectie, virtual MIDI audio trigger, pitch bend en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
+# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
+# Actie: US-037-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
 
 import pytest
 
@@ -22,6 +22,7 @@ from synth.midi import (
     MidiInputReceiveSettings,
     MidiMessage,
     MidiMessageNormalizer,
+    MidiModulationMapper,
     MidiPitchBendMapper,
     MidiToNoteEventMapper,
     PitchBendChannelMode,
@@ -290,6 +291,25 @@ class TestMidiMessageNormalizer:
             pitch_bend_value=4096,
         )
 
+    def test_mido_control_change_normalizes_to_control_change_message_for_us037(self) -> None:
+        raw_message = type(
+            "RawMidiMessage",
+            (),
+            {"type": "control_change", "control": 1, "value": 96, "channel": 0, "time": 0.0},
+        )()
+
+        message = MidiMessageNormalizer().normalize(raw_message, fallback_time_seconds=2.5)
+
+        assert message == MidiMessage(
+            message_type="control_change",
+            note_number=0,
+            velocity=0,
+            channel=1,
+            time_seconds=2.5,
+            control_number=1,
+            control_value=96,
+        )
+
 
 class TestMidiPitchBendMapper:
     def test_raw_pitch_bend_maps_to_semitones_and_frequency_ratio(self) -> None:
@@ -303,6 +323,19 @@ class TestMidiPitchBendMapper:
     def test_mapper_requires_positive_bend_range(self) -> None:
         with pytest.raises(ValueError, match="bend_range_semitones"):
             MidiPitchBendMapper(bend_range_semitones=0)
+
+
+class TestMidiModulationMapper:
+    def test_cc1_value_maps_to_vibrato_depth(self) -> None:
+        mapper = MidiModulationMapper(max_depth_semitones=0.5)
+
+        assert mapper.depth_for(0) == pytest.approx(0.0)
+        assert mapper.depth_for(127) == pytest.approx(0.5)
+        assert mapper.depth_for(64) == pytest.approx(0.5 * 64 / 127)
+
+    def test_mapper_requires_non_negative_depth(self) -> None:
+        with pytest.raises(ValueError, match="max_depth_semitones"):
+            MidiModulationMapper(max_depth_semitones=-0.1)
 
 
 class TestDuplicateMidiEventGuard:
@@ -1008,6 +1041,9 @@ class TestStreamingMidiAudioTrigger:
             def pitch_bend(self, channel, semitones):
                 self.calls.append(("pitch_bend", channel, round(semitones, 3)))
 
+            def modulation(self, channel, depth_semitones, rate_hz):
+                self.calls.append(("modulation", channel, round(depth_semitones, 3), round(rate_hz, 3)))
+
             def stop(self):
                 self.calls.append(("stop",))
                 return 88200
@@ -1040,6 +1076,75 @@ class TestStreamingMidiAudioTrigger:
             ("pitch_bend", 1, 1.0),
             ("note_off", (1, 60)),
             ("note_off", (1, 64)),
+            ("stop",),
+        ]
+
+    def test_streaming_trigger_sustained_mode_applies_cc1_modulation_to_active_voice(self) -> None:
+        class FakeStreamingBatchBackend:
+            def iter_messages(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                raise AssertionError("US-037 should use batch polling when available")
+
+            def iter_message_batches(self, input_name, max_messages, timeout_seconds, poll_interval_seconds):
+                yield (
+                    MidiMessage(message_type="note_on", note_number=60, velocity=100, channel=1, time_seconds=0.10),
+                    MidiMessage(
+                        message_type="control_change",
+                        note_number=0,
+                        velocity=0,
+                        channel=1,
+                        time_seconds=0.20,
+                        control_number=1,
+                        control_value=127,
+                    ),
+                    MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=0.60),
+                )
+
+        class FakeSustainedAudioPlayer:
+            def __init__(self):
+                self.calls = []
+
+            def start(self, settings):
+                self.calls.append(("start",))
+
+            def note_on(self, voice_id, frequency_hz, velocity):
+                self.calls.append(("note_on", voice_id, round(frequency_hz, 2)))
+
+            def note_off(self, voice_id):
+                self.calls.append(("note_off", voice_id))
+
+            def pitch_bend(self, channel, semitones):
+                self.calls.append(("pitch_bend", channel, round(semitones, 3)))
+
+            def modulation(self, channel, depth_semitones, rate_hz):
+                self.calls.append(("modulation", channel, round(depth_semitones, 3), round(rate_hz, 3)))
+
+            def stop(self):
+                self.calls.append(("stop",))
+                return 22050
+
+        sustained_audio_player = FakeSustainedAudioPlayer()
+
+        result = StreamingMidiAudioTrigger(
+            backend=FakeStreamingBatchBackend(),
+            sustained_audio_player=sustained_audio_player,
+        ).trigger(
+            StreamingMidiAudioTriggerSettings(
+                port_name="python-d1-synth",
+                max_messages=3,
+                timeout_seconds=1.0,
+                voice_mode=StreamingVoiceMode.SUSTAINED,
+                modulation_vibrato_depth_semitones=0.5,
+                modulation_vibrato_rate_hz=6.0,
+            )
+        )
+
+        assert result.received_message_count == 3
+        assert result.played_event_count == 1
+        assert sustained_audio_player.calls == [
+            ("start",),
+            ("note_on", (1, 60), 261.63),
+            ("modulation", 1, 0.5, 6.0),
+            ("note_off", (1, 60)),
             ("stop",),
         ]
 
@@ -1266,6 +1371,14 @@ class TestStreamingMidiAudioTrigger:
     def test_streaming_settings_require_non_negative_max_control_messages(self) -> None:
         with pytest.raises(ValueError, match="max_control_messages"):
             StreamingMidiAudioTriggerSettings(max_control_messages=-1)
+
+    def test_streaming_settings_require_non_negative_modulation_depth(self) -> None:
+        with pytest.raises(ValueError, match="modulation_vibrato_depth_semitones"):
+            StreamingMidiAudioTriggerSettings(modulation_vibrato_depth_semitones=-0.1)
+
+    def test_streaming_settings_require_positive_modulation_rate(self) -> None:
+        with pytest.raises(ValueError, match="modulation_vibrato_rate_hz"):
+            StreamingMidiAudioTriggerSettings(modulation_vibrato_rate_hz=0)
 
     def test_streaming_settings_require_supported_voice_mode(self) -> None:
         with pytest.raises(ValueError, match="voice_mode"):

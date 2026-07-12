@@ -3,9 +3,9 @@
 Chatlog ID: CHATOD-20260709-D1PY-MVP-001 / LESSONS-LEARNED-001  
 Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW  
 Doc versie: 0.1.0  
-Datum: 2026-07-11  
+Datum: 2026-07-12
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-036
+Betrokken stories: US-001 t/m US-037
 
 ## Doel
 
@@ -132,15 +132,25 @@ Statuslabel: US-035 `Done`.
 
 US-036 volgt logisch na sustained playback, omdat pitch bend alleen zinvol hoorbaar is wanneer een voice actief blijft klinken. De story voegt mido `pitchwheel` normalisatie, `MidiPitchBendMapper`, `--pitch-bend-range` en `SoundDeviceSustainedAudioPlayer.pitch_bend(...)` toe.
 
-Belangrijke scopegrens: US-036 behandelt pitch bend op actieve sustained voices. Modulation/CC1, sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
+Belangrijke scopegrens: US-036 behandelt pitch bend op actieve sustained voices. Sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
 
 Impediment-001 les: verbose MIDI logging moet altijd channel-informatie tonen en de acceptatietest moet controleren of `note_on` en `pitch_bend` op hetzelfde channel binnenkomen. De SMK37/Logic test liet `note_on` op channel 1 en pitch bend op channel 4 zien; daarom is `--pitch-bend-channel-mode omni` toegevoegd als expliciete MVP/diagnose-route zonder de veilige default `same` te wijzigen.
 
-Statuslabel: US-036 `In Review`.
+Product Owner bevestigde US-036 op 2026-07-12 als geslaagd: er was hoorbaar geluid, triads speelden, korte en lange noten hadden hoorbaar correcte duur, en een langere sessie met `--timeout 600` stopte netjes met `Ctrl-C`.
+
+Statuslabel: US-036 `Done`.
+
+## US-037 Review Voorbereiding
+
+US-037 volgt direct uit US-036: nadat sustained playback en pitch bend werken, kan CC1 modulation als volgende MIDI performance control worden gemapt. De story voegt mido `control_change` normalisatie, `MidiModulationMapper`, `--modulation-vibrato-depth`, `--modulation-vibrato-rate` en `SoundDeviceSustainedAudioPlayer.modulation(...)` toe.
+
+Belangrijke scopegrens: US-037 gebruikt CC1 alleen voor eenvoudige vibrato-depth. Filter-modulatie, sustain pedal, envelope release, GUI en plugin packaging blijven aparte stories.
+
+Statuslabel: US-037 `In Review`.
 
 ## Aanbevolen Volgende Stap
 
 De eerstvolgende taak mag pas gekozen worden nadat de Product Owner bevestigt of we:
 
-- US-036 accepteren na Logic/keyboard pitch bend test, of
-- een US-036 impediment oplossen als pitch bend messages niet zichtbaar zijn of niet hoorbaar buigen.
+- US-037 accepteren na Logic/keyboard mod wheel test, of
+- een US-037 impediment oplossen als CC1 messages niet zichtbaar zijn of vibrato niet hoorbaar reageert.

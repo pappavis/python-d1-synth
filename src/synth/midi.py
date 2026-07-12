@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: MIDI device discovery, device selectie, virtual MIDI audio trigger en MIDI-naar-NoteEvent mapping.
 # Sprint: Future MIDI/DAW
-# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
+# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
+# Actie: US-037-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
 
 from __future__ import annotations
 
@@ -87,6 +87,7 @@ class MidiMessage:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-020 Virtual MIDI Input Voor DAW
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -96,10 +97,12 @@ class MidiMessage:
     channel: int
     time_seconds: float = 0.0
     pitch_bend_value: int = 0
+    control_number: int = 0
+    control_value: int = 0
 
     def __post_init__(self) -> None:
-        if self.message_type not in {"note_on", "note_off", "pitch_bend"}:
-            raise ValueError("message_type must be note_on, note_off or pitch_bend")
+        if self.message_type not in {"note_on", "note_off", "pitch_bend", "control_change"}:
+            raise ValueError("message_type must be note_on, note_off, pitch_bend or control_change")
         if not 1 <= self.channel <= 16:
             raise ValueError("channel must be between 1 and 16")
         if self.time_seconds < 0:
@@ -107,6 +110,12 @@ class MidiMessage:
         if self.message_type == "pitch_bend":
             if not -8192 <= self.pitch_bend_value <= 8191:
                 raise ValueError("pitch_bend_value must be between -8192 and 8191")
+            return
+        if self.message_type == "control_change":
+            if not 0 <= self.control_number <= 127:
+                raise ValueError("control_number must be between 0 and 127")
+            if not 0 <= self.control_value <= 127:
+                raise ValueError("control_value must be between 0 and 127")
             return
         if not 0 <= self.note_number <= 127:
             raise ValueError("note_number must be between 0 and 127")
@@ -373,6 +382,7 @@ class StreamingVoiceMode(str, Enum):
     - User Story: US-033 Note Off Gated Voice Duration
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -410,6 +420,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -424,6 +435,8 @@ class StreamingMidiAudioTriggerSettings:
     pitch_bend_range_semitones: float = 2.0
     pitch_bend_channel_mode: PitchBendChannelMode = PitchBendChannelMode.SAME
     max_control_messages: int = 1024
+    modulation_vibrato_depth_semitones: float = 0.25
+    modulation_vibrato_rate_hz: float = 5.0
     sample_rate: int = 44100
     waveform: Waveform = Waveform.SINE
     amplitude: float = 0.2
@@ -453,6 +466,10 @@ class StreamingMidiAudioTriggerSettings:
             raise ValueError("pitch_bend_channel_mode must be a PitchBendChannelMode")
         if self.max_control_messages < 0:
             raise ValueError("max_control_messages must not be negative")
+        if self.modulation_vibrato_depth_semitones < 0:
+            raise ValueError("modulation_vibrato_depth_semitones must not be negative")
+        if self.modulation_vibrato_rate_hz <= 0:
+            raise ValueError("modulation_vibrato_rate_hz must be positive")
         if self.sample_rate <= 0:
             raise ValueError("sample_rate must be positive")
         if not 0 < self.amplitude <= 1.0:
@@ -473,6 +490,7 @@ class StreamingMidiAudioTriggerResult:
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -519,7 +537,7 @@ class DuplicateMidiEventGuard:
 
     def __init__(self, settings: DuplicateMidiEventGuardSettings | None = None) -> None:
         self._settings = settings if settings is not None else DuplicateMidiEventGuardSettings()
-        self._last_seen_time_by_key: dict[tuple[str, int, int, int, int], float] = {}
+        self._last_seen_time_by_key: dict[tuple[str, int, int, int, int, int, int], float] = {}
 
     def is_duplicate(self, message: MidiMessage) -> bool:
         key = (
@@ -528,6 +546,8 @@ class DuplicateMidiEventGuard:
             message.velocity,
             message.channel,
             message.pitch_bend_value,
+            message.control_number,
+            message.control_value,
         )
         previous_time = self._last_seen_time_by_key.get(key)
         self._last_seen_time_by_key[key] = message.time_seconds
@@ -566,6 +586,30 @@ class MidiPitchBendMapper:
         return math.pow(2.0, self.semitones_for(pitch_bend_value) / 12.0)
 
 
+@dataclass(frozen=True)
+class MidiModulationMapper:
+    """Map MIDI CC1 modulation values to vibrato depth.
+
+    Traceability:
+    - Chatlog: CHATOD-20260709-D1PY-MVP-001 / US-037
+    - Backlog: Sprint 1 Kanban Backlog / Future MIDI/DAW Backlog
+    - Epic: EPIC-007 Future MIDI En DAW Integratie
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
+    - Version: 0.1.0
+    """
+
+    max_depth_semitones: float = 0.25
+
+    def __post_init__(self) -> None:
+        if self.max_depth_semitones < 0:
+            raise ValueError("max_depth_semitones must not be negative")
+
+    def depth_for(self, control_value: int) -> float:
+        if not 0 <= control_value <= 127:
+            raise ValueError("control_value must be between 0 and 127")
+        return self.max_depth_semitones * (control_value / 127.0)
+
+
 class MidiInputBackend(Protocol):
     def receive_messages(
         self, input_name: str, max_messages: int, timeout_seconds: float
@@ -596,6 +640,9 @@ class SustainedAudioPlayer(Protocol):
     def pitch_bend(self, channel: int, semitones: float) -> None:
         ...
 
+    def modulation(self, channel: int, depth_semitones: float, rate_hz: float) -> None:
+        ...
+
     def stop(self) -> int:
         ...
 
@@ -621,12 +668,13 @@ class MidiMessageNormalizer:
     - User Story: US-026 Live MIDI Input Receive Loop
     - User Story: US-030 Logic MIDI Region Multi-Note Playback
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
     def normalize(self, raw_message, fallback_time_seconds: float | None = None) -> MidiMessage | None:
         message_type = getattr(raw_message, "type", "")
-        if message_type not in {"note_on", "note_off", "pitchwheel"}:
+        if message_type not in {"note_on", "note_off", "pitchwheel", "control_change"}:
             return None
         raw_time = float(getattr(raw_message, "time", 0.0))
         time_seconds = fallback_time_seconds if raw_time == 0.0 and fallback_time_seconds is not None else raw_time
@@ -639,6 +687,16 @@ class MidiMessageNormalizer:
                 channel=channel,
                 time_seconds=time_seconds,
                 pitch_bend_value=int(getattr(raw_message, "pitch")),
+            )
+        if message_type == "control_change":
+            return MidiMessage(
+                message_type="control_change",
+                note_number=0,
+                velocity=0,
+                channel=channel,
+                time_seconds=time_seconds,
+                control_number=int(getattr(raw_message, "control")),
+                control_value=int(getattr(raw_message, "value")),
             )
         return MidiMessage(
             message_type=message_type,
@@ -1062,6 +1120,7 @@ class StreamingMidiAudioTrigger:
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -1194,7 +1253,9 @@ class StreamingMidiAudioTrigger:
         suppressed_duplicate_count = 0
         sustained_player = self._sustained_audio_player
         pitch_bend_mapper = MidiPitchBendMapper(settings.pitch_bend_range_semitones)
+        modulation_mapper = MidiModulationMapper(settings.modulation_vibrato_depth_semitones)
         pitch_bend_by_channel: dict[int, float] = {}
+        modulation_depth_by_channel: dict[int, float] = {}
         omni_pitch_bend_semitones: float | None = None
 
         sustained_player.start(
@@ -1225,6 +1286,17 @@ class StreamingMidiAudioTrigger:
                             pitch_bend_by_channel[message.channel] = semitones
                             sustained_player.pitch_bend(message.channel, semitones)
                         continue
+                    if message.message_type == "control_change":
+                        if message.control_number != 1:
+                            continue
+                        depth = modulation_mapper.depth_for(message.control_value)
+                        modulation_depth_by_channel[message.channel] = depth
+                        sustained_player.modulation(
+                            message.channel,
+                            depth,
+                            settings.modulation_vibrato_rate_hz,
+                        )
+                        continue
                     if message.message_type == "note_on" and message.velocity > 0:
                         previous_active_note = active_note_on_by_key.get(key)
                         if previous_active_note is not None:
@@ -1239,6 +1311,12 @@ class StreamingMidiAudioTrigger:
                                 sustained_player.pitch_bend(message.channel, omni_pitch_bend_semitones)
                         elif message.channel in pitch_bend_by_channel:
                             sustained_player.pitch_bend(message.channel, pitch_bend_by_channel[message.channel])
+                        if message.channel in modulation_depth_by_channel:
+                            sustained_player.modulation(
+                                message.channel,
+                                modulation_depth_by_channel[message.channel],
+                                settings.modulation_vibrato_rate_hz,
+                            )
                         played_events.append(event)
                         active_note_on_by_key[key] = (message, len(played_events) - 1)
                         continue

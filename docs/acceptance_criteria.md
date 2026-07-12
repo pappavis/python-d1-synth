@@ -503,10 +503,18 @@ Acceptatie op 2026-07-11:
 - Given `--debuglevel verbose` actief is, then de CLI toont `pitch_bend_range=...st`, `pitch_bend_channel_mode=...` en received messages zoals `pitch_bend:4096:channel=1`.
 - `docs/midi_pitch_bend_mapping_dsp_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-036 MIDI Pitch Bend Mapping En DSP`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-036 MIDI Pitch Bend Mapping En DSP` en `Version: 0.1.0`.
-- Scope: geen modulation/CC1, geen sustain pedal, geen envelope release, geen GUI/plugin.
-- Story status is `In Review`.
+- Acceptatie op 2026-07-12: Product Owner hoorde sustained playback, triads, correcte korte/lange noten en kon de sessie met `Ctrl-C` stoppen.
+- Scope: geen sustain pedal, geen envelope release, geen GUI/plugin.
+- Story status is `Done`.
 
 ## US-037: MIDI Modulation CC1 Mapping En DSP
 
-- Given MIDI CC1 modulation events, then de synth die naar een hoorbare modulatieparameter kan mappen.
-- Story status is `Planned`.
+- Given een mido `control_change` message binnenkomt, then die naar interne `MidiMessage(message_type="control_change")` wordt genormaliseerd.
+- Given `control_number=1`, then `MidiModulationMapper` de CC1 waarde `0..127` naar vibrato-depth in semitones mapt.
+- Given `--voice-mode sustained` draait en CC1 events binnenkomen, then actieve voices op hetzelfde MIDI channel vibrato krijgen.
+- Given een CC1 event vóór een nieuwe `note_on` binnenkomt, then de nieuwe voice de huidige channel modulation erft.
+- Given `--debuglevel verbose` actief is, then de CLI toont `modulation_vibrato_depth=...st`, `modulation_vibrato_rate=...Hz` en received messages zoals `control_change:1:96:channel=1`.
+- `docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-037 MIDI Modulation CC1 Mapping En DSP`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-037 MIDI Modulation CC1 Mapping En DSP` en `Version: 0.1.0`.
+- Scope: CC1 stuurt alleen eenvoudige vibrato-depth; geen filter, sustain pedal, envelope release, GUI/plugin.
+- Story status is `In Review`.

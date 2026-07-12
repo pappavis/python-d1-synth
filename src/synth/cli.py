@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
+# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
+# Actie: US-037-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
 
 import argparse
 import importlib.util
@@ -64,6 +64,7 @@ class SynthCli:
     - User Story: US-034 Polyphonic Voice Mixer En Triads
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -197,6 +198,8 @@ class SynthCli:
             default=PitchBendChannelMode.SAME.value,
         )
         play_stream.add_argument("--max-control-messages", type=int, default=1024)
+        play_stream.add_argument("--modulation-vibrato-depth", type=float, default=0.25)
+        play_stream.add_argument("--modulation-vibrato-rate", type=float, default=5.0)
         play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
         play_stream.add_argument("--sample-rate", type=int, default=44100)
         play_stream.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
@@ -525,6 +528,8 @@ class SynthCli:
                 pitch_bend_range_semitones=args.pitch_bend_range,
                 pitch_bend_channel_mode=PitchBendChannelMode(args.pitch_bend_channel_mode),
                 max_control_messages=args.max_control_messages,
+                modulation_vibrato_depth_semitones=args.modulation_vibrato_depth,
+                modulation_vibrato_rate_hz=args.modulation_vibrato_rate,
                 sample_rate=args.sample_rate,
                 waveform=Waveform(args.waveform),
                 channel=OutputChannel(args.channel),
@@ -538,7 +543,7 @@ class SynthCli:
         if settings.voice_mode is StreamingVoiceMode.SUSTAINED:
             reporter.light(
                 "Sustained MVP note: note_on starts a streaming voice and note_off stops it; "
-                "pitch bend bends active sustained voices, modulation is a later story."
+                "pitch bend bends active sustained voices; CC1 modulation adds vibrato."
             )
         elif settings.voice_mode is StreamingVoiceMode.GATED:
             reporter.light(
@@ -559,6 +564,8 @@ class SynthCli:
             f"pitch_bend_range={settings.pitch_bend_range_semitones:g}st, "
             f"pitch_bend_channel_mode={settings.pitch_bend_channel_mode.value}, "
             f"max_control_messages={settings.max_control_messages}, "
+            f"modulation_vibrato_depth={settings.modulation_vibrato_depth_semitones:g}st, "
+            f"modulation_vibrato_rate={settings.modulation_vibrato_rate_hz:g}Hz, "
             f"waveform={args.waveform}, "
             f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
         )
@@ -619,6 +626,11 @@ class SynthCli:
             if message.message_type == "pitch_bend":
                 formatted_messages.append(
                     f"pitch_bend:{message.pitch_bend_value}:channel={message.channel}"
+                )
+                continue
+            if message.message_type == "control_change":
+                formatted_messages.append(
+                    f"control_change:{message.control_number}:{message.control_value}:channel={message.channel}"
                 )
                 continue
             formatted_messages.append(

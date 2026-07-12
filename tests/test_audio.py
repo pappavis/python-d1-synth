@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Tests voor audio routing, device selectie en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
+# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
+# Actie: US-037-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
 
 import numpy as np
 
@@ -144,6 +144,28 @@ class TestSoundDeviceSustainedAudioPlayer:
         assert player._voice_by_id[(1, 60)].base_frequency_hz == 100.0
         assert player._voice_by_id[(1, 60)].frequency_hz == 200.0
         assert player._voice_by_id[(2, 60)].frequency_hz == 200.0
+
+    def test_modulation_updates_only_matching_channel_voice_vibrato(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        player.note_on((1, 60), frequency_hz=100.0, velocity=1.0)
+        player.note_on((2, 60), frequency_hz=200.0, velocity=1.0)
+
+        player.modulation(channel=1, depth_semitones=0.5, rate_hz=6.0)
+
+        assert player._voice_by_id[(1, 60)].modulation_depth_semitones == 0.5
+        assert player._voice_by_id[(1, 60)].modulation_rate_hz == 6.0
+        assert player._voice_by_id[(2, 60)].modulation_depth_semitones == 0.0
+
+    def test_modulated_frequency_varies_around_current_frequency(self) -> None:
+        player = SoundDeviceSustainedAudioPlayer()
+        player.note_on((1, 60), frequency_hz=100.0, velocity=1.0)
+        player.modulation(channel=1, depth_semitones=1.0, rate_hz=5.0)
+        voice = player._voice_by_id[(1, 60)]
+
+        frequencies = player._modulated_frequency(voice, np.linspace(0.0, 0.2, 200, dtype=np.float64))
+
+        assert np.min(frequencies) < 100.0
+        assert np.max(frequencies) > 100.0
 
     def test_start_and_stop_manage_sounddevice_stream(self, monkeypatch) -> None:
         calls = []

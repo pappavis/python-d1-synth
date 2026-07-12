@@ -3,7 +3,7 @@
 Sprintnummer: Future MIDI/DAW
 Doc versie: 0.1.0
 Epic: EPIC-007 Future MIDI En DAW Integratie
-Status: In Review
+Status: Done
 
 ## Doel
 
@@ -25,7 +25,6 @@ US-036 voegt MIDI pitch bend toe aan sustained playback. Pitch bend messages wor
 Scopegrenzen:
 
 - Alleen `--voice-mode sustained` past pitch bend muzikaal toe.
-- Geen MIDI modulation/CC1; dat is US-037.
 - Geen sustain pedal.
 - Geen envelope release.
 - Geen GUI, AU, VST3 of Logic Component.
@@ -66,7 +65,9 @@ Acceptatie:
 - `--pitch-bend-channel-mode omni` maakt pitch bend hoorbaar wanneer note events en pitch bend events op verschillende channels binnenkomen.
 - Pitch bend bursts stoppen de stream niet meer na de eerste `--max-messages 32`; `--max-control-messages` geeft control messages aparte speelruimte.
 - Zonder pitch bend blijft sustained playback uit US-035 ongewijzigd.
-- Eventuele kleine latency is toegestaan binnen US-036; modulation/CC1 blijft US-037.
+- Product Owner acceptatie op 2026-07-12: hoorbare sustained playback, triads, korte/lange nootduur en nette `Ctrl-C` interrupt in langere sessie.
+- Eventuele kleine latency is toegestaan binnen US-036.
+- CC1 modulation is verder uitgewerkt in US-037.
 
 ## Traceability
 

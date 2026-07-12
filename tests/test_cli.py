@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-IMPEDIMENT-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036-IMPEDIMENT-001
+# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
+# Actie: US-037-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
 
 import numpy as np
 
@@ -995,6 +995,8 @@ class TestSynthCli:
                 assert settings.pitch_bend_range_semitones == 12.0
                 assert settings.pitch_bend_channel_mode is PitchBendChannelMode.OMNI
                 assert settings.max_control_messages == 2048
+                assert settings.modulation_vibrato_depth_semitones == 0.75
+                assert settings.modulation_vibrato_rate_hz == 6.5
                 parser = NoteParser()
                 return StreamingMidiAudioTriggerResult(
                     port_name=settings.port_name,
@@ -1015,6 +1017,15 @@ class TestSynthCli:
                             channel=1,
                             time_seconds=1.0,
                             pitch_bend_value=4096,
+                        ),
+                        MidiMessage(
+                            message_type="control_change",
+                            note_number=0,
+                            velocity=0,
+                            channel=1,
+                            time_seconds=1.5,
+                            control_number=1,
+                            control_value=96,
                         ),
                         MidiMessage(message_type="note_off", note_number=60, velocity=64, channel=1, time_seconds=2.0),
                     ),
@@ -1043,6 +1054,10 @@ class TestSynthCli:
                 "omni",
                 "--max-control-messages",
                 "2048",
+                "--modulation-vibrato-depth",
+                "0.75",
+                "--modulation-vibrato-rate",
+                "6.5",
                 "--debuglevel",
                 "verbose",
             ]
@@ -1055,7 +1070,10 @@ class TestSynthCli:
         assert "pitch_bend_range=12st" in output
         assert "pitch_bend_channel_mode=omni" in output
         assert "max_control_messages=2048" in output
+        assert "modulation_vibrato_depth=0.75st" in output
+        assert "modulation_vibrato_rate=6.5Hz" in output
         assert "pitch_bend:4096:channel=1" in output
+        assert "control_change:1:96:channel=1" in output
         assert "Streamed note durations: C4@0.000s/2.000s" in output
         assert "Total streamed audio frames: 88200, sample_rate=44100 Hz" in output
 

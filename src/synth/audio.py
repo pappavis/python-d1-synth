@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Audio buffers, device selectie, routing en sustained streaming output.
 # Sprint: Future MIDI/DAW
-# User-Story: US-036 MIDI Pitch Bend Mapping En DSP
-# Actie: US-036-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-036
+# User-Story: US-037 MIDI Modulation CC1 Mapping En DSP
+# Actie: US-037-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-037
 
 from dataclasses import dataclass
 from enum import Enum
@@ -178,6 +178,7 @@ class SustainedVoiceState:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -185,6 +186,9 @@ class SustainedVoiceState:
     frequency_hz: float
     velocity: float
     phase_cycles: float = 0.0
+    modulation_depth_semitones: float = 0.0
+    modulation_rate_hz: float = 5.0
+    lfo_phase_cycles: float = 0.0
 
 
 class SoundDeviceSustainedAudioPlayer:
@@ -196,6 +200,7 @@ class SoundDeviceSustainedAudioPlayer:
     - Epic: EPIC-007 Future MIDI En DAW Integratie
     - User Story: US-035 Sustained Note Audio Engine
     - User Story: US-036 MIDI Pitch Bend Mapping En DSP
+    - User Story: US-037 MIDI Modulation CC1 Mapping En DSP
     - Version: 0.1.0
     """
 
@@ -253,6 +258,25 @@ class SoundDeviceSustainedAudioPlayer:
                     frequency_hz=voice.base_frequency_hz * bend_ratio,
                     velocity=voice.velocity,
                     phase_cycles=voice.phase_cycles,
+                    modulation_depth_semitones=voice.modulation_depth_semitones,
+                    modulation_rate_hz=voice.modulation_rate_hz,
+                    lfo_phase_cycles=voice.lfo_phase_cycles,
+                )
+
+    def modulation(self, channel: int, depth_semitones: float, rate_hz: float) -> None:
+        with self._lock:
+            for voice_id, voice in tuple(self._voice_by_id.items()):
+                voice_channel, _note_number = voice_id
+                if voice_channel != channel:
+                    continue
+                self._voice_by_id[voice_id] = SustainedVoiceState(
+                    base_frequency_hz=voice.base_frequency_hz,
+                    frequency_hz=voice.frequency_hz,
+                    velocity=voice.velocity,
+                    phase_cycles=voice.phase_cycles,
+                    modulation_depth_semitones=depth_semitones,
+                    modulation_rate_hz=rate_hz,
+                    lfo_phase_cycles=voice.lfo_phase_cycles,
                 )
 
     def stop(self) -> int:
@@ -283,14 +307,20 @@ class SoundDeviceSustainedAudioPlayer:
         updated_voices: dict[tuple[int, int], SustainedVoiceState] = {}
         timeline = np.arange(frames, dtype=np.float64) / settings.sample_rate
         for voice_id, voice in voice_items:
-            phase = voice.phase_cycles + voice.frequency_hz * timeline
+            instantaneous_frequency = self._modulated_frequency(voice, timeline)
+            increments = instantaneous_frequency / settings.sample_rate
+            phase = voice.phase_cycles + np.cumsum(increments) - increments[0]
             mono += self._waveform_samples(settings.waveform, phase) * settings.amplitude * voice.velocity
-            updated_phase = float((voice.phase_cycles + frames * voice.frequency_hz / settings.sample_rate) % 1.0)
+            updated_phase = float((voice.phase_cycles + float(np.sum(increments))) % 1.0)
+            updated_lfo_phase = float((voice.lfo_phase_cycles + frames * voice.modulation_rate_hz / settings.sample_rate) % 1.0)
             updated_voices[voice_id] = SustainedVoiceState(
                 base_frequency_hz=voice.base_frequency_hz,
                 frequency_hz=voice.frequency_hz,
                 velocity=voice.velocity,
                 phase_cycles=updated_phase,
+                modulation_depth_semitones=voice.modulation_depth_semitones,
+                modulation_rate_hz=voice.modulation_rate_hz,
+                lfo_phase_cycles=updated_lfo_phase,
             )
 
         mono = np.clip(mono, -1.0, 1.0).astype(np.float32)
@@ -300,6 +330,13 @@ class SoundDeviceSustainedAudioPlayer:
                 if voice_id in self._voice_by_id:
                     self._voice_by_id[voice_id] = voice
             self._rendered_frame_count += frames
+
+    def _modulated_frequency(self, voice: SustainedVoiceState, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        if voice.modulation_depth_semitones == 0.0:
+            return np.full(timeline.shape, voice.frequency_hz, dtype=np.float64)
+        lfo_phase = voice.lfo_phase_cycles + voice.modulation_rate_hz * timeline
+        semitone_offset = voice.modulation_depth_semitones * np.sin(2.0 * np.pi * lfo_phase)
+        return voice.frequency_hz * np.power(2.0, semitone_offset / 12.0)
 
     def _waveform_samples(self, waveform: Waveform, phase: NDArray[np.float64]) -> NDArray[np.float32]:
         if waveform is Waveform.SINE:

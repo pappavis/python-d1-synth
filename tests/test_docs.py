@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-036",
+            "US-001 t/m US-037",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -411,7 +411,8 @@ class TestDocumentationArtifacts:
             "US-033 `Done`",
             "US-034 `Done`",
             "US-035 `Done`",
-            "US-036 `In Review`",
+            "US-036 `Done`",
+            "US-037 `In Review`",
         )
         for term in required_terms:
             assert term in content
@@ -569,7 +570,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-036 MIDI Pitch Bend Mapping En DSP",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--pitch-bend-range",
             "--pitch-bend-channel-mode",
@@ -585,9 +586,38 @@ class TestDocumentationArtifacts:
             "SMK37/Logic cross-channel test",
             "8191",
             "-8192",
-            "Geen MIDI modulation/CC1",
+            "Product Owner acceptatie op 2026-07-12",
             "Geen hardcoded MIDI hardware device names",
             "US-037",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us037_midi_modulation_cc1_mapping_dsp_doc_contains_required_terms(self) -> None:
+        document = Path("docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-037 MIDI Modulation CC1 Mapping En DSP",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--modulation-vibrato-depth",
+            "--modulation-vibrato-rate",
+            "modulation_vibrato_depth=0.25st",
+            "modulation_vibrato_rate=5Hz",
+            "control_change:1:96:channel=1",
+            "MidiModulationMapper",
+            "message_type=\"control_change\"",
+            "control_number",
+            "control_value",
+            "SoundDeviceSustainedAudioPlayer.modulation",
+            "Geen filter-modulatie",
+            "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:
             assert term in content
