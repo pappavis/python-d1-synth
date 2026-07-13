@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
 # Sprint: Future MIDI/DAW
-# User-Story: US-033 Note Off Gated Voice Duration
-# Actie: US-033-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-033
+# User-Story: US-042 MIDI Performance Patch YAML Config
+# Actie: US-042-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-042
 
 from pathlib import Path
 
@@ -395,7 +395,7 @@ class TestDocumentationArtifacts:
             "CHATOD-20260709-D1PY-MVP-001",
             "LESSONS-LEARNED-001",
             "Sprint 0, Sprint 1, Future MIDI/DAW",
-            "US-001 t/m US-041",
+            "US-001 t/m US-042",
             "Scope-discipline",
             "MIDI moet altijd eerst diagnostisch bewezen worden",
             "Traceability",
@@ -417,6 +417,36 @@ class TestDocumentationArtifacts:
             "US-039 `Done`",
             "US-040 `Done`",
             "US-041 `Done`",
+            "US-042 `In Review`",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_us042_midi_performance_patch_yaml_config_doc_contains_required_terms(self) -> None:
+        document = Path("docs/midi_performance_patch_yaml_config_v0.1.0.md")
+
+        content = document.read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprintnummer: Future MIDI/DAW",
+            "Doc versie: 0.1.0",
+            "US-042 MIDI Performance Patch YAML Config",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "Status: In Review",
+            "midi play-stream",
+            "--config examples/midi_performance_patch.yaml",
+            "midi.performance",
+            "CLI Precedence",
+            "voice_mode=sustained",
+            "pitch_bend_channel_mode=omni",
+            "attack_time=0.02s",
+            "decay_time=0.12s",
+            "sustain_level=0.6",
+            "release_time=0.08s",
+            "run_until_interrupted: true",
+            "audio_device: null",
+            "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:
             assert term in content

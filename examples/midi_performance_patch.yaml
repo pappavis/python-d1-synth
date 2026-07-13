@@ -1,0 +1,36 @@
+sample_rate: 44100
+duration_seconds: 1.0
+channel: stereo
+debuglevel: light
+
+oscillator:
+  waveform: sine
+  note: C3
+  amplitude: 0.2
+
+midi:
+  default_input_device: null
+  performance:
+    port_name: python-d1-synth
+    audio_device: null
+    voice_mode: sustained
+    max_messages: 10000
+    timeout_seconds: 600
+    poll_interval_seconds: 0.005
+    note_duration_seconds: 0.25
+    dedupe_window_seconds: 0.03
+    chord_window_seconds: 0.08
+    pitch_bend_range_semitones: 2
+    pitch_bend_channel_mode: omni
+    max_control_messages: 20000
+    modulation_vibrato_depth_semitones: 0.25
+    modulation_vibrato_rate_hz: 5
+    run_until_interrupted: true
+    attack_time_seconds: 0.02
+    decay_time_seconds: 0.12
+    sustain_level: 0.6
+    release_time_seconds: 0.08
+    sample_rate: 44100
+    waveform: sine
+    amplitude: 0.2
+    channel: stereo

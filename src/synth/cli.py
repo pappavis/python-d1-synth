@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Commandline entrypoint voor playback, render, audio utilities en MIDI/DAW workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-041 Amp Envelope ADSR Parameters
-# Actie: US-041-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
+# User-Story: US-042 MIDI Performance Patch YAML Config
+# Actie: US-042-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-042
 
 import argparse
 import importlib.util
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 from synth.audio import AudioDeviceScanner, AudioDeviceSelector, OutputChannel, SoundDeviceAudioPlayer
-from synth.config import PatchConfigLoader
+from synth.config import MidiPerformanceConfig, PatchConfig, PatchConfigLoader
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import SynthEngine, SynthEngineSettings
 from synth.midi import (
@@ -69,6 +69,7 @@ class SynthCli:
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
     - User Story: US-041 Amp Envelope ADSR Parameters
+    - User Story: US-042 MIDI Performance Patch YAML Config
     - Version: 0.1.0
     """
 
@@ -183,37 +184,36 @@ class SynthCli:
             "play-stream",
             help="Open a virtual MIDI input port and stream note_on events through short audio buffers.",
         )
-        play_stream.add_argument("--port-name", "--name", dest="port_name", default="python-d1-synth")
-        play_stream.add_argument("--max-messages", type=int, default=32)
-        play_stream.add_argument("--timeout", type=float, default=30.0)
-        play_stream.add_argument("--poll-interval", type=float, default=0.005)
-        play_stream.add_argument("--note-duration", type=float, default=0.25)
+        play_stream.add_argument("--config")
+        play_stream.add_argument("--port-name", "--name", dest="port_name")
+        play_stream.add_argument("--max-messages", type=int)
+        play_stream.add_argument("--timeout", type=float)
+        play_stream.add_argument("--poll-interval", type=float)
+        play_stream.add_argument("--note-duration", type=float)
         play_stream.add_argument(
             "--voice-mode",
             choices=[item.value for item in StreamingVoiceMode],
-            default=StreamingVoiceMode.FIXED.value,
         )
-        play_stream.add_argument("--dedupe-window", type=float, default=0.03)
-        play_stream.add_argument("--chord-window", type=float, default=0.02)
-        play_stream.add_argument("--pitch-bend-range", type=float, default=2.0)
+        play_stream.add_argument("--dedupe-window", type=float)
+        play_stream.add_argument("--chord-window", type=float)
+        play_stream.add_argument("--pitch-bend-range", type=float)
         play_stream.add_argument(
             "--pitch-bend-channel-mode",
             choices=[item.value for item in PitchBendChannelMode],
-            default=PitchBendChannelMode.SAME.value,
         )
-        play_stream.add_argument("--max-control-messages", type=int, default=1024)
-        play_stream.add_argument("--modulation-vibrato-depth", type=float, default=0.25)
-        play_stream.add_argument("--modulation-vibrato-rate", type=float, default=5.0)
+        play_stream.add_argument("--max-control-messages", type=int)
+        play_stream.add_argument("--modulation-vibrato-depth", type=float)
+        play_stream.add_argument("--modulation-vibrato-rate", type=float)
         play_stream.add_argument("--until-interrupt", action="store_true")
-        play_stream.add_argument("--attack-time", type=float, default=0.0)
-        play_stream.add_argument("--decay-time", type=float, default=0.0)
-        play_stream.add_argument("--sustain-level", type=float, default=1.0)
-        play_stream.add_argument("--release-time", type=float, default=0.03)
-        play_stream.add_argument("--waveform", choices=[item.value for item in Waveform], default=Waveform.SINE.value)
-        play_stream.add_argument("--sample-rate", type=int, default=44100)
-        play_stream.add_argument("--channel", choices=[item.value for item in OutputChannel], default=OutputChannel.STEREO.value)
+        play_stream.add_argument("--attack-time", type=float)
+        play_stream.add_argument("--decay-time", type=float)
+        play_stream.add_argument("--sustain-level", type=float)
+        play_stream.add_argument("--release-time", type=float)
+        play_stream.add_argument("--waveform", choices=[item.value for item in Waveform])
+        play_stream.add_argument("--sample-rate", type=int)
+        play_stream.add_argument("--channel", choices=[item.value for item in OutputChannel])
         play_stream.add_argument("--audio-device")
-        play_stream.add_argument("--debuglevel", choices=[item.value for item in DebugLevel], default=DebugLevel.NONE.value)
+        play_stream.add_argument("--debuglevel", choices=[item.value for item in DebugLevel])
         play_stream.set_defaults(handler=self._handle_midi_play_stream)
 
         return parser
@@ -520,33 +520,81 @@ class SynthCli:
         return 0
 
     def _handle_midi_play_stream(self, args: argparse.Namespace) -> int:
-        reporter = DebugReporter(DebugLevel(args.debuglevel))
-        audio_selection = AudioDeviceSelector().select(args.audio_device)
+        patch_config = self._load_patch_config(args.config)
+        performance_config = patch_config.midi.performance if patch_config is not None else MidiPerformanceConfig()
+        debuglevel = self._config_value(
+            args.debuglevel,
+            patch_config.debuglevel.value if patch_config is not None else None,
+            DebugLevel.NONE.value,
+        )
+        reporter = DebugReporter(DebugLevel(debuglevel))
+        audio_device = self._config_value(args.audio_device, performance_config.audio_device, None)
+        audio_selection = AudioDeviceSelector().select(audio_device)
         if audio_selection.sounddevice_value is not None:
             reporter.light(f"Selected audio device from {audio_selection.source}: {audio_selection.sounddevice_value}")
         try:
             settings = StreamingMidiAudioTriggerSettings(
-                port_name=args.port_name,
-                max_messages=args.max_messages,
-                timeout_seconds=args.timeout,
-                poll_interval_seconds=args.poll_interval,
-                note_duration_seconds=args.note_duration,
-                voice_mode=StreamingVoiceMode(args.voice_mode),
-                dedupe_window_seconds=args.dedupe_window,
-                chord_window_seconds=args.chord_window,
-                pitch_bend_range_semitones=args.pitch_bend_range,
-                pitch_bend_channel_mode=PitchBendChannelMode(args.pitch_bend_channel_mode),
-                max_control_messages=args.max_control_messages,
-                modulation_vibrato_depth_semitones=args.modulation_vibrato_depth,
-                modulation_vibrato_rate_hz=args.modulation_vibrato_rate,
-                run_until_interrupted=args.until_interrupt,
-                attack_time_seconds=args.attack_time,
-                decay_time_seconds=args.decay_time,
-                sustain_level=args.sustain_level,
-                release_time_seconds=args.release_time,
-                sample_rate=args.sample_rate,
-                waveform=Waveform(args.waveform),
-                channel=OutputChannel(args.channel),
+                port_name=self._config_value(args.port_name, performance_config.port_name, "python-d1-synth"),
+                max_messages=self._config_value(args.max_messages, performance_config.max_messages, 32),
+                timeout_seconds=self._config_value(args.timeout, performance_config.timeout_seconds, 30.0),
+                poll_interval_seconds=self._config_value(
+                    args.poll_interval,
+                    performance_config.poll_interval_seconds,
+                    0.005,
+                ),
+                note_duration_seconds=self._config_value(
+                    args.note_duration,
+                    performance_config.note_duration_seconds,
+                    0.25,
+                ),
+                voice_mode=StreamingVoiceMode(
+                    self._config_value(args.voice_mode, performance_config.voice_mode, StreamingVoiceMode.FIXED.value)
+                ),
+                dedupe_window_seconds=self._config_value(
+                    args.dedupe_window,
+                    performance_config.dedupe_window_seconds,
+                    0.03,
+                ),
+                chord_window_seconds=self._config_value(args.chord_window, performance_config.chord_window_seconds, 0.02),
+                pitch_bend_range_semitones=self._config_value(
+                    args.pitch_bend_range,
+                    performance_config.pitch_bend_range_semitones,
+                    2.0,
+                ),
+                pitch_bend_channel_mode=PitchBendChannelMode(
+                    self._config_value(
+                        args.pitch_bend_channel_mode,
+                        performance_config.pitch_bend_channel_mode,
+                        PitchBendChannelMode.SAME.value,
+                    )
+                ),
+                max_control_messages=self._config_value(
+                    args.max_control_messages,
+                    performance_config.max_control_messages,
+                    1024,
+                ),
+                modulation_vibrato_depth_semitones=self._config_value(
+                    args.modulation_vibrato_depth,
+                    performance_config.modulation_vibrato_depth_semitones,
+                    0.25,
+                ),
+                modulation_vibrato_rate_hz=self._config_value(
+                    args.modulation_vibrato_rate,
+                    performance_config.modulation_vibrato_rate_hz,
+                    5.0,
+                ),
+                run_until_interrupted=args.until_interrupt
+                or self._config_value(None, performance_config.run_until_interrupted, False),
+                attack_time_seconds=self._config_value(args.attack_time, performance_config.attack_time_seconds, 0.0),
+                decay_time_seconds=self._config_value(args.decay_time, performance_config.decay_time_seconds, 0.0),
+                sustain_level=self._config_value(args.sustain_level, performance_config.sustain_level, 1.0),
+                release_time_seconds=self._config_value(args.release_time, performance_config.release_time_seconds, 0.03),
+                sample_rate=self._config_value(args.sample_rate, performance_config.sample_rate, 44100),
+                waveform=Waveform(self._config_value(args.waveform, performance_config.waveform, Waveform.SINE.value)),
+                amplitude=self._config_value(None, performance_config.amplitude, 0.2),
+                channel=OutputChannel(
+                    self._config_value(args.channel, performance_config.channel, OutputChannel.STEREO.value)
+                ),
                 audio_device=audio_selection.sounddevice_value,
             )
         except ValueError as exc:
@@ -588,8 +636,8 @@ class SynthCli:
             f"decay_time={settings.decay_time_seconds:g}s, "
             f"sustain_level={settings.sustain_level:g}, "
             f"release_time={settings.release_time_seconds:g}s, "
-            f"waveform={args.waveform}, "
-            f"sample_rate={args.sample_rate} Hz, channel={args.channel}"
+            f"waveform={settings.waveform.value}, "
+            f"sample_rate={settings.sample_rate} Hz, channel={settings.channel.value}"
         )
         original_sigint_handler = signal.getsignal(signal.SIGINT)
 
@@ -703,10 +751,22 @@ class SynthCli:
         return lines[0]
 
     def _load_midi_default_device(self, config_path: str | None) -> str | None:
+        config = self._load_patch_config(config_path)
+        if config is None:
+            return None
+        return config.midi.default_input_device
+
+    def _load_patch_config(self, config_path: str | None) -> PatchConfig | None:
         if config_path is None:
             return None
-        config = PatchConfigLoader().load(Path(config_path))
-        return config.midi.default_input_device
+        return PatchConfigLoader().load(Path(config_path))
+
+    def _config_value(self, cli_value, config_value, default_value):
+        if cli_value is not None:
+            return cli_value
+        if config_value is not None:
+            return config_value
+        return default_value
 
 
 def main(argv: list[str] | None = None) -> int:

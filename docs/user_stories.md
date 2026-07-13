@@ -375,3 +375,12 @@ Prioriteit: Should
 Sprint: Future
 
 Notitie: Done met `SustainedAudioPlayerSettings.attack_seconds`, `decay_seconds`, `sustain_level`, bestaande `release_seconds`, CLI opties `--attack-time`, `--decay-time`, `--sustain-level`, `--release-time`, audio callback envelope tests en `docs/amp_envelope_adsr_parameters_v0.1.0.md`. Product Owner accepteerde US-041 op 2026-07-13. Scope: geen filter envelope, geen velocity-afhankelijke envelope curves, GUI of plugin.
+
+### US-042: MIDI Performance Patch YAML Config
+
+Als speler wil ik `midi play-stream` performance parameters uit een YAML patch kunnen laden, zodat ik de synth met een kort reproduceerbaar command kan starten zonder steeds alle live flags over te typen.
+
+Prioriteit: Should
+Sprint: Future
+
+Notitie: In Review met `MidiPerformanceConfig`, `midi.performance` in YAML, CLI optie `midi play-stream --config`, voorbeeldbestand `examples/midi_performance_patch.yaml`, CLI precedence tests en `docs/midi_performance_patch_yaml_config_v0.1.0.md`. Expliciete CLI flags winnen van YAML, zodat testcommands en live overrides veilig blijven. Scope: geen GUI, geen AU/VST3/plugin packaging, geen hardcoded MIDI hardware device names.

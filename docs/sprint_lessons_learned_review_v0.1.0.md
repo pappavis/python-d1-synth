@@ -5,7 +5,7 @@ Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW
 Doc versie: 0.1.0  
 Datum: 2026-07-12
 Status: Product Owner proposal accepted  
-Betrokken stories: US-001 t/m US-041
+Betrokken stories: US-001 t/m US-042
 
 ## Doel
 
@@ -192,6 +192,16 @@ Product Owner accepteerde US-041 op 2026-07-13 na review.
 
 Statuslabel: US-041 `Done`.
 
+## US-042 Review Voorbereiding
+
+US-042 volgt logisch na US-041: de performance commandline is bruikbaar maar te lang voor herhaald spelen. De story verplaatst bestaande `midi play-stream` defaults naar `midi.performance` in YAML, zonder de commandline-only scope te verlaten.
+
+Belangrijke scopegrens: US-042 behandelt alleen config-defaults en CLI precedence. GUI, AU/VST3/plugin packaging, automatische hardware binding en hardcoded device constants blijven buiten scope.
+
+Reviewpunt: de acceptatietest moet aantonen dat `--config examples/midi_performance_patch.yaml` dezelfde sustained/pitch/modulation/ADSR defaults activeert en dat `--audio-device "Scarlett 8i6 USB"` als CLI override blijft winnen.
+
+Statuslabel: US-042 `In Review`.
+
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende logische taak is US-042 MIDI Performance Patch YAML Config. De live commandline is nu krachtig maar lang; de volgende stap moet deze performance-parameters via YAML kunnen laden zonder GUI/plugin-scope te openen.
+De eerstvolgende logische taak is de Product Owner acceptatietest voor US-042. Bij akkoord wordt US-042 `Done`; bij afwijkend gedrag behandelen we dit als US-042 impediment voordat een nieuwe story start.

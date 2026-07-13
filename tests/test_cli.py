@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: CLI tests voor audio, playback, MIDI diagnostics, device selectie en virtual MIDI audio trigger workflows.
 # Sprint: Future MIDI/DAW
-# User-Story: US-041 Amp Envelope ADSR Parameters
-# Actie: US-041-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
+# User-Story: US-042 MIDI Performance Patch YAML Config
+# Actie: US-042-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-042
 
 import numpy as np
 
@@ -1106,6 +1106,149 @@ class TestSynthCli:
         assert "CC64 sustain pedal holds released voices" in output
         assert "ADSR envelope shapes amplitude" in output
         assert "control_change:64:127:channel=1" in output
+
+    def test_midi_play_stream_loads_performance_defaults_from_config(self, monkeypatch, capsys, tmp_path) -> None:
+        config_path = tmp_path / "performance_patch.yaml"
+        config_path.write_text(
+            """
+debuglevel: verbose
+midi:
+  performance:
+    port_name: yaml-port
+    audio_device: Config Audio
+    voice_mode: sustained
+    max_messages: 99
+    timeout_seconds: 123
+    poll_interval_seconds: 0.01
+    note_duration_seconds: 0.4
+    dedupe_window_seconds: 0.07
+    chord_window_seconds: 0.09
+    pitch_bend_range_semitones: 5
+    pitch_bend_channel_mode: omni
+    max_control_messages: 4096
+    modulation_vibrato_depth_semitones: 0.5
+    modulation_vibrato_rate_hz: 6
+    run_until_interrupted: true
+    attack_time_seconds: 0.03
+    decay_time_seconds: 0.11
+    sustain_level: 0.55
+    release_time_seconds: 0.13
+    sample_rate: 48000
+    waveform: saw
+    amplitude: 0.3
+    channel: left
+""",
+            encoding="utf-8",
+        )
+
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                assert cli_device == "Config Audio"
+                return AudioDeviceSelection(sounddevice_value="Config Audio", source="config")
+
+        class FakeStreamingMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.port_name == "yaml-port"
+                assert settings.max_messages == 99
+                assert settings.timeout_seconds == 123.0
+                assert settings.poll_interval_seconds == 0.01
+                assert settings.note_duration_seconds == 0.4
+                assert settings.voice_mode is StreamingVoiceMode.SUSTAINED
+                assert settings.dedupe_window_seconds == 0.07
+                assert settings.chord_window_seconds == 0.09
+                assert settings.pitch_bend_range_semitones == 5.0
+                assert settings.pitch_bend_channel_mode is PitchBendChannelMode.OMNI
+                assert settings.max_control_messages == 4096
+                assert settings.modulation_vibrato_depth_semitones == 0.5
+                assert settings.modulation_vibrato_rate_hz == 6.0
+                assert settings.run_until_interrupted is True
+                assert settings.attack_time_seconds == 0.03
+                assert settings.decay_time_seconds == 0.11
+                assert settings.sustain_level == 0.55
+                assert settings.release_time_seconds == 0.13
+                assert settings.sample_rate == 48000
+                assert settings.waveform is synth.cli.Waveform.SAW
+                assert settings.amplitude == 0.3
+                assert settings.channel is OutputChannel.LEFT
+                assert settings.audio_device == "Config Audio"
+                return StreamingMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=0,
+                    played_event_count=0,
+                    audio_frame_count=0,
+                    sample_rate=settings.sample_rate,
+                    message="Received 0 MIDI note messages from streaming virtual MIDI port yaml-port; no audio played.",
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "StreamingMidiAudioTrigger", FakeStreamingMidiAudioTrigger)
+
+        exit_code = SynthCli().run(["midi", "play-stream", "--config", str(config_path)])
+
+        output = capsys.readouterr().out
+        assert exit_code == 0
+        assert "Selected audio device from config: Config Audio" in output
+        assert "Performance mode: running until Ctrl-C" in output
+        assert "port=yaml-port" in output
+        assert "voice_mode=sustained" in output
+        assert "pitch_bend_channel_mode=omni" in output
+        assert "attack_time=0.03s" in output
+        assert "sample_rate=48000 Hz, channel=left" in output
+
+    def test_midi_play_stream_cli_values_override_config_defaults(self, monkeypatch, tmp_path) -> None:
+        config_path = tmp_path / "performance_patch.yaml"
+        config_path.write_text(
+            """
+midi:
+  performance:
+    audio_device: Config Audio
+    voice_mode: sustained
+    attack_time_seconds: 0.03
+""",
+            encoding="utf-8",
+        )
+
+        class FakeAudioSelector:
+            def select(self, cli_device):
+                assert cli_device == "CLI Audio"
+                return AudioDeviceSelection(sounddevice_value="CLI Audio", source="cli")
+
+        class FakeStreamingMidiAudioTrigger:
+            def trigger(self, settings):
+                assert settings.voice_mode is StreamingVoiceMode.GATED
+                assert settings.attack_time_seconds == 0.01
+                assert settings.audio_device == "CLI Audio"
+                return StreamingMidiAudioTriggerResult(
+                    port_name=settings.port_name,
+                    received_message_count=0,
+                    played_event_count=0,
+                    audio_frame_count=0,
+                    sample_rate=settings.sample_rate,
+                    message=(
+                        "Received 0 MIDI note messages from streaming virtual MIDI port "
+                        "python-d1-synth; no audio played."
+                    ),
+                )
+
+        monkeypatch.setattr(synth.cli, "AudioDeviceSelector", FakeAudioSelector)
+        monkeypatch.setattr(synth.cli, "StreamingMidiAudioTrigger", FakeStreamingMidiAudioTrigger)
+
+        exit_code = SynthCli().run(
+            [
+                "midi",
+                "play-stream",
+                "--config",
+                str(config_path),
+                "--audio-device",
+                "CLI Audio",
+                "--voice-mode",
+                "gated",
+                "--attack-time",
+                "0.01",
+            ]
+        )
+
+        assert exit_code == 0
 
     def test_midi_play_stream_until_interrupt_passes_performance_mode(self, monkeypatch, capsys) -> None:
         class FakeAudioSelector:

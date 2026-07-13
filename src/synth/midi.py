@@ -387,6 +387,7 @@ class StreamingVoiceMode(str, Enum):
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
     - User Story: US-041 Amp Envelope ADSR Parameters
+    - User Story: US-042 MIDI Performance Patch YAML Config
     - Version: 0.1.0
     """
 
@@ -429,6 +430,7 @@ class StreamingMidiAudioTriggerSettings:
     - User Story: US-039 Sustain Pedal CC64
     - User Story: US-040 Envelope Release / Soft Note-Off
     - User Story: US-041 Amp Envelope ADSR Parameters
+    - User Story: US-042 MIDI Performance Patch YAML Config
     - Version: 0.1.0
     """
 

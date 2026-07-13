@@ -571,3 +571,16 @@ Acceptatie op 2026-07-11:
 - Acceptatie op 2026-07-13: Product Owner accepteerde US-041 na review.
 - Scope: geen filter envelope, geen velocity-afhankelijke envelope curves, geen GUI/plugin en geen hardcoded MIDI hardware device names.
 - Story status is `Done`.
+
+## US-042: MIDI Performance Patch YAML Config
+
+- Given `midi play-stream --config examples/midi_performance_patch.yaml` draait, then performance defaults uit `midi.performance` geladen worden.
+- Given YAML `voice_mode: sustained` bevat, then de CLI `voice_mode=sustained` toont en sustained playback gebruikt.
+- Given YAML ADSR waarden bevat, then de CLI `attack_time=0.02s`, `decay_time=0.12s`, `sustain_level=0.6` en `release_time=0.08s` toont.
+- Given YAML pitch/modulation defaults bevat, then `pitch_bend_channel_mode=omni`, `modulation_vibrato_depth=0.25st` en `modulation_vibrato_rate=5Hz` beschikbaar zijn.
+- Given een CLI flag dezelfde instelling opgeeft als YAML, then de CLI flag wint.
+- Given `audio_device: null` in het voorbeeld staat, then er geen hardcoded MIDI/audio hardware device names als constants in code of voorbeeldconfig nodig zijn.
+- `docs/midi_performance_patch_yaml_config_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-042 MIDI Performance Patch YAML Config`.
+- Traceability-tests verifieren ChatOD, backlog, epic, `US-042 MIDI Performance Patch YAML Config` en `Version: 0.1.0`.
+- Scope: geen GUI/plugin, geen AU/VST3, geen nieuwe audio engine en geen hardcoded MIDI hardware device names.
+- Story status is `In Review`.

@@ -2,9 +2,9 @@
 # Versienummer: 0.1.0
 # Doel: Bewaakt code-traceability voor user stories, epics, backlog en ChatOD.
 # Sprint: Future MIDI/DAW
-# User-Story: US-041 Amp Envelope ADSR Parameters
-# Actie: US-041-RED-GREEN-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-041
+# User-Story: US-042 MIDI Performance Patch YAML Config
+# Actie: US-042-RED-GREEN-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-042
 
 from synth.audio import (
     ChannelRouter,
@@ -14,6 +14,7 @@ from synth.audio import (
     SustainedVoiceState,
 )
 from synth.cli import SynthCli
+from synth.config import MidiConfig, MidiPerformanceConfig, PatchConfig, PatchConfigLoader
 from synth.debug import DebugLevel, DebugReporter
 from synth.engine import PolyphonicVoiceMixer
 from synth.midi import (
@@ -518,6 +519,28 @@ class TestCodeTraceability:
             StreamingMidiAudioTriggerSettings,
             StreamingMidiAudioTriggerResult,
             StreamingMidiAudioTrigger,
+            SynthCli,
+        )
+
+        for traceable_object in traceable_objects:
+            doc = traceable_object.__doc__ or ""
+            for expected in required:
+                assert expected in doc
+
+    def test_us042_code_contains_required_traceability_fields(self) -> None:
+        required = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "Sprint 1 Kanban Backlog",
+            "EPIC-007 Future MIDI En DAW Integratie",
+            "US-042 MIDI Performance Patch YAML Config",
+            "Version: 0.1.0",
+        )
+        traceable_objects = (
+            MidiPerformanceConfig,
+            MidiConfig,
+            PatchConfig,
+            PatchConfigLoader,
+            StreamingMidiAudioTriggerSettings,
             SynthCli,
         )
 
