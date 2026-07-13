@@ -2,7 +2,7 @@
 
 - Sprintnummer: Future MIDI/DAW
 - Doc versie: 0.1.0
-- Status: In Review
+- Status: Done
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-041 Amp Envelope ADSR Parameters
 - Actie: US-041-RED-GREEN-001
@@ -10,6 +10,8 @@
 ## Doel
 
 US-041 voegt amplitude ADSR parameters toe aan sustained playback. Daarmee kan de speler de start, decay, hold-level en release van sustained voices instellen zonder de scope uit te breiden naar filter envelopes, GUI of plugin packaging.
+
+Product Owner acceptatie op 2026-07-13: US-041 is na review geaccepteerd.
 
 ## Gedrag
 

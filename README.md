@@ -418,7 +418,7 @@ Controleer in verbose output:
 
 Bevestigd gedrag: Product Owner accepteerde US-040 op 2026-07-12.
 
-US-041 is in review: `midi play-stream --voice-mode sustained` ondersteunt nu amplitude ADSR parameters. Dit gebruikt dezelfde sustained voice engine als US-035 t/m US-040, maar voegt attack, decay en sustain-level toe bovenop bestaande release-time.
+US-041 is afgerond: `midi play-stream --voice-mode sustained` ondersteunt nu amplitude ADSR parameters. Dit gebruikt dezelfde sustained voice engine als US-035 t/m US-040, maar voegt attack, decay en sustain-level toe bovenop bestaande release-time.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --port-name python-d1-synth --audio-device "Scarlett 8i6 USB" --max-messages 10000 --max-control-messages 20000 --timeout 600 --note-duration 0.25 --voice-mode sustained --dedupe-window 0.03 --chord-window 0.08 --pitch-bend-range 2 --pitch-bend-channel-mode omni --modulation-vibrato-depth 0.25 --modulation-vibrato-rate 5 --attack-time 0.02 --decay-time 0.12 --sustain-level 0.6 --release-time 0.08 --until-interrupt --debuglevel verbose
@@ -432,6 +432,8 @@ Controleer in verbose output:
 - `release_time=0.08s`
 
 Scope: geen filter envelope, velocity-afhankelijke envelope curves, GUI of plugin.
+
+Bevestigd gedrag: Product Owner accepteerde US-041 op 2026-07-13.
 
 Lessons learned en sprint review:
 

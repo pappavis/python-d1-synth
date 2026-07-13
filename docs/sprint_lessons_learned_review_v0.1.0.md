@@ -188,8 +188,10 @@ US-041 volgt logisch na US-040: soft note-off lost het harde einde op, maar de a
 
 Belangrijke scopegrens: US-041 behandelt alleen amplitude ADSR in sustained mode. Filter envelopes, velocity-afhankelijke curves, YAML patch envelopes, GUI en plugin packaging blijven aparte stories.
 
-Statuslabel: US-041 `In Review`.
+Product Owner accepteerde US-041 op 2026-07-13 na review.
+
+Statuslabel: US-041 `Done`.
 
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende taak is US-041 handmatig accepteren of een impediment vastleggen. Test met `--attack-time 0.02 --decay-time 0.12 --sustain-level 0.6 --release-time 0.08` en vergelijk eventueel met de US-040 defaults.
+De eerstvolgende logische taak is US-042 MIDI Performance Patch YAML Config. De live commandline is nu krachtig maar lang; de volgende stap moet deze performance-parameters via YAML kunnen laden zonder GUI/plugin-scope te openen.

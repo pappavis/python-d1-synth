@@ -568,5 +568,6 @@ Acceptatie op 2026-07-11:
 - Given `--debuglevel verbose` actief is, then de CLI toont `attack_time=<waarde>s`, `decay_time=<waarde>s`, `sustain_level=<waarde>` en `release_time=<waarde>s`.
 - `docs/amp_envelope_adsr_parameters_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-041 Amp Envelope ADSR Parameters`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-041 Amp Envelope ADSR Parameters` en `Version: 0.1.0`.
+- Acceptatie op 2026-07-13: Product Owner accepteerde US-041 na review.
 - Scope: geen filter envelope, geen velocity-afhankelijke envelope curves, geen GUI/plugin en geen hardcoded MIDI hardware device names.
-- Story status is `In Review`.
+- Story status is `Done`.

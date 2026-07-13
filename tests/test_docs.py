@@ -416,7 +416,7 @@ class TestDocumentationArtifacts:
             "US-038 `Done`",
             "US-039 `Done`",
             "US-040 `Done`",
-            "US-041 `In Review`",
+            "US-041 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -716,7 +716,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-041 Amp Envelope ADSR Parameters",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--voice-mode sustained",
             "--attack-time 0.02",
@@ -727,6 +727,7 @@ class TestDocumentationArtifacts:
             "decay_time=0.12s",
             "sustain_level=0.6",
             "release_time=0.08s",
+            "Product Owner acceptatie op 2026-07-13",
             "Pitch bend",
             "CC1 modulation",
             "CC64 sustain pedal",

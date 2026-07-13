@@ -374,4 +374,4 @@ Als speler wil ik attack, decay, sustain en release voor amplitude kunnen instel
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `SustainedAudioPlayerSettings.attack_seconds`, `decay_seconds`, `sustain_level`, bestaande `release_seconds`, CLI opties `--attack-time`, `--decay-time`, `--sustain-level`, `--release-time`, audio callback envelope tests en `docs/amp_envelope_adsr_parameters_v0.1.0.md`. Scope: geen filter envelope, geen velocity-afhankelijke envelope curves, GUI of plugin.
+Notitie: Done met `SustainedAudioPlayerSettings.attack_seconds`, `decay_seconds`, `sustain_level`, bestaande `release_seconds`, CLI opties `--attack-time`, `--decay-time`, `--sustain-level`, `--release-time`, audio callback envelope tests en `docs/amp_envelope_adsr_parameters_v0.1.0.md`. Product Owner accepteerde US-041 op 2026-07-13. Scope: geen filter envelope, geen velocity-afhankelijke envelope curves, GUI of plugin.
