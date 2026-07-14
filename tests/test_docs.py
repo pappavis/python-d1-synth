@@ -1,15 +1,103 @@
 # Bestand: test_docs.py
 # Versienummer: 0.1.0
 # Doel: Controleert dat story-documentatie traceerbare verplichte termen bevat.
-# Sprint: Future MIDI/DAW
-# User-Story: US-042 MIDI Performance Patch YAML Config
-# Actie: US-042-DOCS-001
-# ChatID: CHATOD-20260709-D1PY-MVP-001 / US-042
+# Sprint: MVP Review
+# User-Story: MVP Sprint Review En Retrospective
+# Actie: MVP-REVIEW-DOCS-001
+# ChatID: CHATOD-20260709-D1PY-MVP-001 / MVP-REVIEW
 
+import re
 from pathlib import Path
 
 
 class TestDocumentationArtifacts:
+    def test_readme_is_mvp_ready_for_logic_users(self) -> None:
+        content = Path("README.md").read_text(encoding="utf-8")
+
+        required_terms = (
+            "A commandline-first Python synthesizer MVP",
+            "MVP accepted on 2026-07-14",
+            "Quick Start For Logic Pro Users",
+            "Windows PowerShell",
+            "examples/midi_performance_patch.yaml",
+            "python -m synth midi play-stream --config examples/midi_performance_patch.yaml",
+            "MIDI Destination` to `python-d1-synth`",
+            "YAML First, CLI When Needed",
+            "docs/assets/python_d1_synth_architecture.svg",
+            "MVP Sprint Review",
+            "MVP Retrospective",
+        )
+        for term in required_terms:
+            assert term in content
+
+        forbidden_terms = (
+            "/Volumes/data1/michiele/venv/venv3.12/bin/python",
+            "Scarlett 8i6 USB",
+        )
+        for term in forbidden_terms:
+            assert term not in content
+
+    def test_architecture_svg_contains_required_terms(self) -> None:
+        content = Path("docs/assets/python_d1_synth_architecture.svg").read_text(encoding="utf-8")
+
+        required_terms = (
+            "python-d1-synth MVP Architecture",
+            "Logic Pro",
+            "Virtual MIDI",
+            "YAML Patch",
+            "Synth Engine",
+            "Audio Out",
+            "MVP result",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_user_stories_contains_complete_mvp_story_range(self) -> None:
+        content = Path("docs/user_stories.md").read_text(encoding="utf-8")
+        found = sorted(set(re.findall(r"US-\d{3}", content)))
+        expected = [f"US-{story_number:03d}" for story_number in range(1, 43)]
+
+        assert found == expected
+        assert "Status: MVP Accepted op 2026-07-14" in content
+        assert "alle 42 story IDs staan in dit document" in content
+
+    def test_mvp_sprint_review_doc_contains_required_terms(self) -> None:
+        content = Path("docs/mvp_sprint_review_v0.1.0.md").read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "MVP Sprint Review",
+            "Status: Accepted",
+            "US-001 t/m US-042",
+            "De `python-d1-synth` MVP is geslaagd.",
+            "Logic Pro -> External MIDI -> python-d1-synth virtual MIDI",
+            "Story Sanity Check",
+            "alle stories van `US-001` tot en met `US-042`",
+            "python -m synth midi play-stream --config examples/midi_performance_patch.yaml",
+            "Synth character",
+            "Plugin path",
+        )
+        for term in required_terms:
+            assert term in content
+
+    def test_mvp_retrospective_doc_contains_required_terms(self) -> None:
+        content = Path("docs/mvp_retrospective_v0.1.0.md").read_text(encoding="utf-8")
+
+        required_terms = (
+            "CHATOD-20260709-D1PY-MVP-001",
+            "MVP Retrospective",
+            "Status: Accepted",
+            "US-001 t/m US-042",
+            "Wat Ging Goed",
+            "Wat Was Moeilijk",
+            "Wat Hebben We Geleerd",
+            "Stop / Start / Continue",
+            "YAML defaults plus CLI overrides",
+            "Geen nieuwe hardware- of plugin-side quests",
+        )
+        for term in required_terms:
+            assert term in content
+
     def test_us019_midi_learning_path_contains_required_terms(self) -> None:
         document = Path("docs/midi_learning_path_v0.1.0.md")
 

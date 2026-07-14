@@ -2,7 +2,14 @@
 
 ChatOD: CHATOD-20260709-D1PY-MVP-001 / ARTEFACTS-001
 Datum: 2026-07-09
-Status: Draft for customer review
+Status: MVP Accepted op 2026-07-14
+
+## Sanity Check
+
+- Laatste MVP story: `US-042 MIDI Performance Patch YAML Config`.
+- Story range: `US-001` t/m `US-042`.
+- Controle: alle 42 story IDs staan in dit document.
+- MVP conclusie: geslaagd en geaccepteerd door Product Owner op 2026-07-14.
 
 ## Rollen
 

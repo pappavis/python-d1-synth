@@ -2,7 +2,14 @@
 
 ChatOD: CHATOD-20260709-D1PY-MVP-001 / ARTEFACTS-001
 Datum: 2026-07-09
-Status: Draft for customer review
+Status: MVP Accepted op 2026-07-14
+
+## MVP Acceptance Summary
+
+- Story range: `US-001` t/m `US-042`.
+- Sanity check: alle 42 story IDs zijn aanwezig in `docs/user_stories.md`.
+- Laatste acceptatie: `US-042 test geslaagd`, met Logic MIDI naar `python-d1-synth` en hoorbaar geluid via de geconfigureerde audio-output.
+- MVP conclusie: commandline-first Logic/DAW Python synth route is geslaagd.
 
 ## Algemene Criteria
 

@@ -12,6 +12,7 @@ midi:
   default_input_device: null
   performance:
     port_name: python-d1-synth
+    # Leave null for the system default audio output, or set your exact audio device name here.
     audio_device: null
     voice_mode: sustained
     max_messages: 10000

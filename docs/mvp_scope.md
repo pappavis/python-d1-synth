@@ -2,7 +2,11 @@
 
 ChatOD: CHATOD-20260709-D1PY-MVP-001 / ARTEFACTS-001
 Datum: 2026-07-09
-Status: Draft for customer review
+Status: MVP Accepted op 2026-07-14
+
+## MVP Acceptatie Update
+
+De oorspronkelijke Sprint 1 scope is uitgebreid met Future MIDI/DAW stories tot en met `US-042 MIDI Performance Patch YAML Config`. De Product Owner heeft de MVP op 2026-07-14 als geslaagd bevestigd: Logic stuurt MIDI naar `python-d1-synth`, `play-stream` start via YAML config, en er is hoorbaar geluid via de geconfigureerde audio-output.
 
 ## Productvisie
 

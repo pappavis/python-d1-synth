@@ -3,13 +3,18 @@
 Chatlog ID: CHATOD-20260709-D1PY-MVP-001 / LESSONS-LEARNED-001  
 Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW  
 Doc versie: 0.1.0  
-Datum: 2026-07-12
-Status: Product Owner proposal accepted  
+Datum: 2026-07-14
+Status: MVP Accepted
 Betrokken stories: US-001 t/m US-042
 
 ## Doel
 
 Dit document vat de geleerde lessen samen uit de afgeronde Sprint 0, Sprint 1 en de lopende Future MIDI/DAW sprint. Het doel is om het vendor-proces scherper te maken voordat we verdergaan met nieuwe synth-, MIDI-, packaging- of plugin-stories.
+
+MVP status op 2026-07-14: geaccepteerd. Zie ook:
+
+- `docs/mvp_sprint_review_v0.1.0.md`
+- `docs/mvp_retrospective_v0.1.0.md`
 
 ## Sprint Review Samenvatting
 
@@ -207,3 +212,11 @@ Statuslabel: US-042 `Done`.
 ## Aanbevolen Volgende Stap
 
 De eerstvolgende logische taak is een nieuw voorstel voor de volgende user story in de bestaande volgorde. We starten geen GUI, AU/VST3/plugin packaging of hardware-port zijpad zonder expliciete Product Owner keuze.
+
+Omdat de MVP nu is geaccepteerd, moet de volgende sprint eerst een productrichting kiezen:
+
+- synth character;
+- usability;
+- delivery packaging;
+- plugin feasibility;
+- hardware/CircuitPython feasibility.
