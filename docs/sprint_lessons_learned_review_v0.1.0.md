@@ -2,7 +2,7 @@
 
 Chatlog ID: CHATOD-20260709-D1PY-MVP-001 / LESSONS-LEARNED-001  
 Sprintnummer: Sprint 0, Sprint 1, Future MIDI/DAW  
-Doc versie: 0.1.0  
+Doc versie: 0.1.1
 Datum: 2026-07-14
 Status: MVP Accepted
 Betrokken stories: US-001 t/m US-042
@@ -59,6 +59,21 @@ De Future MIDI/DAW sprint heeft MIDI-leerpad, device discovery, hardware MIDI in
 - Hardwaretests pauzeren voor Product Owner feedback; story status blijft `In Review` tot de handmatige test bevestigd is.
 - Als een test faalt, wordt dat als impediment binnen dezelfde story behandeld zolang het dezelfde acceptatiecriteria raakt.
 - Nieuwe side quests worden expliciet benoemd en niet geïmplementeerd zonder Product Owner akkoord.
+
+## Doorlopende Lessons-Learned-Cadans
+
+Vanaf US-042 is dit document een levend lessons-learned-register en niet alleen een eenmalig MVP-artefact.
+
+- Na elke volgende groep van drie of vier afgeronde user stories wordt dit document bijgewerkt voordat een releasebesluit of nieuwe epic-start wordt genomen.
+- De Scrum Master bewaakt de cadans; QA koppelt elke les aan bewijs; de Product Owner accepteert backlog- of scopewijzigingen.
+- Een extra vroeg checkpoint is verplicht na een ernstige crash, een securitybevinding, een herhaald interrupt/cleanup-probleem of twee gerelateerde impediments.
+- Elke nieuwe les vermeldt minimaal: betrokken stories, waarneming, bewijs, vermoedelijke oorzaak, verbeteractie, eigenaar en doelstory.
+- Een release candidate mag niet worden gepubliceerd wanneer een verschuldigd drie-/vier-story checkpoint ontbreekt.
+- Relevante lessen mogen naar `circuitpython-midi-chip-platform` worden overgedragen, maar alleen als expliciete hypothese of requirement; desktopimplementatie wordt niet blind naar CircuitPython gekopieerd.
+
+### Volgende geplande checkpoint
+
+De eerstvolgende periodieke update is verschuldigd zodra drie of vier nieuwe D1-stories na US-042 `Done` zijn, dus bij US-045 of uiterlijk US-046. Een epic-einde of zwaar impediment kan dit checkpoint vervroegen.
 
 ## US-029 Review
 
