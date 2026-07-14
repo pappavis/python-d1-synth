@@ -435,7 +435,7 @@ Scope: geen filter envelope, velocity-afhankelijke envelope curves, GUI of plugi
 
 Bevestigd gedrag: Product Owner accepteerde US-041 op 2026-07-13.
 
-US-042 is in review: `midi play-stream` kan performance defaults uit YAML laden via `--config`. Gebruik dit om de lange live performance command korter en herhaalbaar te maken. Expliciete CLI flags blijven winnen van YAML.
+US-042 is afgerond: `midi play-stream` kan performance defaults uit YAML laden via `--config`. Gebruik dit om de lange live performance command korter en herhaalbaar te maken. Expliciete CLI flags blijven winnen van YAML.
 
 ```bash
 PYTHONPATH=src /Volumes/data1/michiele/venv/venv3.12/bin/python -m synth midi play-stream --config examples/midi_performance_patch.yaml --audio-device "Scarlett 8i6 USB" --debuglevel verbose
@@ -452,6 +452,8 @@ Controleer in verbose output:
 - `Performance mode: running until Ctrl-C`
 
 Het voorbeeldbestand houdt `audio_device: null`, zodat device-namen zoals `Scarlett 8i6 USB` runtime keuzes blijven en geen constants in de repo worden.
+
+Bevestigd gedrag: Product Owner testte op 2026-07-14 dat `play-stream` start via `examples/midi_performance_patch.yaml`, Logic MIDI naar `python-d1-synth` stuurt, en er hoorbaar geluid via `Scarlett 8i6 USB` is.
 
 Lessons learned en sprint review:
 

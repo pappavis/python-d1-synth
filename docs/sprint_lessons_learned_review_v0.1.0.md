@@ -198,10 +198,12 @@ US-042 volgt logisch na US-041: de performance commandline is bruikbaar maar te 
 
 Belangrijke scopegrens: US-042 behandelt alleen config-defaults en CLI precedence. GUI, AU/VST3/plugin packaging, automatische hardware binding en hardcoded device constants blijven buiten scope.
 
-Reviewpunt: de acceptatietest moet aantonen dat `--config examples/midi_performance_patch.yaml` dezelfde sustained/pitch/modulation/ADSR defaults activeert en dat `--audio-device "Scarlett 8i6 USB"` als CLI override blijft winnen.
+Reviewpunt: de acceptatietest moest aantonen dat `--config examples/midi_performance_patch.yaml` dezelfde sustained/pitch/modulation/ADSR defaults activeert en dat `--audio-device "Scarlett 8i6 USB"` als CLI override blijft winnen.
 
-Statuslabel: US-042 `In Review`.
+Product Owner bevestigde US-042 op 2026-07-14 als geslaagd: `play-stream` start via `examples/midi_performance_patch.yaml`, Logic stuurt MIDI naar `python-d1-synth`, en er is hoorbaar geluid via `Scarlett 8i6 USB`.
+
+Statuslabel: US-042 `Done`.
 
 ## Aanbevolen Volgende Stap
 
-De eerstvolgende logische taak is de Product Owner acceptatietest voor US-042. Bij akkoord wordt US-042 `Done`; bij afwijkend gedrag behandelen we dit als US-042 impediment voordat een nieuwe story start.
+De eerstvolgende logische taak is een nieuw voorstel voor de volgende user story in de bestaande volgorde. We starten geen GUI, AU/VST3/plugin packaging of hardware-port zijpad zonder expliciete Product Owner keuze.

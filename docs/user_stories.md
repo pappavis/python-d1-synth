@@ -383,4 +383,4 @@ Als speler wil ik `midi play-stream` performance parameters uit een YAML patch k
 Prioriteit: Should
 Sprint: Future
 
-Notitie: In Review met `MidiPerformanceConfig`, `midi.performance` in YAML, CLI optie `midi play-stream --config`, voorbeeldbestand `examples/midi_performance_patch.yaml`, CLI precedence tests en `docs/midi_performance_patch_yaml_config_v0.1.0.md`. Expliciete CLI flags winnen van YAML, zodat testcommands en live overrides veilig blijven. Scope: geen GUI, geen AU/VST3/plugin packaging, geen hardcoded MIDI hardware device names.
+Notitie: Done met `MidiPerformanceConfig`, `midi.performance` in YAML, CLI optie `midi play-stream --config`, voorbeeldbestand `examples/midi_performance_patch.yaml`, CLI precedence tests en `docs/midi_performance_patch_yaml_config_v0.1.0.md`. Expliciete CLI flags winnen van YAML, zodat testcommands en live overrides veilig blijven. Product Owner testte op 2026-07-14 dat Logic MIDI naar `python-d1-synth` stuurt en er hoorbaar geluid via `Scarlett 8i6 USB` is. Scope: geen GUI, geen AU/VST3/plugin packaging, geen hardcoded MIDI hardware device names.

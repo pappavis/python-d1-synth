@@ -583,4 +583,5 @@ Acceptatie op 2026-07-11:
 - `docs/midi_performance_patch_yaml_config_v0.1.0.md` bevat ChatOD, doc versie, epic en `US-042 MIDI Performance Patch YAML Config`.
 - Traceability-tests verifieren ChatOD, backlog, epic, `US-042 MIDI Performance Patch YAML Config` en `Version: 0.1.0`.
 - Scope: geen GUI/plugin, geen AU/VST3, geen nieuwe audio engine en geen hardcoded MIDI hardware device names.
-- Story status is `In Review`.
+- Acceptatie op 2026-07-14: Product Owner bevestigde `US-042 test geslaagd: play-stream start via examples/midi_performance_patch.yaml, Logic stuurt MIDI naar python-d1-synth, en er is hoorbaar geluid via Scarlett 8i6 USB.`
+- Story status is `Done`.

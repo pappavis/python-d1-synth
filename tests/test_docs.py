@@ -417,7 +417,7 @@ class TestDocumentationArtifacts:
             "US-039 `Done`",
             "US-040 `Done`",
             "US-041 `Done`",
-            "US-042 `In Review`",
+            "US-042 `Done`",
         )
         for term in required_terms:
             assert term in content
@@ -433,7 +433,7 @@ class TestDocumentationArtifacts:
             "Doc versie: 0.1.0",
             "US-042 MIDI Performance Patch YAML Config",
             "EPIC-007 Future MIDI En DAW Integratie",
-            "Status: In Review",
+            "Status: Done",
             "midi play-stream",
             "--config examples/midi_performance_patch.yaml",
             "midi.performance",
@@ -446,6 +446,9 @@ class TestDocumentationArtifacts:
             "release_time=0.08s",
             "run_until_interrupted: true",
             "audio_device: null",
+            "Product Owner acceptatie op 2026-07-14",
+            "Logic stuurt MIDI naar `python-d1-synth`",
+            "hoorbaar geluid via `Scarlett 8i6 USB`",
             "Geen hardcoded MIDI hardware device names",
         )
         for term in required_terms:

@@ -2,7 +2,7 @@
 
 - Sprintnummer: Future MIDI/DAW
 - Doc versie: 0.1.0
-- Status: In Review
+- Status: Done
 - Epic: EPIC-007 Future MIDI En DAW Integratie
 - User Story: US-042 MIDI Performance Patch YAML Config
 - Actie: US-042-RED-GREEN-001
@@ -10,6 +10,8 @@
 ## Doel
 
 US-042 maakt de lange `midi play-stream` performance-parameters config-file driven. De speler kan een YAML patch gebruiken voor live defaults, terwijl expliciete commandline flags blijven winnen.
+
+Product Owner acceptatie op 2026-07-14: `play-stream` start via `examples/midi_performance_patch.yaml`, Logic stuurt MIDI naar `python-d1-synth`, en er is hoorbaar geluid via `Scarlett 8i6 USB`.
 
 ## YAML Bestand
 
@@ -61,6 +63,12 @@ Verwacht:
 - `attack_time=0.02s`, `decay_time=0.12s`, `sustain_level=0.6` en `release_time=0.08s` komen uit YAML.
 - De expliciete CLI flag `--audio-device "Scarlett 8i6 USB"` wint van YAML `audio_device: null`.
 - `run_until_interrupted: true` start performance mode tot `Ctrl-C`.
+
+Bevestigd resultaat:
+
+- `play-stream` start via `examples/midi_performance_patch.yaml`.
+- Logic stuurt MIDI naar `python-d1-synth`.
+- Er is hoorbaar geluid via `Scarlett 8i6 USB`.
 
 ## CLI Precedence
 
