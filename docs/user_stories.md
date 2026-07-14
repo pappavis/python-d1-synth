@@ -11,6 +11,62 @@ Status: MVP Accepted op 2026-07-14
 - Controle: alle 42 story IDs staan in dit document.
 - MVP conclusie: geslaagd en geaccepteerd door Product Owner op 2026-07-14.
 
+## Backlog Overzicht Zonder Excel
+
+Dit overzicht vult de bestaande story-beschrijvingen aan zodat een bezoeker de volledige backlog in Markdown kan lezen zonder het Excel/Kanban workbook te openen. Het workbook blijft de bron voor spreadsheet-weergave, maar dit document bevat nu ook alle story titels, epic-indeling, prioriteit, sprint en MVP-status.
+
+### Sprint 0 En Sprint 1 Backlog
+
+| ID | Epic | Titel | Prioriteit | Sprint | Status | Resultaat |
+| --- | --- | --- | --- | --- | --- | --- |
+| US-001 | E1 Projectbasis | Project Skeleton | Must | 1 | Done | Python package structuur, VS Code en CLI basis staan. |
+| US-002 | E1 Projectbasis | Testframework | Must | 1 | Done | `pytest` is ingericht voor red/green story werk. |
+| US-003 | E1 Projectbasis | VS Code Debug Configuratie | Must | 1 | Done | Debug launch-config ondersteunt CLI-start vanuit VS Code. |
+| US-004 | E2 Muzikale Basisdata | Note Parsing | Must | 1 | Done | Noten zoals `C3` en `A4` worden naar frequenties vertaald. |
+| US-005 | E2 Muzikale Basisdata | Testsequence Parsing | Must | 1 | Done | `ACGD` wordt als testsequence gemapt naar concrete noten. |
+| US-006 | E2 Muzikale Basisdata | NoteEvent En NoteSequence Model | Must | 1 | Done | Intern eventmodel is beschikbaar voor CLI, render en MIDI. |
+| US-007 | E3 Oscillator En Audio Rendering | Sine Oscillator | Must | 1 | Done | Eerste technisch bewijsbare waveform werkt. |
+| US-008 | E3 Oscillator En Audio Rendering | Saw Oscillator | Should | 1 | Done | Saw waveform is toegevoegd en getest. |
+| US-009 | E3 Oscillator En Audio Rendering | Square Oscillator | Should | 1 | Done | Square waveform is toegevoegd en getest. |
+| US-010 | E3 Oscillator En Audio Rendering | WAV Export | Must | 1 | Done | YAML patch kan naar stereo WAV worden gerenderd. |
+| US-011 | E4 Realtime CLI Playback | Play Single Note | Must | 1 | Done | `play --note C3` produceert hoorbaar geluid. |
+| US-012 | E4 Realtime CLI Playback | Play Testsequence | Must | 1 | Done | `play --testsequence "ACGD"` produceert een hoorbare reeks. |
+| US-013 | E4 Realtime CLI Playback | Channel Selection | Must | 1 | Done | Stereo, links en rechts output zijn hoorbaar getest. |
+| US-014 | E5 Configuratie En CLI | YAML Patch Config | Must | 1 | Done | Patch-instellingen zijn reproduceerbaar via YAML. |
+| US-015 | E5 Configuratie En CLI | Render Command | Must | 1 | Done | `render patch.yaml --output demo.wav` werkt. |
+| US-016 | E5 Configuratie En CLI | Debuglevel | Should | 1 | Done | `none`, `light` en `verbose` CLI feedback werken. |
+| US-017 | E6 Documentatie En Governance | README Startinstructies | Must | 1 | Done | Startinstructies zijn MVP-ready en later Afrikaans verbeterd. |
+| US-018 | E6 Documentatie En Governance | Agile Artefacts | Must | 0 | Done | Scope, stories, acceptatiecriteria en Kanban bestaan. |
+
+### MIDI/DAW Backlog Tot MVP Acceptatie
+
+| ID | Epic | Titel | Prioriteit | Sprint | Status | Resultaat |
+| --- | --- | --- | --- | --- | --- | --- |
+| US-019 | E7 Future MIDI En DAW Integratie | MIDI Leerpad En Terminologie | Must | Future | Done | MIDI kernbegrippen zijn uitgelegd en aan `NoteEvent` gekoppeld. |
+| US-020 | E7 Future MIDI En DAW Integratie | Virtual MIDI Input Voor DAW | Must | Future | Done | Virtual MIDI input backend kan worden gediagnosticeerd. |
+| US-021 | E7 Future MIDI En DAW Integratie | External MIDI Workflow In Logic | Should | Future | Done | Logic external MIDI workflow is onderzocht en gedocumenteerd. |
+| US-022 | E7 Future MIDI En DAW Integratie | USB MIDI Hardware Input | Must | Future | Done | Generieke MIDI device scan werkt zonder merkgebonden constants. |
+| US-023 | E7 Future MIDI En DAW Integratie | Studio MIDI Routing Integratietest | Should | Future | Done | Studio routing testmatrix is vastgelegd voor meerdere computers en devices. |
+| US-024 | E7 Future MIDI En DAW Integratie | MIDI Naar NoteEvent Mapping | Must | Future | Done | MIDI note-on/off wordt naar het bestaande note-event model gemapt. |
+| US-025 | E7 Future MIDI En DAW Integratie | MIDI Device Discovery En Default Selection | Must | Future | Done | CLI/YAML device selectie werkt met runtime discovery. |
+| US-026 | E7 Future MIDI En DAW Integratie | Live MIDI Input Receive Loop | Must | Future | Done | Gekozen MIDI input kan bounded worden beluisterd. |
+| US-027 | E7 Future MIDI En DAW Integratie | Virtual MIDI Port Voor Logic/DAW | Should | Future | Done | `python-d1-synth` verschijnt als Logic External MIDI destination. |
+| US-028 | E7 Future MIDI En DAW Integratie | External MIDI Audio Trigger Integratie | Must | Future | Done | Hardware MIDI input kan hoorbare synth-audio triggeren. |
+| US-029 | E7 Future MIDI En DAW Integratie | Logic/DAW Virtual MIDI Naar Audio Trigger | Must | Future | Done | Logic MIDI region kan hoorbaar geluid via de synth triggeren. |
+| US-030 | E7 Future MIDI En DAW Integratie | Logic MIDI Region Multi-Note Playback | Must | Future | Done | Meerdere noten uit een Logic region worden hoorbaar gerenderd. |
+| US-031 | E7 Future MIDI En DAW Integratie | Live/Streaming MIDI Playback Loop | Must | Future | Done | Near-realtime MIDI `note_on` playback werkt. |
+| US-032 | E7 Future MIDI En DAW Integratie | Duplicate MIDI Event Guard | Must | Future | Done | Dubbele MIDI echo-events worden onderdrukt zonder chord tones te verliezen. |
+| US-033 | E7 Future MIDI En DAW Integratie | Note Off Gated Voice Duration | Must | Future | Done | Note-on/off duurmeting is toegevoegd als tussenstap naar sustained voices. |
+| US-034 | E7 Future MIDI En DAW Integratie | Polyphonic Voice Mixer En Triads | Must | Future | Done | Triads en akkoordbuffers worden gemixt. |
+| US-035 | E7 Future MIDI En DAW Integratie | Sustained Note Audio Engine | Must | Future | Done | Note-on start een voice en note-off stopt die voice. |
+| US-036 | E7 Future MIDI En DAW Integratie | MIDI Pitch Bend Mapping En DSP | Should | Future | Done | Pitch bend werkt op sustained voices. |
+| US-037 | E7 Future MIDI En DAW Integratie | MIDI Modulation CC1 Mapping En DSP | Should | Future | Done | CC1 stuurt eenvoudige vibrato-modulatie. |
+| US-038 | E7 Future MIDI En DAW Integratie | Performance Mode Until Interrupt | Must | Future | Done | De synth kan blijven draaien tot `Ctrl-C`. |
+| US-039 | E7 Future MIDI En DAW Integratie | Sustain Pedal CC64 | Must | Future | Done | CC64 sustain pedal gedrag is geimplementeerd en automatisch getest. |
+| US-040 | E7 Future MIDI En DAW Integratie | Envelope Release / Soft Note-Off | Should | Future | Done | Note-off krijgt een release fade. |
+| US-041 | E7 Future MIDI En DAW Integratie | Amp Envelope ADSR Parameters | Should | Future | Done | Attack, decay, sustain en release zijn instelbaar. |
+| US-042 | E7 Future MIDI En DAW Integratie | MIDI Performance Patch YAML Config | Should | Future | Done | `play-stream` instellingen kunnen uit YAML geladen worden. |
+
 ## Rollen
 
 - Klant: ervaren Python ontwikkelaar zonder MIDI/macOS/Windows audio-plugin ervaring.

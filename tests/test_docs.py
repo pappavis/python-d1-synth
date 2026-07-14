@@ -11,31 +11,55 @@ from pathlib import Path
 
 
 class TestDocumentationArtifacts:
-    def test_readme_is_mvp_ready_for_logic_users(self) -> None:
+    def test_readme_is_afrikaans_and_beginner_ready_for_logic_users(self) -> None:
         content = Path("README.md").read_text(encoding="utf-8")
 
         required_terms = (
-            "A commandline-first Python synthesizer MVP",
-            "MVP accepted on 2026-07-14",
-            "Quick Start For Logic Pro Users",
+            "Afrikaanse vinnige gids vir Logic Pro gebruikers",
+            "Die MVP is op 2026-07-14 aanvaar",
+            "As jy nie Terminal of PowerShell ken nie",
+            "Jy hoef nie in die `src` gids in te gaan nie.",
+            "python -m pip install -e \".[midi]\"",
+            "python -m synth --help",
+            "No module named synth",
+            "Moenie na die `src` gids beweeg",
+            "FileNotFoundError",
+            "projek se hoofmap",
             "Windows PowerShell",
             "examples/midi_performance_patch.yaml",
             "python -m synth midi play-stream --config examples/midi_performance_patch.yaml",
-            "MIDI Destination` to `python-d1-synth`",
-            "YAML First, CLI When Needed",
+            "MIDI Destination` die bestemming `python-d1-synth`",
+            "YAML Eerste, Opdragreel Wanneer Nodig",
             "docs/assets/python_d1_synth_architecture.svg",
             "MVP Sprint Review",
             "MVP Retrospective",
+            "[Engelse README](README.en.md)",
         )
         for term in required_terms:
             assert term in content
 
         forbidden_terms = (
             "/Volumes/data1/michiele/venv/venv3.12/bin/python",
+            "/Volumes/data1",
+            "venv3.12",
             "Scarlett 8i6 USB",
+            "Scarlet 8i6",
         )
         for term in forbidden_terms:
             assert term not in content
+
+    def test_english_readme_is_kept_as_separate_document(self) -> None:
+        content = Path("README.en.md").read_text(encoding="utf-8")
+
+        required_terms = (
+            "A commandline-first Python synthesizer MVP",
+            "MVP accepted on 2026-07-14",
+            "Quick Start For Logic Pro Users",
+            "YAML First, CLI When Needed",
+            "python -m synth midi play-stream --config examples/midi_performance_patch.yaml",
+        )
+        for term in required_terms:
+            assert term in content
 
     def test_architecture_svg_contains_required_terms(self) -> None:
         content = Path("docs/assets/python_d1_synth_architecture.svg").read_text(encoding="utf-8")
@@ -60,6 +84,9 @@ class TestDocumentationArtifacts:
         assert found == expected
         assert "Status: MVP Accepted op 2026-07-14" in content
         assert "alle 42 story IDs staan in dit document" in content
+        assert "Backlog Overzicht Zonder Excel" in content
+        assert "| US-001 | E1 Projectbasis | Project Skeleton | Must | 1 | Done |" in content
+        assert "| US-042 | E7 Future MIDI En DAW Integratie | MIDI Performance Patch YAML Config | Should | Future | Done |" in content
 
     def test_mvp_sprint_review_doc_contains_required_terms(self) -> None:
         content = Path("docs/mvp_sprint_review_v0.1.0.md").read_text(encoding="utf-8")

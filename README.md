@@ -1,76 +1,90 @@
 # python-d1-synth
 
-**A commandline-first Python synthesizer MVP for Logic Pro and MIDI performance experiments.**
+**Afrikaanse vinnige gids vir Logic Pro gebruikers wat geen Python- of opdragreel-ervaring het nie.**
 
-`python-d1-synth` is a small, test-backed software synth prototype inspired by classic mono synth workflows. The MVP proves that a Python synth can be controlled from Logic Pro as an External MIDI destination, play audible sustained notes, handle chords, pitch bend, modulation, sustain pedal events, ADSR amplitude shaping, and load performance settings from YAML.
+`python-d1-synth` is 'n klein, getoetste Python-synth MVP. Die doel is eenvoudig: Logic Pro of 'n ander DAW stuur MIDI na `python-d1-synth`, en die Python-kode maak hoorbare klank deur jou gekose klankuitset.
 
-This is not a GUI application and not an AU/VST3 plugin yet. It is the working technical core: a clean Python package, a MIDI-to-audio route, Agile traceability, tests, docs, and a repeatable config-driven workflow.
+Die MVP is op 2026-07-14 aanvaar. Dit is nog nie 'n AU-, VST3- of Logic Component-inprop nie, en dit is nog nie 'n grafiese lessenaarprogram nie. Dit is die werkende tegniese kern: MIDI in, synth-engine, klank uit, YAML-konfigurasie, toetse, dokumentasie en naspeurbare user stories.
 
-![python-d1-synth architecture](docs/assets/python_d1_synth_architecture.svg)
+[Engelse README](README.en.md)
 
-## MVP Status
+![python-d1-synth argitektuur](docs/assets/python_d1_synth_architecture.svg)
 
-**MVP accepted on 2026-07-14.**
+## Wat Kan Die MVP Doen?
 
-The accepted MVP can:
+- Begin as 'n gewone Python-opdragreelprogram.
+- Speel klank vanaf Logic Pro se `External MIDI` roete.
+- Maak `python-d1-synth` sigbaar as 'n virtuele MIDI-bestemming.
+- Speel enkel note, melodiee, akkoorde en eenvoudige triads.
+- Gebruik sine, saw en square golfvorms.
+- Ondersteun stereo, links en regs klankuitset.
+- Onderdruk dubbele MIDI-events uit Logic/CoreMIDI roetes.
+- Gebruik note-on en note-off vir vasgehoue note.
+- Ondersteun pitch bend, CC1 vibrato-modulasie, CC64 sustain pedal, release fade en ADSR amplitude-instellings.
+- Laai uitvoerinstellings uit `examples/midi_performance_patch.yaml`.
+- Laat opdragreel-opsies die YAML-instellings tydelik oorskryf.
 
-- Start as a normal Python commandline app.
-- Render WAV files from YAML patches.
-- Play sine, saw and square oscillator tones.
-- Route stereo, left and right output.
-- Scan MIDI devices where the local backend supports it.
-- Open `python-d1-synth` as a virtual MIDI destination for Logic Pro or another DAW.
-- Play notes from Logic Pro External MIDI tracks.
-- Play sustained notes until note-off.
-- Mix simple chords and triads.
-- Handle duplicate MIDI event suppression.
-- Apply pitch bend, CC1 vibrato modulation, CC64 sustain pedal handling, release fade and ADSR amplitude settings.
-- Load performance defaults from `examples/midi_performance_patch.yaml`.
-- Let commandline flags override YAML settings when needed.
+## Vir Wie Is Hierdie Repo?
 
-## Who This Is For
+Hierdie repo is geskryf vir drie groepe:
 
-This repo is written for three audiences:
+- Logic Pro gebruikers wat die synth wil probeer sonder om eers plugin-ontwikkeling te leer.
+- Python ontwikkelaars wat 'n skoon, class-based MIDI/audio prototipe wil bestudeer.
+- Tegniese beoordelaars wat wil sien dat die MVP professioneel, toetsbaar en Agile-naspeurbaar gebou is.
 
-- **Logic Pro users** who want to try a Python synth without learning plugin development first.
-- **Python developers** who want a class-based, tested audio/MIDI prototype.
-- **Technical reviewers** who want to see a disciplined MVP with traceable stories, tests and docs.
+As jy nie Terminal of PowerShell ken nie: volg die stappe hieronder stadig en kopieer die opdragte presies. Jy hoef nie in die `src` gids in te gaan nie.
 
-If you are comfortable in Logic Pro but not in Terminal, follow the short path below and copy commands exactly. The commandline part is intentionally small.
+## Voor Jy Begin
 
-## Quick Start For Logic Pro Users
+Jy gaan drie dinge gebruik:
 
-### 1. Install Python
+- **Python**: die programtaal waarin die synth geskryf is.
+- **Terminal of PowerShell**: die venster waarin jy opdragte tik.
+- **Virtuele omgewing**: 'n plaaslike Python-omgewing binne die projekmap, sodat installasies nie jou hele rekenaar verander nie.
 
-Install Python 3.11 or newer from [python.org](https://www.python.org/downloads/) or your preferred package manager.
+Belangrik: al die gewone opdragte hieronder word uit die hoofmap van die projek uitgevoer. Dit is die map waar `README.md`, `pyproject.toml`, `src` en `examples` langs mekaar staan.
 
-Check it:
+## Stap 1: Installeer Python
+
+Installeer Python 3.11 of nuwer vanaf [python.org](https://www.python.org/downloads/).
+
+Op macOS, toets daarna:
 
 ```bash
-python --version
+python3 --version
 ```
 
-On some Windows systems, use:
+Op Windows, toets daarna:
 
 ```powershell
 py --version
 ```
 
-### 2. Get The Project
+As Windows se Python-installeerder vra, merk **Add Python to PATH** aan.
+
+## Stap 2: Kry Die Projek
+
+As jy Git het:
 
 ```bash
 git clone https://github.com/pappavis/python-d1-synth.git
 cd python-d1-synth
 ```
 
-If you downloaded a ZIP instead of using Git, unzip it and open Terminal or PowerShell in the `python-d1-synth` folder.
+As jy nie Git het nie:
 
-### 3. Create A Local Virtual Environment
+1. Open die GitHub-bladsy in jou webblaaier.
+2. Kies **Code**.
+3. Kies **Download ZIP**.
+4. Pak die ZIP uit.
+5. Open Terminal of PowerShell in die uitgepakte `python-d1-synth` map.
 
-macOS / Linux:
+## Stap 3: Maak 'n Virtuele Omgewing
+
+macOS of Linux:
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[midi]"
@@ -85,181 +99,239 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[midi]"
 ```
 
-If PowerShell blocks activation, run:
+As PowerShell aktivering blokkeer, voer hierdie een keer uit:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-Then open a new PowerShell window and activate `.venv` again.
+Maak daarna 'n nuwe PowerShell-venster oop en aktiveer weer:
 
-### 4. Choose Your Audio Output In YAML
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-Open:
+Jy weet die virtuele omgewing is aktief wanneer jy iets soos `(.venv)` voor jou prompt sien.
+
+## Stap 4: Toets Dat Die Installering Reg Is
+
+Tik uit die projek se hoofmap:
+
+```bash
+python -m synth --help
+```
+
+As jy `No module named synth` kry, beteken dit gewoonlik een van hierdie dinge:
+
+- Die virtuele omgewing is nie aktief nie.
+- Jy het nog nie `python -m pip install -e ".[midi]"` uitgevoer nie.
+- Jy is nie in dieselfde Python-omgewing waarin jy die projek geinstalleer het nie.
+
+Oplossing:
+
+```bash
+python -m pip install -e ".[midi]"
+python -m synth --help
+```
+
+Moenie na die `src` gids beweeg om hierdie fout te probeer oplos nie. Die regte oplossing is om die pakket in jou aktiewe virtuele omgewing te installeer.
+
+## Stap 5: Kies Klankuitset In YAML
+
+Open hierdie bestand:
 
 ```text
 examples/midi_performance_patch.yaml
 ```
 
-Find:
+Soek:
 
 ```yaml
 audio_device: null
 ```
 
-You have two choices:
+Jy het twee veilige keuses:
 
-- Leave it as `null` to use the system default audio output.
-- Replace `null` with the exact name of your preferred output device.
+- Los dit as `null` om jou stelsel se standaard-klankuitset te gebruik.
+- Vervang `null` met die presiese naam van jou eie klankuitset.
 
-You can list available audio devices with:
+Jy kan beskikbare klanktoestelle lys met:
 
 ```bash
 python -m synth audio list-devices --debuglevel light
 ```
 
-Example YAML shape:
+Gebruik jou eie toestelnaam. Hierdie repo maak geen aanname oor watter klankkaart, USB-koppelvlak of luidsprekers jy het nie.
 
-```yaml
-midi:
-  performance:
-    port_name: python-d1-synth
-    audio_device: null
-    voice_mode: sustained
-    run_until_interrupted: true
-```
+## Stap 6: Start Die Synth
 
-Keep device names in YAML or pass them as temporary commandline overrides. They are not hardcoded in the application.
-
-### 5. Start The Synth
+Voer hierdie opdrag uit die projek se hoofmap uit:
 
 ```bash
 python -m synth midi play-stream --config examples/midi_performance_patch.yaml
 ```
 
-Leave this command running. It opens the virtual MIDI destination named `python-d1-synth`.
+Laat die opdrag oop staan. Dit open die virtuele MIDI-bestemming `python-d1-synth`.
 
-Stop it later with `Ctrl-C`.
+Stop later met:
 
-### 6. Route Logic Pro To The Synth
+```text
+Ctrl-C
+```
+
+As jy `FileNotFoundError` vir `examples/midi_performance_patch.yaml` kry, is jy waarskynlik nie in die projek se hoofmap nie. Gaan terug na die map waar `examples` sigbaar is, en voer die opdrag weer uit.
+
+## Stap 7: Route Logic Pro Na Die Synth
 
 In Logic Pro:
 
-1. Create a new track.
-2. Choose `MIDI`.
-3. Choose `External MIDI`.
-4. Set `MIDI Destination` to `python-d1-synth`.
-5. Set `MIDI Channel` to `All` or `1`.
-6. Create a small MIDI region with a few notes, or use Musical Typing.
-7. Press Play.
+1. Maak 'n nuwe track.
+2. Kies `MIDI`.
+3. Kies `External MIDI`.
+4. Kies by `MIDI Destination` die bestemming `python-d1-synth`.
+5. Kies by `MIDI Channel` die waarde `All` of `1`.
+6. Maak 'n klein MIDI region met 'n paar note, byvoorbeeld C, E en G.
+7. Druk Play.
 
-Expected result: you hear the Python synth through your configured audio output.
+Verwagte resultaat: jy hoor die Python-synth deur die klankuitset wat in YAML gekies is, of deur jou stelsel se standaard-klankuitset as `audio_device: null` bly.
 
-## Useful Commands
+## Belangrike Opdragte
 
-Run the YAML-driven performance patch:
+Start die Logic/DAW performance mode:
 
 ```bash
 python -m synth midi play-stream --config examples/midi_performance_patch.yaml
 ```
 
-Override the YAML audio device for one run:
+Oorskryf die YAML-klanktoestel net vir een run:
 
 ```bash
-python -m synth midi play-stream --config examples/midi_performance_patch.yaml --audio-device "<your-audio-device-name>"
+python -m synth midi play-stream --config examples/midi_performance_patch.yaml --audio-device "<jou-klanktoestel-naam>"
 ```
 
-Use verbose diagnostics:
+Wys meer diagnose:
 
 ```bash
 python -m synth midi play-stream --config examples/midi_performance_patch.yaml --debuglevel verbose
 ```
 
-Render a WAV demo:
-
-```bash
-python -m synth render examples/patch.yaml --output outputs/demo.wav --debuglevel light
-```
-
-Play a simple note without Logic:
+Speel 'n enkele toetsnoot sonder Logic:
 
 ```bash
 python -m synth play --note C3 --duration 1.0 --channel stereo --debuglevel light
 ```
 
-Play a small test sequence:
+Speel 'n klein toetsreeks sonder Logic:
 
 ```bash
 python -m synth play --testsequence "ACGD" --duration 0.25 --debuglevel light
 ```
 
-List audio devices:
+Render 'n WAV-bestand:
+
+```bash
+python -m synth render examples/patch.yaml --output outputs/demo.wav --debuglevel light
+```
+
+Lys klanktoestelle:
 
 ```bash
 python -m synth audio list-devices --debuglevel light
 ```
 
-List MIDI devices:
+Lys MIDI-toestelle:
 
 ```bash
 python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel light
 ```
 
-## YAML First, CLI When Needed
+## YAML Eerste, Opdragreel Wanneer Nodig
 
-The preferred MVP workflow is:
+Die aanbevole MVP-werkvloei is:
 
-1. Put stable defaults in `examples/midi_performance_patch.yaml`.
-2. Start with `python -m synth midi play-stream --config examples/midi_performance_patch.yaml`.
-3. Use commandline flags only for temporary overrides.
+1. Hou stabiele instellings in `examples/midi_performance_patch.yaml`.
+2. Start met `python -m synth midi play-stream --config examples/midi_performance_patch.yaml`.
+3. Gebruik ekstra opdragreel-opsies net vir tydelike toetse.
 
-Precedence is:
+Voorrang is:
 
-1. Explicit commandline flag.
-2. YAML value.
-3. Built-in safe default.
+1. Opdragreel-opsie.
+2. YAML-waarde.
+3. Ingeboude veilige standaard.
 
-That means this command temporarily overrides the YAML voice mode and debug level:
+Hierdie opdrag oorskryf byvoorbeeld net tydelik die debugvlak:
 
 ```bash
-python -m synth midi play-stream --config examples/midi_performance_patch.yaml --voice-mode gated --debuglevel verbose
+python -m synth midi play-stream --config examples/midi_performance_patch.yaml --debuglevel verbose
 ```
 
-## What The MVP Proves
+## Algemene Probleme
 
-The MVP proves the core route end to end:
+**Fout: `No module named synth`**
+
+Die pakket is nie in die aktiewe Python-omgewing geinstalleer nie. Aktiveer `.venv` en voer uit:
+
+```bash
+python -m pip install -e ".[midi]"
+```
+
+**Fout: `FileNotFoundError: examples/midi_performance_patch.yaml`**
+
+Jy is nie in die projek se hoofmap nie. Gaan na die map waar `examples` sigbaar is, en start weer.
+
+**Logic wys nie `python-d1-synth` nie**
+
+Die Python-opdrag moet reeds loop voordat Logic die bestemming kan sien. Start eers:
+
+```bash
+python -m synth midi play-stream --config examples/midi_performance_patch.yaml
+```
+
+Maak daarna die Logic MIDI destination lys weer oop.
+
+**Daar is geen klank nie**
+
+Kontroleer:
+
+- Is `audio_device` in YAML `null`, of is dit jou presiese klanktoestelnaam?
+- Is jou stelsel se klankuitset reg gekies?
+- Stuur Logic na `python-d1-synth`?
+- Is die MIDI channel `All` of `1`?
+- Speel `python -m synth play --note C3 --duration 1.0` wel klank?
+
+## Wat Die MVP Bewys
+
+Die kernroete werk end-tot-end:
 
 ```text
 Logic Pro MIDI region
-  -> virtual MIDI destination python-d1-synth
-  -> MIDI message normalizer
-  -> NoteEvent / sustained voice model
-  -> oscillator and voice mixer
-  -> sounddevice audio output
+  -> virtuele MIDI-bestemming python-d1-synth
+  -> MIDI normalisering
+  -> NoteEvent en voice model
+  -> oscillator en mixer
+  -> Python klankuitset
 ```
 
-It also proves the working process:
+Die ontwikkelproses is ook bewys:
 
-- User stories `US-001` through `US-042` are documented.
-- Acceptance criteria and story status are tracked.
-- The Kanban backlog is generated as an XLSX workbook.
-- Tests cover the core behavior with fake backends where hardware is not available.
-- Hardware and Logic Pro behavior are recorded as product-owner acceptance evidence.
+- User stories `US-001` tot `US-042` is gedokumenteer.
+- Die Markdown user-story dokument bevat nou die volle backlog sodat Excel nie nodig is om die scope te verstaan nie.
+- Die Kanban workbook bly beskikbaar vir spreadsheet-gebruikers.
+- Toetse dek kernlogika met fake backends waar hardeware nie beskikbaar is nie.
+- Logic Pro en MIDI-hardeware gedrag is deur Product Owner toetse bevestig.
 
-## Current Limitations
+## Huidige Beperkings
 
-The MVP is intentionally focused. These are not defects:
+- Nog geen AU-, VST3- of Logic Component-inprop nie.
+- Nog geen verpakte macOS- of Windows-lessenaarprogram nie.
+- Nog geen grafiese synth-paneel nie.
+- Nog geen volledige Behringer D / Model D styl filter- en modulasiestem nie.
+- Produksie-lae-latency klankwerk benodig nog 'n dieper audio-engine sprint.
+- Windows MIDI/audio gedrag moet nog op 'n werklike Windows-masjien bevestig word.
 
-- It is not an AU, VST3 or Logic Component plugin.
-- It is not a standalone packaged desktop app yet.
-- It has no graphical synth panel yet.
-- It does not yet model a full Behringer D / Model D style subtractive voice architecture.
-- Low-latency production audio performance will need a deeper audio-engine pass.
-- Windows support is installable in principle, but real MIDI/audio behavior must still be validated on a Windows machine.
+## Dokumentasie
 
-## Documentation Map
-
-Core project artifacts:
+Kernartefakte:
 
 - [MVP Scope](docs/mvp_scope.md)
 - [User Stories](docs/user_stories.md)
@@ -268,8 +340,9 @@ Core project artifacts:
 - [MVP Sprint Review](docs/mvp_sprint_review_v0.1.0.md)
 - [MVP Retrospective](docs/mvp_retrospective_v0.1.0.md)
 - [Kanban Workbook](outputs/CHATOD-20260709-D1PY-MVP-001/python_d1_synth_sprint_1_kanban_backlog.xlsx)
+- [Engelse README](README.en.md)
 
-Important MIDI / DAW docs:
+Belangrike MIDI/DAW dokumente:
 
 - [MIDI Learning Path](docs/midi_learning_path_v0.1.0.md)
 - [Virtual MIDI Port For Logic/DAW](docs/virtual_midi_port_logic_daw_v0.1.0.md)
@@ -280,46 +353,44 @@ Important MIDI / DAW docs:
 - [MIDI Modulation CC1 Mapping](docs/midi_modulation_cc1_mapping_dsp_v0.1.0.md)
 - [MIDI Performance Patch YAML Config](docs/midi_performance_patch_yaml_config_v0.1.0.md)
 
-## Development Workflow
+## Ontwikkelaars
 
-Run tests:
+Voer alle toetse uit:
 
 ```bash
 python -m pytest
 ```
 
-Run only documentation checks:
+Voer net dokumentasie-toetse uit:
 
 ```bash
 python -m pytest tests/test_docs.py
 ```
 
-Run the real hardware MIDI scan only when hardware is connected:
+Voer die hardeware MIDI-toets net uit wanneer MIDI-hardeware gekoppel is:
 
 ```bash
 PYTHON_D1_RUN_HARDWARE_MIDI=1 python -m pytest tests/test_hardware_midi.py -s
 ```
 
-The codebase follows the project rules established during the MVP:
+Die projekreels bly:
 
-- Class-based implementation.
-- No global application state.
-- Tests for red/green story work.
-- Traceability in code and docs for changed story work.
-- Runtime device discovery and YAML config instead of hardcoded hardware names.
+- Class-based implementasie.
+- Geen globale toepassingstaat nie.
+- Red/green toetse per user story.
+- Naspeurbaarheid in code en docs vir story-werk.
+- Runtime device discovery en YAML-konfigurasie in plaas van hardcoded hardeware-name.
 
-## Suggested Next Sprint
+## Volgende Sprint Idees
 
-The next sprint should choose one clear product direction:
+Die MVP is klaar genoeg om nou bewustelik een rigting te kies:
 
-- **Synth character:** filter cutoff/resonance, envelope-to-filter, better oscillator behavior.
-- **Usability:** small desktop UI or patch manager.
-- **Delivery:** packaged macOS/Windows app.
-- **Plugin path:** AU/VST3 feasibility spike.
-- **Hardware path:** CircuitPython/ESP32 feasibility spike.
+- **Synth karakter:** filter cutoff/resonance, envelope-to-filter en ryker oscillator gedrag.
+- **Gebruiksgemak:** klein desktop UI of patch manager.
+- **Aflewering:** verpakte macOS- en Windows-program.
+- **Plugin pad:** AU/VST3 haalbaarheidsondersoek.
+- **Hardeware pad:** CircuitPython/ESP32 haalbaarheidsondersoek.
 
-The MVP is deliberately solid enough to make that choice from a working baseline.
+## Lisensie
 
-## License
-
-MIT. See [LICENSE](LICENSE).
+MIT. Sien [LICENSE](LICENSE).
