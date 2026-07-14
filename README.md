@@ -299,6 +299,93 @@ Kontroleer:
 - Is die MIDI channel `All` of `1`?
 - Speel `python -m synth play --note C3 --duration 1.0` wel klank?
 
+## Geen Klank Diagnose
+
+Gebruik hierdie pad wanneer die synth start, geen fout wys nie, maar jy niks hoor nie. Werk van bo na onder; verander net een ding op 'n slag.
+
+### 1. Bewys Eers Dat Python Klank Maak
+
+Stop Logic eers en speel 'n toetsnoot direk uit die synth:
+
+```bash
+python -m synth play --note C3 --duration 1.0 --channel stereo --debuglevel verbose
+```
+
+As hierdie toets klank maak, werk die basiese Python-klankroete. Gaan dan na Logic/MIDI routing.
+
+As hierdie toets geen klank maak nie, toets links en regs apart:
+
+```bash
+python -m synth play --note C3 --duration 1.0 --channel left --debuglevel verbose
+python -m synth play --note C3 --duration 1.0 --channel right --debuglevel verbose
+```
+
+Hierdie flags stuur binne die synth na links, regs of stereo. Dit kies nog nie 'n ander fisiese uitgangspaar soos 3/4 op 'n meerkanaal audio-interface nie.
+
+### 2. Lys Audio Devices En Kies Een Bewus
+
+Lys die toestelle wat Python kan sien:
+
+```bash
+python -m synth audio list-devices --debuglevel light
+```
+
+Kies daarna een toestelnaam of toestel-ID vir 'n toets:
+
+```bash
+python -m synth play --note C3 --duration 1.0 --audio-device "<jou-klanktoestel-naam>" --debuglevel verbose
+```
+
+As dit werk, sit dieselfde toestelnaam in `examples/midi_performance_patch.yaml` by `audio_device`, of gebruik `--audio-device` net tydelik op die opdragreel.
+
+### 3. Kontroleer Of Jou Interface Op Kanaal 1/2 Of 3/4 Luister
+
+Baie USB-klankinterfaces het meer as twee uitsette. Die synth open tans 'n tweekanaals stereo stream. By die meeste interfaces beteken dit uitgang **kanaal 1/2**, maar sommige drivers, mengpaneelprogramme of DAW-routes stuur jou hoorbare monitors na **kanaal 3/4** of 'n ander paar.
+
+Kontroleer daarom in jou interface-mengpaneel, macOS Audio MIDI Setup, Windows Sound settings, of die driver control panel:
+
+- Watter uitsetpaar is aan jou luidsprekers of koptelefoon gekoppel?
+- Is die stelsel se standaard-uitset op kanaal 1/2, 3/4 of 'n ander paar?
+- Is daar 'n software mixer waar Python se stereo 1/2 na monitor 1/2 of monitor 3/4 geroute moet word?
+- Is die interface self gemute, gedim of op 'n ander monitor mix gestel?
+
+As jou monitors net op 3/4 luister en Python speel op 1/2, kan die synth tegnies speel maar jy hoor niks. Stel dan jou interface mixer so dat stereo 1/2 na jou monitors gaan, of kies in die bedryfstelsel 'n audio device wat reeds na die regte monitorpaar route.
+
+### 4. Toets Die MIDI Roete Los Van Audio
+
+Kontroleer dat Logic of jou keyboard MIDI stuur:
+
+```bash
+python -m synth midi list-devices --unsafe-rtmidi-scan --debuglevel light
+```
+
+Vir Logic gebruik jy daarna:
+
+```bash
+python -m synth midi play-stream --config examples/midi_performance_patch.yaml --debuglevel verbose
+```
+
+In die terminal behoort jy MIDI-boodskappe of gespeelde note te sien wanneer Logic Play druk of wanneer jy note speel. As jy geen MIDI-boodskappe sien nie, is die probleem waarskynlik Logic se `MIDI Destination`, MIDI channel, track mute/solo, of die virtuele MIDI-bestemming wat nog nie oop was toe Logic ingestel is nie.
+
+### 5. Gebruik 'n Kort Diagnose-Run
+
+As jy wil vermy dat die synth lank bly loop, gebruik 'n kort test-run:
+
+```bash
+python -m synth midi play-stream --config examples/midi_performance_patch.yaml --max-messages 16 --timeout 15 --debuglevel verbose
+```
+
+Let op: as `run_until_interrupted: true` in YAML staan, kan daardie instelling die run lank laat loop. Gebruik `Ctrl-C` om te stop.
+
+### 6. Wat Om Terug Te Rapporteer
+
+As jy nog geen klank kry nie, noteer hierdie vier dinge:
+
+- Die output van `python -m synth audio list-devices --debuglevel light`.
+- Die waarde van `audio_device` in `examples/midi_performance_patch.yaml`.
+- Of `python -m synth play --note C3 --duration 1.0 --debuglevel verbose` klank maak.
+- Watter fisiese interface-uitsette jou luidsprekers of koptelefoon gebruik: 1/2, 3/4 of iets anders.
+
 ## Wat Die MVP Bewys
 
 Die kernroete werk end-tot-end:
